@@ -325,7 +325,7 @@
     "about": {
         "about-memos": "Over Memos",
         "memos-description": "Memos is een web-based noteerapplicatie die je kan gebruiekn om notities te schrijven, organiseren en delen.",
-        "no-server-description": "Geen beschrijving geconfigureerd.",
+        "no-server-description": "Aangepaste memoserver door edonyzpc.",
         "powered-by": "Mogelijk gemaakt door",
         "other-projects": "Andere projecten"
     },
