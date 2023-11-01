@@ -96,8 +96,6 @@ func (s *APIV1Service) GetUserList(c echo.Context) error {
 	userMessageList := make([]*User, 0, len(list))
 	for _, user := range list {
 		userMessage := convertUserFromStore(user)
-		// data desensitize
-		userMessage.Email = ""
 		userMessageList = append(userMessageList, userMessage)
 	}
 	return c.JSON(http.StatusOK, userMessageList)
@@ -232,8 +230,6 @@ func (s *APIV1Service) GetUserByUsername(c echo.Context) error {
 	}
 
 	userMessage := convertUserFromStore(user)
-	// data desensitize
-	userMessage.Email = ""
 	return c.JSON(http.StatusOK, userMessage)
 }
 
@@ -264,8 +260,6 @@ func (s *APIV1Service) GetUserByID(c echo.Context) error {
 	}
 
 	userMessage := convertUserFromStore(user)
-	// data desensitize
-	userMessage.Email = ""
 	return c.JSON(http.StatusOK, userMessage)
 }
 
