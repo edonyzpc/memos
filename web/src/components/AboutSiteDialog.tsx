@@ -11,6 +11,7 @@ const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
   const globalStore = useGlobalStore();
   const profile = globalStore.state.systemStatus.profile;
   const customizedProfile = globalStore.state.systemStatus.customizedProfile;
+  const author = "@ShadowWalker 1.0.3";
 
   const handleCloseBtnClick = () => {
     destroy();
@@ -26,7 +27,7 @@ const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
           <Icon.X />
         </button>
       </div>
-      <div className="flex flex-col justify-start items-start max-w-full w-96">
+      <div className="flex flex-col justify-start items-start w-96">
         <p className="text-xs">{t("about.memos-description")}</p>
         <p className="text-sm mt-2">{customizedProfile.description || t("about.no-server-description")}</p>
         <Divider className="!my-3" />
@@ -36,6 +37,14 @@ const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
             <img className="w-auto h-7" src="https://www.usememos.com/full-logo-landscape.png" alt="" />
           </a>
           <span>v{profile.version}</span>
+          <a
+            href="https://github.com/edonyzpc/memos/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-6 justify-end text-sm hover:underline italic text-red-500"
+          >
+            {author}
+          </a>
         </div>
       </div>
     </>
