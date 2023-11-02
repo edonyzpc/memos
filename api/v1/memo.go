@@ -419,6 +419,17 @@ func (s *APIV1Service) CreateMemo(c echo.Context) error {
 				log.Error("Failed to send Telegram notification", zap.Error(err))
 				continue
 			}
+
+			// send HTML notification to telegram group
+			// According to https://core.telegram.org/bots/api#html-style,
+			// Telegram HTML has a lot wired condition. And I cannot do some formatting things for now
+			memoURL := "https://twitter.edony.ink/m/" + fmt.Sprint(memoResponse.ID)
+			contentGroup := `<a href="` + memoURL + `">@memos says: </a><pre>` + memoResponse.Content + `</pre>`
+			_, err = s.telegramBot.SendHTMLMessage(ctx, -1001233204358, contentGroup)
+			if err != nil {
+				log.Error("Failed to send Telegram notification", zap.Error(err))
+				continue
+			}
 		}
 	}
 	metric.Enqueue("memo create")
