@@ -1,6 +1,7 @@
 import { Divider } from "@mui/joy";
 import { useGlobalStore } from "@/store/module";
 import { useTranslate } from "@/utils/i18n";
+import { edonyVersion } from "@/utils/version";
 import { generateDialog } from "./Dialog";
 import Icon from "./Icon";
 
@@ -11,7 +12,7 @@ const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
   const globalStore = useGlobalStore();
   const profile = globalStore.state.systemStatus.profile;
   const customizedProfile = globalStore.state.systemStatus.customizedProfile;
-  const author = "@ShadowWalker 1.0.3";
+  const customizedInfo = edonyVersion;
 
   const handleCloseBtnClick = () => {
     destroy();
@@ -43,7 +44,7 @@ const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
             rel="noopener noreferrer"
             className="ml-6 justify-end text-sm hover:underline italic text-red-500"
           >
-            {author}
+            {customizedInfo}
           </a>
         </div>
       </div>
