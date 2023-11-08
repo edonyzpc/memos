@@ -19,7 +19,7 @@ import { getDateTimeString } from "@/helpers/datetime";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useNavigateTo from "@/hooks/useNavigateTo";
 import { useGlobalStore, useMemoStore } from "@/store/module";
-import { useUserV1Store } from "@/store/v1";
+import { useUserV1Store, extractUsernameFromName } from "@/store/v1";
 import { User, User_Role } from "@/types/proto/api/v2/user_service";
 import { useTranslate } from "@/utils/i18n";
 
@@ -35,7 +35,7 @@ const MemoDetail = () => {
   const { systemStatus } = globalStore.state;
   const memoId = Number(params.memoId);
   const memo = memoStore.state.memos.find((memo) => memo.id === memoId);
-  const allowEdit = memo?.creatorUsername === currentUser?.username;
+  const allowEdit = memo?.creatorUsername === extractUsernameFromName(currentUser.name);
   const referenceRelations = memo?.relationList.filter((relation) => relation.type === "REFERENCE") || [];
   const commentRelations = memo?.relationList.filter((relation) => relation.relatedMemoId === memo.id && relation.type === "COMMENT") || [];
   const comments = commentRelations

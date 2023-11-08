@@ -20,6 +20,7 @@ import (
 	"github.com/usememos/memos/server/profile"
 	"github.com/usememos/memos/server/service/backup"
 	"github.com/usememos/memos/server/service/metric"
+	versionchecker "github.com/usememos/memos/server/service/version_checker"
 	"github.com/usememos/memos/store"
 )
 
@@ -60,8 +61,6 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 			`"method":"${method}","uri":"${uri}",` +
 			`"status":${status},"error":"${error}"}` + "\n",
 	}))
-
-	e.Use(middleware.Gzip())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		Skipper:      grpcRequestSkipper,
@@ -111,6 +110,7 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 }
 
 func (s *Server) Start(ctx context.Context) error {
+	go versionchecker.NewVersionChecker(s.Store, s.Profile).Start(ctx)
 	go s.telegramBot.Start(ctx)
 	go s.backupRunner.Run(ctx)
 

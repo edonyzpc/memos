@@ -3,8 +3,7 @@ import classNames from "classnames";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { activityServiceClient } from "@/grpcweb";
-import useNavigateTo from "@/hooks/useNavigateTo";
-import { useInboxStore, extractUsernameFromName } from "@/store/v1";
+import { useInboxStore } from "@/store/v1";
 import { Activity } from "@/types/proto/api/v2/activity_service";
 import { Inbox, Inbox_Status } from "@/types/proto/api/v2/inbox_service";
 import { useTranslate } from "@/utils/i18n";
@@ -14,9 +13,8 @@ interface Props {
   inbox: Inbox;
 }
 
-const MemoCommentMessage = ({ inbox }: Props) => {
+const VersionUpdateMessage = ({ inbox }: Props) => {
   const t = useTranslate();
-  const navigateTo = useNavigateTo();
   const inboxStore = useInboxStore();
   const [activity, setActivity] = useState<Activity | undefined>(undefined);
 
@@ -34,11 +32,11 @@ const MemoCommentMessage = ({ inbox }: Props) => {
       });
   }, [inbox.activityId]);
 
-  const handleNavigateToMemo = () => {
-    if (!activity?.payload?.memoComment?.relatedMemoId) {
+  const handleNavigate = () => {
+    if (!activity?.payload?.versionUpdate?.version) {
       return;
     }
-    navigateTo(`/m/${activity?.payload?.memoComment?.relatedMemoId}`);
+    window.open(`https://github.com/usememos/memos/releases/tag/v${activity?.payload?.versionUpdate?.version}`);
     if (inbox.status === Inbox_Status.UNREAD) {
       handleArchiveMessage(true);
     }
@@ -63,12 +61,12 @@ const MemoCommentMessage = ({ inbox }: Props) => {
         className={classNames(
           "shrink-0 mt-2 p-2 rounded-full border",
           inbox.status === Inbox_Status.UNREAD
-            ? "border-blue-600 text-blue-600 bg-blue-50 dark:bg-zinc-800"
+            ? "border-green-600 text-green-600 bg-blue-50 dark:bg-zinc-800"
             : "border-gray-400 text-gray-400 bg-gray-50 dark:bg-zinc-800"
         )}
       >
-        <Tooltip title={"Comment"} placement="bottom">
-          <Icon.MessageCircle className="w-4 sm:w-5 h-auto" />
+        <Tooltip title={"Update"} placement="bottom">
+          <Icon.ArrowUp className="w-4 sm:w-5 h-auto" />
         </Tooltip>
       </div>
       <div
@@ -92,11 +90,10 @@ const MemoCommentMessage = ({ inbox }: Props) => {
         </div>
         <p
           className="text-base leading-tight cursor-pointer text-gray-500 dark:text-gray-400 hover:underline hover:text-blue-600"
-          onClick={handleNavigateToMemo}
+          onClick={handleNavigate}
         >
-          {t("inbox.memo-comment", {
-            user: extractUsernameFromName(inbox.sender),
-            memo: `memo#${activity?.payload?.memoComment?.relatedMemoId}`,
+          {t("inbox.version-update", {
+            version: activity?.payload?.versionUpdate?.version,
           })}
         </p>
       </div>
@@ -104,4 +101,4 @@ const MemoCommentMessage = ({ inbox }: Props) => {
   );
 };
 
-export default MemoCommentMessage;
+export default VersionUpdateMessage;
