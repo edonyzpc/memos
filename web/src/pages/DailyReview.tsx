@@ -14,23 +14,21 @@ import DatePicker from "@/components/kit/DatePicker";
 import { DAILY_TIMESTAMP, DEFAULT_MEMO_LIMIT } from "@/helpers/consts";
 import { getDateStampByDate, getNormalizedDateString, getTimeStampByDate, getTimeString } from "@/helpers/datetime";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { useMemoStore, useUserStore } from "@/store/module";
+import { useMemoStore } from "@/store/module";
 import { extractUsernameFromName } from "@/store/v1";
 import { useTranslate } from "@/utils/i18n";
 
 const DailyReview = () => {
   const t = useTranslate();
   const memoStore = useMemoStore();
-  const userStore = useUserStore();
   const user = useCurrentUser();
-  const { localSetting } = userStore.state.user as User;
   const currentDateStamp = getDateStampByDate(getNormalizedDateString()) as number;
   const [selectedDateStamp, setSelectedDateStamp] = useState<number>(currentDateStamp as number);
   const [showDatePicker, toggleShowDatePicker] = useToggle(false);
   const dailyMemos = memoStore.state.memos
     .filter((m) => {
       const displayTimestamp = getTimeStampByDate(m.displayTs);
-      const selectedDateStampWithOffset = selectedDateStamp + localSetting.dailyReviewTimeOffset * 60 * 60 * 1000;
+      const selectedDateStampWithOffset = selectedDateStamp;
       return (
         m.rowStatus === "NORMAL" &&
         m.creatorUsername === extractUsernameFromName(user.name) &&
@@ -67,7 +65,7 @@ const DailyReview = () => {
 
   return (
     <section className="@container w-full max-w-3xl min-h-full flex flex-col justify-start items-center px-4 sm:px-2 sm:pt-4 pb-8 bg-zinc-100 dark:bg-zinc-800">
-      <MobileHeader showSearch={false} />
+      <MobileHeader />
       <div className="w-full shadow flex flex-col justify-start items-start px-4 py-3 rounded-xl bg-white dark:bg-zinc-700 text-black dark:text-gray-300">
         <div className="relative w-full flex flex-row justify-start items-center">
           <p
