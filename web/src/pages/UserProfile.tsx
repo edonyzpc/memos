@@ -46,7 +46,7 @@ const UserProfile = () => {
                     <div className="flex-grow shrink w-full">
                       <div className="w-full flex flex-col justify-start items-center py-8">
                         <a href="/">
-                          <UserAvatar className="!w-20 h-20 mb-2 drop-shadow" avatarUrl={user?.avatarUrl} />
+                          <UserAvatar className="!w-20 !h-20 mb-2 drop-shadow" avatarUrl={user?.avatarUrl} />
                         </a>
                         <p className="text-3xl text-black opacity-80 dark:text-gray-200">{user?.nickname}</p>
                       </div>
