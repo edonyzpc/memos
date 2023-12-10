@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 
@@ -28,11 +27,9 @@ func (d *DB) FindMigrationHistoryList(ctx context.Context, _ *store.FindMigratio
 	list := make([]*store.MigrationHistory, 0)
 	for rows.Next() {
 		var migrationHistory store.MigrationHistory
-		var createdTs time.Time
-		if err := rows.Scan(&migrationHistory.Version, &createdTs); err != nil {
+		if err := rows.Scan(&migrationHistory.Version, &migrationHistory.CreatedTs); err != nil {
 			return nil, err
 		}
-		migrationHistory.CreatedTs = createdTs.UnixNano()
 		list = append(list, &migrationHistory)
 	}
 
@@ -47,9 +44,10 @@ func (d *DB) UpsertMigrationHistory(ctx context.Context, upsert *store.UpsertMig
 	qb := squirrel.Insert("migration_history").
 		Columns("version").
 		Values(upsert.Version).
-		Suffix("ON CONFLICT (version) DO UPDATE SET version = ?", upsert.Version)
+		Suffix("ON CONFLICT (version) DO NOTHING").
+		PlaceholderFormat(squirrel.Dollar)
 
-	query, args, err := qb.PlaceholderFormat(squirrel.Dollar).ToSql()
+	query, args, err := qb.ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +58,6 @@ func (d *DB) UpsertMigrationHistory(ctx context.Context, upsert *store.UpsertMig
 	}
 
 	var migrationHistory store.MigrationHistory
-	var createdTs time.Time
 	query, args, err = squirrel.Select("version", "created_ts").
 		From("migration_history").
 		Where(squirrel.Eq{"version": upsert.Version}).
@@ -70,10 +67,9 @@ func (d *DB) UpsertMigrationHistory(ctx context.Context, upsert *store.UpsertMig
 		return nil, err
 	}
 
-	if err := d.db.QueryRowContext(ctx, query, args...).Scan(&migrationHistory.Version, &createdTs); err != nil {
+	if err := d.db.QueryRowContext(ctx, query, args...).Scan(&migrationHistory.Version, &migrationHistory.CreatedTs); err != nil {
 		return nil, err
 	}
-	migrationHistory.CreatedTs = createdTs.UnixNano()
 
 	return &migrationHistory, nil
 }
