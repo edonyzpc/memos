@@ -44,7 +44,8 @@ const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
             rel="noopener noreferrer"
             className="ml-6 justify-end text-sm hover:underline italic text-red-500"
           >
-            {customizedInfo}
+            <img className="w-auto h-7" src="https://img.edony.ink/1573133907wings-cricut-freesvg.org.shadow.walker.edit.svg" alt="" />
+            <span>{customizedInfo}</span>
           </a>
         </div>
       </div>
