@@ -7,17 +7,22 @@ import (
 	"github.com/usememos/memos/plugin/gomark/parser/tokenizer"
 )
 
-type ParagraphParser struct {
-	ContentTokens []*tokenizer.Token
+type BlockquoteParser struct{}
+
+func NewBlockquoteParser() *BlockquoteParser {
+	return &BlockquoteParser{}
 }
 
-func NewParagraphParser() *ParagraphParser {
-	return &ParagraphParser{}
-}
+func (*BlockquoteParser) Match(tokens []*tokenizer.Token) (int, bool) {
+	if len(tokens) < 4 {
+		return 0, false
+	}
+	if tokens[0].Type != tokenizer.GreaterThan || tokens[1].Type != tokenizer.Space {
+		return 0, false
+	}
 
-func (*ParagraphParser) Match(tokens []*tokenizer.Token) (int, bool) {
 	contentTokens := []*tokenizer.Token{}
-	for _, token := range tokens {
+	for _, token := range tokens[2:] {
 		contentTokens = append(contentTokens, token)
 		if token.Type == tokenizer.Newline {
 			break
@@ -26,24 +31,22 @@ func (*ParagraphParser) Match(tokens []*tokenizer.Token) (int, bool) {
 	if len(contentTokens) == 0 {
 		return 0, false
 	}
-	if len(contentTokens) == 1 && contentTokens[0].Type == tokenizer.Newline {
-		return 0, false
-	}
-	return len(contentTokens), true
+
+	return len(contentTokens) + 2, true
 }
 
-func (p *ParagraphParser) Parse(tokens []*tokenizer.Token) (ast.Node, error) {
+func (p *BlockquoteParser) Parse(tokens []*tokenizer.Token) (ast.Node, error) {
 	size, ok := p.Match(tokens)
 	if size == 0 || !ok {
 		return nil, errors.New("not matched")
 	}
 
-	contentTokens := tokens[:size]
+	contentTokens := tokens[2:size]
 	children, err := ParseInline(contentTokens)
 	if err != nil {
 		return nil, err
 	}
-	return &ast.Paragraph{
+	return &ast.Blockquote{
 		Children: children,
 	}, nil
 }
