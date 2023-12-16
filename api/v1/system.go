@@ -80,7 +80,7 @@ func (s *APIV1Service) GetSystemStatus(c echo.Context) error {
 		AllowSignUp:      true,
 		MaxUploadSizeMiB: 32,
 		CustomizedProfile: CustomizedProfile{
-			Name:       "memos",
+			Name:       "Memos",
 			Locale:     "en",
 			Appearance: "system",
 		},
@@ -104,7 +104,7 @@ func (s *APIV1Service) GetSystemStatus(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to find system setting list").SetInternal(err)
 	}
 	for _, systemSetting := range systemSettingList {
-		if systemSetting.Name == SystemSettingServerIDName.String() || systemSetting.Name == SystemSettingSecretSessionName.String() || systemSetting.Name == SystemSettingTelegramBotTokenName.String() {
+		if systemSetting.Name == SystemSettingServerIDName.String() || systemSetting.Name == SystemSettingSecretSessionName.String() || systemSetting.Name == SystemSettingTelegramBotTokenName.String() || systemSetting.Name == SystemSettingInstanceURLName.String() {
 			continue
 		}
 

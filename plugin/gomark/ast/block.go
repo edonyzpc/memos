@@ -1,7 +1,5 @@
 package ast
 
-import "fmt"
-
 type BaseBlock struct {
 	BaseNode
 }
@@ -10,14 +8,8 @@ type LineBreak struct {
 	BaseBlock
 }
 
-var NodeTypeLineBreak = NewNodeType("LineBreak")
-
 func (*LineBreak) Type() NodeType {
-	return NodeTypeLineBreak
-}
-
-func (n *LineBreak) String() string {
-	return n.Type().String()
+	return LineBreakNode
 }
 
 type Paragraph struct {
@@ -26,18 +18,8 @@ type Paragraph struct {
 	Children []Node
 }
 
-var NodeTypeParagraph = NewNodeType("Paragraph")
-
 func (*Paragraph) Type() NodeType {
-	return NodeTypeParagraph
-}
-
-func (n *Paragraph) String() string {
-	str := n.Type().String()
-	for _, child := range n.Children {
-		str += " " + child.String()
-	}
-	return str
+	return ParagraphNode
 }
 
 type CodeBlock struct {
@@ -47,14 +29,8 @@ type CodeBlock struct {
 	Content  string
 }
 
-var NodeTypeCodeBlock = NewNodeType("CodeBlock")
-
 func (*CodeBlock) Type() NodeType {
-	return NodeTypeCodeBlock
-}
-
-func (n *CodeBlock) String() string {
-	return n.Type().String() + " " + n.Language + " " + n.Content
+	return CodeBlockNode
 }
 
 type Heading struct {
@@ -64,18 +40,8 @@ type Heading struct {
 	Children []Node
 }
 
-var NodeTypeHeading = NewNodeType("Heading")
-
 func (*Heading) Type() NodeType {
-	return NodeTypeHeading
-}
-
-func (n *Heading) String() string {
-	str := n.Type().String() + " " + fmt.Sprintf("%d", n.Level)
-	for _, child := range n.Children {
-		str += " " + child.String()
-	}
-	return str
+	return HeadingNode
 }
 
 type HorizontalRule struct {
@@ -85,14 +51,8 @@ type HorizontalRule struct {
 	Symbol string
 }
 
-var NodeTypeHorizontalRule = NewNodeType("HorizontalRule")
-
 func (*HorizontalRule) Type() NodeType {
-	return NodeTypeHorizontalRule
-}
-
-func (n *HorizontalRule) String() string {
-	return n.Type().String()
+	return HorizontalRuleNode
 }
 
 type Blockquote struct {
@@ -101,16 +61,42 @@ type Blockquote struct {
 	Children []Node
 }
 
-var NodeTypeBlockquote = NewNodeType("Blockquote")
-
 func (*Blockquote) Type() NodeType {
-	return NodeTypeBlockquote
+	return BlockquoteNode
 }
 
-func (n *Blockquote) String() string {
-	str := n.Type().String()
-	for _, child := range n.Children {
-		str += " " + child.String()
-	}
-	return str
+type OrderedList struct {
+	BaseBlock
+
+	Number   string
+	Children []Node
+}
+
+func (*OrderedList) Type() NodeType {
+	return OrderedListNode
+}
+
+type UnorderedList struct {
+	BaseBlock
+
+	// Symbol is "*" or "-" or "+".
+	Symbol   string
+	Children []Node
+}
+
+func (*UnorderedList) Type() NodeType {
+	return UnorderedListNode
+}
+
+type TaskList struct {
+	BaseBlock
+
+	// Symbol is "*" or "-" or "+".
+	Symbol   string
+	Complete bool
+	Children []Node
+}
+
+func (*TaskList) Type() NodeType {
+	return TaskListNode
 }

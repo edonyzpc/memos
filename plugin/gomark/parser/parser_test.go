@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,13 +28,45 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
+			text: "# Hello world!",
+			nodes: []ast.Node{
+				&ast.Heading{
+					Level: 1,
+					Children: []ast.Node{
+						&ast.Text{
+							Content: "Hello world!",
+						},
+					},
+				},
+			},
+		},
+		{
+			text: "\\# Hello world!",
+			nodes: []ast.Node{
+				&ast.Paragraph{
+					Children: []ast.Node{
+						&ast.EscapingCharacter{
+							Symbol: "#",
+						},
+						&ast.Text{
+							Content: " Hello world!",
+						},
+					},
+				},
+			},
+		},
+		{
 			text: "**Hello** world!",
 			nodes: []ast.Node{
 				&ast.Paragraph{
 					Children: []ast.Node{
 						&ast.Bold{
-							Symbol:  "*",
-							Content: "Hello",
+							Symbol: "*",
+							Children: []ast.Node{
+								&ast.Text{
+									Content: "Hello",
+								},
+							},
 						},
 						&ast.Text{
 							Content: " world!",
@@ -51,13 +84,16 @@ func TestParser(t *testing.T) {
 							Content: "Hello ",
 						},
 						&ast.Bold{
-							Symbol:  "*",
-							Content: "world",
+							Symbol: "*",
+							Children: []ast.Node{
+								&ast.Text{
+									Content: "world",
+								},
+							},
 						},
 						&ast.Text{
 							Content: "!",
 						},
-						&ast.LineBreak{},
 					},
 				},
 				&ast.Paragraph{
@@ -78,13 +114,16 @@ func TestParser(t *testing.T) {
 							Content: "Hello ",
 						},
 						&ast.Bold{
-							Symbol:  "*",
-							Content: "world",
+							Symbol: "*",
+							Children: []ast.Node{
+								&ast.Text{
+									Content: "world",
+								},
+							},
 						},
 						&ast.Text{
 							Content: "!",
 						},
-						&ast.LineBreak{},
 					},
 				},
 				&ast.CodeBlock{
@@ -101,7 +140,6 @@ func TestParser(t *testing.T) {
 						&ast.Text{
 							Content: "Hello world!",
 						},
-						&ast.LineBreak{},
 					},
 				},
 				&ast.LineBreak{},
@@ -109,6 +147,51 @@ func TestParser(t *testing.T) {
 					Children: []ast.Node{
 						&ast.Text{
 							Content: "New paragraph.",
+						},
+					},
+				},
+			},
+		},
+		{
+			text: "1. hello\n- [ ] world",
+			nodes: []ast.Node{
+				&ast.OrderedList{
+					Number: "1",
+					Children: []ast.Node{
+						&ast.Text{
+							Content: "hello",
+						},
+					},
+				},
+				&ast.TaskList{
+					Symbol:   tokenizer.Hyphen,
+					Complete: false,
+					Children: []ast.Node{
+						&ast.Text{
+							Content: "world",
+						},
+					},
+				},
+			},
+		},
+		{
+			text: "- [ ] hello\n- [x] world",
+			nodes: []ast.Node{
+				&ast.TaskList{
+					Symbol:   tokenizer.Hyphen,
+					Complete: false,
+					Children: []ast.Node{
+						&ast.Text{
+							Content: "hello",
+						},
+					},
+				},
+				&ast.TaskList{
+					Symbol:   tokenizer.Hyphen,
+					Complete: true,
+					Children: []ast.Node{
+						&ast.Text{
+							Content: "world",
 						},
 					},
 				},
@@ -127,8 +210,52 @@ func StringifyNodes(nodes []ast.Node) string {
 	var result string
 	for _, node := range nodes {
 		if node != nil {
-			result += node.String()
+			result += StringifyNode(node)
 		}
 	}
 	return result
+}
+
+func StringifyNode(node ast.Node) string {
+	switch n := node.(type) {
+	case *ast.LineBreak:
+		return "LineBreak()"
+	case *ast.CodeBlock:
+		return "CodeBlock(" + n.Language + ", " + n.Content + ")"
+	case *ast.Paragraph:
+		return "Paragraph(" + StringifyNodes(n.Children) + ")"
+	case *ast.Heading:
+		return "Heading(" + StringifyNodes(n.Children) + ")"
+	case *ast.HorizontalRule:
+		return "HorizontalRule(" + n.Symbol + ")"
+	case *ast.Blockquote:
+		return "Blockquote(" + StringifyNodes(n.Children) + ")"
+	case *ast.OrderedList:
+		return "OrderedList(" + n.Number + ", " + StringifyNodes(n.Children) + ")"
+	case *ast.UnorderedList:
+		return "UnorderedList(" + n.Symbol + ", " + StringifyNodes(n.Children) + ")"
+	case *ast.TaskList:
+		return "TaskList(" + n.Symbol + ", " + strconv.FormatBool(n.Complete) + ", " + StringifyNodes(n.Children) + ")"
+	case *ast.Text:
+		return "Text(" + n.Content + ")"
+	case *ast.Bold:
+		return "Bold(" + n.Symbol + StringifyNodes(n.Children) + n.Symbol + ")"
+	case *ast.Italic:
+		return "Italic(" + n.Symbol + n.Content + n.Symbol + ")"
+	case *ast.BoldItalic:
+		return "BoldItalic(" + n.Symbol + n.Content + n.Symbol + ")"
+	case *ast.Code:
+		return "Code(" + n.Content + ")"
+	case *ast.Image:
+		return "Image(" + n.URL + ", " + n.AltText + ")"
+	case *ast.Link:
+		return "Link(" + n.Text + ", " + n.URL + ")"
+	case *ast.Tag:
+		return "Tag(" + n.Content + ")"
+	case *ast.Strikethrough:
+		return "Strikethrough(" + n.Content + ")"
+	case *ast.EscapingCharacter:
+		return "EscapingCharacter(" + n.Symbol + ")"
+	}
+	return ""
 }

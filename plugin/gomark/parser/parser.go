@@ -25,20 +25,31 @@ type BlockParser interface {
 	BaseParser
 }
 
+func Parse(tokens []*tokenizer.Token) ([]ast.Node, error) {
+	return ParseBlock(tokens)
+}
+
 var defaultBlockParsers = []BlockParser{
 	NewCodeBlockParser(),
 	NewHorizontalRuleParser(),
 	NewHeadingParser(),
 	NewBlockquoteParser(),
+	NewTaskListParser(),
+	NewUnorderedListParser(),
+	NewOrderedListParser(),
 	NewParagraphParser(),
 	NewLineBreakParser(),
 }
 
-func Parse(tokens []*tokenizer.Token) ([]ast.Node, error) {
+func ParseBlock(tokens []*tokenizer.Token) ([]ast.Node, error) {
+	return ParseBlockWithParsers(tokens, defaultBlockParsers)
+}
+
+func ParseBlockWithParsers(tokens []*tokenizer.Token, blockParsers []BlockParser) ([]ast.Node, error) {
 	nodes := []ast.Node{}
 	var prevNode ast.Node
 	for len(tokens) > 0 {
-		for _, blockParser := range defaultBlockParsers {
+		for _, blockParser := range blockParsers {
 			size, matched := blockParser.Match(tokens)
 			if matched {
 				node, err := blockParser.Parse(tokens)
@@ -61,6 +72,7 @@ func Parse(tokens []*tokenizer.Token) ([]ast.Node, error) {
 }
 
 var defaultInlineParsers = []InlineParser{
+	NewEscapingCharacterParser(),
 	NewBoldItalicParser(),
 	NewImageParser(),
 	NewLinkParser(),
@@ -74,10 +86,14 @@ var defaultInlineParsers = []InlineParser{
 }
 
 func ParseInline(tokens []*tokenizer.Token) ([]ast.Node, error) {
+	return ParseInlineWithParsers(tokens, defaultInlineParsers)
+}
+
+func ParseInlineWithParsers(tokens []*tokenizer.Token, inlineParsers []InlineParser) ([]ast.Node, error) {
 	nodes := []ast.Node{}
 	var prevNode ast.Node
 	for len(tokens) > 0 {
-		for _, inlineParser := range defaultInlineParsers {
+		for _, inlineParser := range inlineParsers {
 			size, matched := inlineParser.Match(tokens)
 			if matched {
 				node, err := inlineParser.Parse(tokens)
@@ -88,7 +104,7 @@ func ParseInline(tokens []*tokenizer.Token) ([]ast.Node, error) {
 				tokens = tokens[size:]
 				if prevNode != nil {
 					// Merge text nodes if possible.
-					if prevNode.Type() == ast.NodeTypeText && node.Type() == ast.NodeTypeText {
+					if prevNode.Type() == ast.TextNode && node.Type() == ast.TextNode {
 						prevNode.(*ast.Text).Content += node.(*ast.Text).Content
 						break
 					}

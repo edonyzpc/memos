@@ -10,32 +10,20 @@ type Text struct {
 	Content string
 }
 
-var NodeTypeText = NewNodeType("Text")
-
 func (*Text) Type() NodeType {
-	return NodeTypeText
-}
-
-func (n *Text) String() string {
-	return n.Type().String() + " " + n.Content
+	return TextNode
 }
 
 type Bold struct {
 	BaseInline
 
 	// Symbol is "*" or "_".
-	Symbol  string
-	Content string
+	Symbol   string
+	Children []Node
 }
-
-var NodeTypeBold = NewNodeType("Bold")
 
 func (*Bold) Type() NodeType {
-	return NodeTypeBold
-}
-
-func (n *Bold) String() string {
-	return n.Type().String() + " " + n.Symbol + " " + n.Content
+	return BoldNode
 }
 
 type Italic struct {
@@ -46,14 +34,8 @@ type Italic struct {
 	Content string
 }
 
-var NodeTypeItalic = NewNodeType("Italic")
-
 func (*Italic) Type() NodeType {
-	return NodeTypeItalic
-}
-
-func (n *Italic) String() string {
-	return n.Type().String() + " " + n.Symbol + " " + n.Content
+	return ItalicNode
 }
 
 type BoldItalic struct {
@@ -64,14 +46,8 @@ type BoldItalic struct {
 	Content string
 }
 
-var NodeTypeBoldItalic = NewNodeType("BoldItalic")
-
 func (*BoldItalic) Type() NodeType {
-	return NodeTypeBoldItalic
-}
-
-func (n *BoldItalic) String() string {
-	return n.Type().String() + " " + n.Symbol + " " + n.Content
+	return BoldItalicNode
 }
 
 type Code struct {
@@ -80,14 +56,8 @@ type Code struct {
 	Content string
 }
 
-var NodeTypeCode = NewNodeType("Code")
-
 func (*Code) Type() NodeType {
-	return NodeTypeCode
-}
-
-func (n *Code) String() string {
-	return n.Type().String() + " " + n.Content
+	return CodeNode
 }
 
 type Image struct {
@@ -97,14 +67,8 @@ type Image struct {
 	URL     string
 }
 
-var NodeTypeImage = NewNodeType("Image")
-
 func (*Image) Type() NodeType {
-	return NodeTypeImage
-}
-
-func (n *Image) String() string {
-	return n.Type().String() + " " + n.AltText + " " + n.URL
+	return ImageNode
 }
 
 type Link struct {
@@ -114,14 +78,8 @@ type Link struct {
 	URL  string
 }
 
-var NodeTypeLink = NewNodeType("Link")
-
 func (*Link) Type() NodeType {
-	return NodeTypeLink
-}
-
-func (n *Link) String() string {
-	return n.Type().String() + " " + n.Text + " " + n.URL
+	return LinkNode
 }
 
 type Tag struct {
@@ -130,14 +88,8 @@ type Tag struct {
 	Content string
 }
 
-var NodeTypeTag = NewNodeType("Tag")
-
 func (*Tag) Type() NodeType {
-	return NodeTypeTag
-}
-
-func (n *Tag) String() string {
-	return n.Type().String() + " " + n.Content
+	return TagNode
 }
 
 type Strikethrough struct {
@@ -146,12 +98,16 @@ type Strikethrough struct {
 	Content string
 }
 
-var NodeTypeStrikethrough = NewNodeType("Strikethrough")
-
 func (*Strikethrough) Type() NodeType {
-	return NodeTypeStrikethrough
+	return StrikethroughNode
 }
 
-func (n *Strikethrough) String() string {
-	return n.Type().String() + " " + n.Content
+type EscapingCharacter struct {
+	BaseInline
+
+	Symbol string
+}
+
+func (*EscapingCharacter) Type() NodeType {
+	return EscapingCharacterNode
 }

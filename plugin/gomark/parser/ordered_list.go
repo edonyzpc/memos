@@ -7,38 +7,42 @@ import (
 	"github.com/usememos/memos/plugin/gomark/parser/tokenizer"
 )
 
-type ParagraphParser struct {
-	ContentTokens []*tokenizer.Token
+type OrderedListParser struct{}
+
+func NewOrderedListParser() *OrderedListParser {
+	return &OrderedListParser{}
 }
 
-func NewParagraphParser() *ParagraphParser {
-	return &ParagraphParser{}
-}
+func (*OrderedListParser) Match(tokens []*tokenizer.Token) (int, bool) {
+	if len(tokens) < 4 {
+		return 0, false
+	}
+	if tokens[0].Type != tokenizer.Number || tokens[1].Type != tokenizer.Dot || tokens[2].Type != tokenizer.Space {
+		return 0, false
+	}
 
-func (*ParagraphParser) Match(tokens []*tokenizer.Token) (int, bool) {
 	contentTokens := []*tokenizer.Token{}
-	for _, token := range tokens {
+	for _, token := range tokens[3:] {
 		contentTokens = append(contentTokens, token)
 		if token.Type == tokenizer.Newline {
 			break
 		}
 	}
+
 	if len(contentTokens) == 0 {
 		return 0, false
 	}
-	if len(contentTokens) == 1 && contentTokens[0].Type == tokenizer.Newline {
-		return 0, false
-	}
-	return len(contentTokens), true
+
+	return len(contentTokens) + 3, true
 }
 
-func (p *ParagraphParser) Parse(tokens []*tokenizer.Token) (ast.Node, error) {
+func (p *OrderedListParser) Parse(tokens []*tokenizer.Token) (ast.Node, error) {
 	size, ok := p.Match(tokens)
 	if size == 0 || !ok {
 		return nil, errors.New("not matched")
 	}
 
-	contentTokens := tokens[:size]
+	contentTokens := tokens[3:size]
 	if contentTokens[len(contentTokens)-1].Type == tokenizer.Newline {
 		contentTokens = contentTokens[:len(contentTokens)-1]
 	}
@@ -46,7 +50,8 @@ func (p *ParagraphParser) Parse(tokens []*tokenizer.Token) (ast.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ast.Paragraph{
+	return &ast.OrderedList{
+		Number:   tokens[0].Value,
 		Children: children,
 	}, nil
 }

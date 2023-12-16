@@ -1,5 +1,5 @@
 # Build frontend dist.
-FROM node:18-alpine AS frontend
+FROM node:20-alpine AS frontend
 WORKDIR /frontend-build
 
 COPY . .
@@ -15,7 +15,7 @@ FROM golang:1.21-alpine AS backend
 WORKDIR /backend-build
 
 COPY . .
-COPY --from=frontend /frontend-build/web/dist ./server/dist
+COPY --from=frontend /frontend-build/web/dist ./server/frontend/dist
 
 RUN CGO_ENABLED=0 go build -o memos ./bin/memos/main.go
 
