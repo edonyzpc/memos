@@ -47,16 +47,16 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 	}
 	if v := find.ContentSearch; len(v) != 0 {
 		for _, s := range v {
-			where, args = append(where, "memo.content LIKE ?"), append(args, "%"+s+"%")
+			where, args = append(where, "memo.content LIKE ?"), append(args, fmt.Sprintf("%%%s%%", s))
 		}
 	}
 	if v := find.VisibilityList; len(v) != 0 {
-		list := []string{}
+		placeholder := []string{}
 		for _, visibility := range v {
-			list = append(list, fmt.Sprintf("$%d", len(args)+1))
-			args = append(args, visibility)
+			placeholder = append(placeholder, "?")
+			args = append(args, visibility.String())
 		}
-		where = append(where, fmt.Sprintf("memo.visibility in (%s)", strings.Join(list, ",")))
+		where = append(where, fmt.Sprintf("memo.visibility in (%s)", strings.Join(placeholder, ",")))
 	}
 	if v := find.Pinned; v != nil {
 		where = append(where, "memo_organizer.pinned = 1")
@@ -152,11 +152,7 @@ func (d *DB) UpdateMemo(ctx context.Context, update *store.UpdateMemo) error {
 	}
 	args = append(args, update.ID)
 
-	stmt := `
-		UPDATE memo
-		SET ` + strings.Join(set, ", ") + `
-		WHERE id = ?
-	`
+	stmt := `UPDATE memo SET ` + strings.Join(set, ", ") + ` WHERE id = ?`
 	if _, err := d.db.ExecContext(ctx, stmt, args...); err != nil {
 		return err
 	}

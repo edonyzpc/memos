@@ -3,52 +3,56 @@ import copy from "copy-to-clipboard";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useParams } from "react-router-dom";
-import FloatingNavButton from "@/components/FloatingNavButton";
 import Icon from "@/components/Icon";
-import Memo from "@/components/Memo";
 import MemoContent from "@/components/MemoContent";
 import MemoEditor from "@/components/MemoEditor";
 import showMemoEditorDialog from "@/components/MemoEditor/MemoEditorDialog";
 import MemoRelationListView from "@/components/MemoRelationListView";
 import MemoResourceListView from "@/components/MemoResourceListView";
+import MemoView from "@/components/MemoView";
+import MobileHeader from "@/components/MobileHeader";
 import showShareMemoDialog from "@/components/ShareMemoDialog";
 import UserAvatar from "@/components/UserAvatar";
 import VisibilityIcon from "@/components/VisibilityIcon";
-import { UNKNOWN_ID, VISIBILITY_SELECTOR_ITEMS } from "@/helpers/consts";
+import { UNKNOWN_ID } from "@/helpers/consts";
 import { getDateTimeString } from "@/helpers/datetime";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useNavigateTo from "@/hooks/useNavigateTo";
-import { useGlobalStore, useMemoStore } from "@/store/module";
-import { useUserV1Store, extractUsernameFromName } from "@/store/v1";
-import { User, User_Role } from "@/types/proto/api/v2/user_service";
+import { useUserV1Store, useMemoV1Store, extractUsernameFromName } from "@/store/v1";
+import { MemoRelation, MemoRelation_Type } from "@/types/proto/api/v2/memo_relation_service";
+import { Memo, Visibility } from "@/types/proto/api/v2/memo_service";
+import { Resource } from "@/types/proto/api/v2/resource_service";
+import { User } from "@/types/proto/api/v2/user_service";
 import { useTranslate } from "@/utils/i18n";
+import { convertVisibilityToString } from "@/utils/memo";
 
 const MemoDetail = () => {
   const t = useTranslate();
   const params = useParams();
   const navigateTo = useNavigateTo();
   const currentUser = useCurrentUser();
-  const globalStore = useGlobalStore();
-  const memoStore = useMemoStore();
+  const memoStore = useMemoV1Store();
   const userV1Store = useUserV1Store();
   const [creator, setCreator] = useState<User>();
-  const { systemStatus } = globalStore.state;
   const memoId = Number(params.memoId);
-  const memo = memoStore.state.memos.find((memo) => memo.id === memoId);
-  const allowEdit = memo?.creatorUsername === extractUsernameFromName(currentUser?.name);
-  const referenceRelations = memo?.relationList.filter((relation) => relation.type === "REFERENCE") || [];
-  const commentRelations = memo?.relationList.filter((relation) => relation.relatedMemoId === memo.id && relation.type === "COMMENT") || [];
-  const comments = commentRelations
-    .map((relation) => memoStore.state.memos.find((memo) => memo.id === relation.memoId))
-    .filter((memo) => memo) as Memo[];
+  const memo = memoStore.getMemoById(memoId);
+  const allowEdit = memo?.creatorId === currentUser.id;
+  const [parentMemo, setParentMemo] = useState<Memo | undefined>(undefined);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [memoRelations, setMemoRelations] = useState<MemoRelation[]>([]);
+  const referenceRelations = memoRelations.filter((relation) => relation.type === MemoRelation_Type.REFERENCE);
+  const commentRelations = memoRelations.filter(
+    (relation) => relation.relatedMemoId === memo?.id && relation.type === MemoRelation_Type.COMMENT
+  );
+  const comments = commentRelations.map((relation) => memoStore.getMemoById(relation.memoId)).filter((memo) => memo) as any as Memo[];
 
   // Prepare memo.
   useEffect(() => {
     if (memoId && !isNaN(memoId)) {
       memoStore
-        .fetchMemoById(memoId)
+        .getOrFetchMemoById(memoId)
         .then(async (memo) => {
-          const user = await userV1Store.getOrFetchUserByUsername(memo.creatorUsername);
+          const user = await userV1Store.getOrFetchUserByUsername(extractUsernameFromName(memo.creator));
           setCreator(user);
         })
         .catch((error) => {
@@ -67,22 +71,38 @@ const MemoDetail = () => {
     }
 
     (async () => {
-      const commentRelations = memo.relationList.filter((relation) => relation.relatedMemoId === memo.id && relation.type === "COMMENT");
-      const requests = commentRelations.map((relation) => memoStore.fetchMemoById(relation.memoId));
+      const resources = await memoStore.fetchMemoResources(memo.id);
+      setResources(resources);
+      const memoRelations = await memoStore.fetchMemoRelations(memo.id);
+      const commentRelations = memoRelations.filter(
+        (relation) => relation.relatedMemoId === memo.id && relation.type === MemoRelation_Type.COMMENT
+      );
+      const parentMemoId = memoRelations.find(
+        (relation) => relation.memoId === memo.id && relation.type === MemoRelation_Type.COMMENT
+      )?.relatedMemoId;
+      if (parentMemoId) {
+        memoStore.getOrFetchMemoById(parentMemoId).then((memo: Memo) => {
+          setParentMemo(memo);
+        });
+      }
+      const requests = commentRelations.map((relation) => memoStore.getOrFetchMemoById(relation.memoId));
       await Promise.all(requests);
+      setMemoRelations(memoRelations);
     })();
-  }, [memo?.relationList]);
+  }, [memo]);
 
   if (!memo) {
     return null;
   }
 
-  const handleMemoVisibilityOptionChanged = async (value: string) => {
-    const visibilityValue = value as Visibility;
-    await memoStore.patchMemo({
-      id: memo.id,
-      visibility: visibilityValue,
-    });
+  const handleMemoVisibilityOptionChanged = async (visibility: Visibility) => {
+    await memoStore.updateMemo(
+      {
+        id: memo.id,
+        visibility: visibility,
+      },
+      ["visibility"]
+    );
   };
 
   const handleEditMemoClick = () => {
@@ -96,109 +116,94 @@ const MemoDetail = () => {
     toast.success(t("message.succeed-copy-link"));
   };
 
-  const handleCommentCreated = async () => {
-    await memoStore.fetchMemoById(memoId);
-  };
-
-  const disableOption = (v: string) => {
-    const isAdminOrHost = currentUser?.role === User_Role.ADMIN || currentUser?.role === User_Role.HOST;
-
-    if (v === "PUBLIC" && !isAdminOrHost) {
-      return systemStatus.disablePublicMemos;
-    }
-    return false;
+  const handleCommentCreated = async (commentId: number) => {
+    await memoStore.getOrFetchMemoById(commentId);
+    setMemoRelations(await memoStore.fetchMemoRelations(memo.id));
   };
 
   return (
-    <>
-      <section className="relative top-0 w-full min-h-full overflow-x-hidden bg-zinc-100 dark:bg-zinc-900">
-        <div className="relative w-full h-auto mx-auto flex flex-col justify-start items-center bg-white dark:bg-zinc-700">
-          <div className="w-full flex flex-col justify-start items-center pt-16 pb-8">
-            <a href="/">
-              <UserAvatar className="!w-20 !h-20 mb-2 drop-shadow" avatarUrl={systemStatus.customizedProfile.logoUrl} />
-            </a>
-            <p className="text-3xl text-black opacity-80 dark:text-gray-200">{systemStatus.customizedProfile.name}</p>
-          </div>
-          <div className="relative flex-grow max-w-2xl w-full min-h-full flex flex-col justify-start items-start px-4 pb-6">
-            {memo.parent && (
-              <div className="w-auto mb-4">
-                <Link
-                  className="px-3 py-1 border rounded-full max-w-xs w-auto text-sm flex flex-row justify-start items-center flex-nowrap text-gray-600 dark:text-gray-400 dark:border-gray-500 hover:shadow hover:opacity-80"
-                  to={`/m/${memo.parent.id}`}
-                >
-                  <Icon.ArrowUpLeftFromCircle className="w-4 h-auto shrink-0 opacity-60" />
-                  <span className="mx-1 opacity-60">#{memo.parent.id}</span>
-                  <span className="truncate">{memo.parent.content}</span>
-                </Link>
-              </div>
-            )}
-            <div className="w-full mb-4 flex flex-row justify-start items-center mr-1">
-              <span className="text-gray-400 select-none">{getDateTimeString(memo.displayTs)}</span>
+    <section className="@container w-full max-w-5xl min-h-full flex flex-col justify-start items-center sm:pt-3 md:pt-6 pb-8">
+      <MobileHeader />
+      <div className="w-full px-4 sm:px-6">
+        <div className="relative flex-grow w-full min-h-full flex flex-col justify-start items-start border dark:border-zinc-700 bg-white dark:bg-zinc-700 shadow hover:shadow-xl transition-all p-4 pb-3 rounded-lg">
+          {parentMemo && (
+            <div className="w-auto mb-2">
+              <Link
+                className="px-3 py-1 border rounded-full max-w-xs w-auto text-sm flex flex-row justify-start items-center flex-nowrap text-gray-600 dark:text-gray-400 dark:border-gray-500 hover:shadow hover:opacity-80"
+                to={`/m/${parentMemo.id}`}
+              >
+                <Icon.ArrowUpLeftFromCircle className="w-4 h-auto shrink-0 opacity-60" />
+                <span className="mx-1 opacity-60">#{parentMemo.id}</span>
+                <span className="truncate">{parentMemo.content}</span>
+              </Link>
             </div>
-            <MemoContent content={memo.content} />
-            <MemoResourceListView resourceList={memo.resourceList} />
-            <MemoRelationListView memo={memo} relationList={referenceRelations} />
-            <div className="w-full mt-4 flex flex-col sm:flex-row justify-start sm:justify-between sm:items-center gap-2">
-              <div className="flex flex-row justify-start items-center">
-                <Tooltip title={"Identifier"} placement="top">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">#{memo.id}</span>
+          )}
+          <div className="w-full mb-2 flex flex-row justify-start items-center">
+            <span className="text-gray-400 select-none">{getDateTimeString(memo.displayTime)}</span>
+          </div>
+          <MemoContent content={memo.content} />
+          <MemoResourceListView resourceList={resources} />
+          <MemoRelationListView memo={memo} relationList={referenceRelations} />
+          <div className="w-full mt-4 flex flex-col sm:flex-row justify-start sm:justify-between sm:items-center gap-2">
+            <div className="flex flex-row justify-start items-center">
+              <Tooltip title={"Identifier"} placement="top">
+                <span className="text-sm text-gray-500 dark:text-gray-400">#{memo.id}</span>
+              </Tooltip>
+              <Icon.Dot className="w-4 h-auto text-gray-400 dark:text-zinc-400" />
+              <Link to={`/u/${encodeURIComponent(memo.creator)}`}>
+                <Tooltip title={"Creator"} placement="top">
+                  <span className="flex flex-row justify-start items-center">
+                    <UserAvatar className="!w-5 !h-5 mr-1" avatarUrl={creator?.avatarUrl} />
+                    <span className="text-sm text-gray-600 max-w-[8em] truncate dark:text-gray-400">{creator?.nickname}</span>
+                  </span>
                 </Tooltip>
-                <Icon.Dot className="w-4 h-auto text-gray-400 dark:text-zinc-400" />
-                <Link to={`/u/${encodeURIComponent(memo.creatorUsername)}`}>
-                  <Tooltip title={"Creator"} placement="top">
-                    <span className="flex flex-row justify-start items-center">
-                      <UserAvatar className="!w-5 !h-5 mr-1" avatarUrl={creator?.avatarUrl} />
-                      <span className="text-sm text-gray-600 max-w-[8em] truncate dark:text-gray-400">{creator?.nickname}</span>
-                    </span>
-                  </Tooltip>
-                </Link>
-                {allowEdit && (
-                  <>
-                    <Icon.Dot className="w-4 h-auto text-gray-400 dark:text-zinc-400" />
-                    <Select
-                      className="w-auto text-sm"
-                      variant="plain"
-                      value={memo.visibility}
-                      startDecorator={<VisibilityIcon visibility={memo.visibility} />}
-                      onChange={(_, visibility) => {
-                        if (visibility) {
-                          handleMemoVisibilityOptionChanged(visibility);
-                        }
-                      }}
-                    >
-                      {VISIBILITY_SELECTOR_ITEMS.map((item) => (
-                        <Option key={item} value={item} className="whitespace-nowrap" disabled={disableOption(item)}>
-                          {t(`memo.visibility.${item.toLowerCase() as Lowercase<typeof item>}`)}
-                        </Option>
-                      ))}
-                    </Select>
-                  </>
-                )}
-              </div>
-              <div className="flex flex-row sm:justify-end items-center">
-                {allowEdit && (
-                  <Tooltip title={"Edit"} placement="top">
-                    <IconButton size="sm" onClick={handleEditMemoClick}>
-                      <Icon.Edit3 className="w-4 h-auto text-gray-600 dark:text-gray-400" />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                <Tooltip title={"Copy link"} placement="top">
-                  <IconButton size="sm" onClick={handleCopyLinkBtnClick}>
-                    <Icon.Link className="w-4 h-auto text-gray-600 dark:text-gray-400" />
+              </Link>
+              {allowEdit && (
+                <>
+                  <Icon.Dot className="w-4 h-auto text-gray-400 dark:text-zinc-400" />
+                  <Select
+                    className="w-auto text-sm"
+                    variant="plain"
+                    value={memo.visibility}
+                    startDecorator={<VisibilityIcon visibility={memo.visibility} />}
+                    onChange={(_, visibility) => {
+                      if (visibility) {
+                        handleMemoVisibilityOptionChanged(visibility);
+                      }
+                    }}
+                  >
+                    {[Visibility.PRIVATE, Visibility.PROTECTED, Visibility.PUBLIC].map((item) => (
+                      <Option key={item} value={item} className="whitespace-nowrap">
+                        {t(`memo.visibility.${convertVisibilityToString(item).toLowerCase()}` as any)}
+                      </Option>
+                    ))}
+                  </Select>
+                </>
+              )}
+            </div>
+            <div className="flex flex-row sm:justify-end items-center">
+              {allowEdit && (
+                <Tooltip title={"Edit"} placement="top">
+                  <IconButton size="sm" onClick={handleEditMemoClick}>
+                    <Icon.Edit3 className="w-4 h-auto text-gray-600 dark:text-gray-400" />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title={"Share"} placement="top">
-                  <IconButton size="sm" onClick={() => showShareMemoDialog(memo)}>
-                    <Icon.Share className="w-4 h-auto text-gray-600 dark:text-gray-400" />
-                  </IconButton>
-                </Tooltip>
-              </div>
+              )}
+              <Tooltip title={"Copy link"} placement="top">
+                <IconButton size="sm" onClick={handleCopyLinkBtnClick}>
+                  <Icon.Link className="w-4 h-auto text-gray-600 dark:text-gray-400" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={"Share"} placement="top">
+                <IconButton size="sm" onClick={() => showShareMemoDialog(memo)}>
+                  <Icon.Share className="w-4 h-auto text-gray-600 dark:text-gray-400" />
+                </IconButton>
+              </Tooltip>
             </div>
           </div>
         </div>
-        <div className="pt-8 pb-16 w-full border-t dark:border-t-zinc-700">
-          <div className="relative mx-auto flex-grow max-w-2xl w-full min-h-full flex flex-col justify-start items-start px-4 gap-y-1">
+        <div className="pt-8 pb-16 w-full">
+          <div className="relative mx-auto flex-grow w-full min-h-full flex flex-col justify-start items-start gap-y-1">
             {comments.length === 0 ? (
               <div className="w-full flex flex-col justify-center items-center py-6 mb-2">
                 <Icon.MessageCircle strokeWidth={1} className="w-8 h-auto text-gray-400" />
@@ -212,7 +217,7 @@ const MemoDetail = () => {
                   <span className="text-gray-400 text-sm ml-0.5">({comments.length})</span>
                 </div>
                 {comments.map((comment) => (
-                  <Memo key={comment.id} memo={comment} showCreator />
+                  <MemoView key={comment.id} memo={comment} showCreator />
                 ))}
               </>
             )}
@@ -222,16 +227,14 @@ const MemoDetail = () => {
               <MemoEditor
                 key={memo.id}
                 cacheKey={`comment-editor-${memo.id}`}
-                relationList={[{ memoId: UNKNOWN_ID, relatedMemoId: memo.id, type: "COMMENT" }]}
+                relationList={[{ memoId: UNKNOWN_ID, relatedMemoId: memo.id, type: MemoRelation_Type.COMMENT }]}
                 onConfirm={handleCommentCreated}
               />
             )}
           </div>
         </div>
-      </section>
-
-      <FloatingNavButton />
-    </>
+      </div>
+    </section>
   );
 };
 

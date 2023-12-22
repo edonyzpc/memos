@@ -43,11 +43,11 @@ const Navigation = () => {
     title: t("common.home"),
     icon: <Icon.Home className="mr-3 w-6 h-auto opacity-70" />,
   };
-  const dailyReviewNavLink: NavLinkItem = {
-    id: "header-daily-review",
-    path: "/review",
-    title: t("daily-review.title"),
-    icon: <Icon.Calendar className="mr-3 w-6 h-auto opacity-70" />,
+  const timelineNavLink: NavLinkItem = {
+    id: "header-timeline",
+    path: "/timeline",
+    title: t("timeline.title"),
+    icon: <Icon.GanttChartSquare className="mr-3 w-6 h-auto opacity-70" />,
   };
   const resourcesNavLink: NavLinkItem = {
     id: "header-resources",
@@ -72,7 +72,7 @@ const Navigation = () => {
     id: "header-explore",
     path: "/explore",
     title: t("common.explore"),
-    icon: <Icon.Hash className="mr-3 w-6 h-auto opacity-70" />,
+    icon: <Icon.Globe2 className="mr-3 w-6 h-auto opacity-70" />,
   };
   const archivedNavLink: NavLinkItem = {
     id: "header-archived",
@@ -94,13 +94,13 @@ const Navigation = () => {
   };
 
   const navLinks: NavLinkItem[] = user
-    ? [homeNavLink, dailyReviewNavLink, resourcesNavLink, exploreNavLink, inboxNavLink, archivedNavLink, settingNavLink]
+    ? [homeNavLink, timelineNavLink, resourcesNavLink, exploreNavLink, inboxNavLink, archivedNavLink, settingNavLink]
     : [exploreNavLink, signInNavLink];
 
   return (
-    <header className="w-full h-full overflow-auto flex flex-col justify-start items-start py-4 z-30">
+    <header className="w-full h-full overflow-auto flex flex-col justify-start items-start py-4 md:pt-6 z-30">
       <UserBanner />
-      <div className="w-full px-2 py-2 flex flex-col justify-start items-start shrink-0 space-y-2">
+      <div className="w-full px-1 py-2 flex flex-col justify-start items-start shrink-0 space-y-2">
         {navLinks.map((navLink) => (
           <NavLink
             key={navLink.id}
@@ -108,7 +108,7 @@ const Navigation = () => {
             id={navLink.id}
             className={({ isActive }) =>
               classNames(
-                "px-4 pr-5 py-2 rounded-2xl border flex flex-row items-center text-lg text-gray-800 dark:text-gray-300 hover:bg-white hover:border-gray-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700",
+                "w-full px-4 pr-5 py-2 rounded-2xl border flex flex-row items-center text-lg text-gray-800 dark:text-gray-300 hover:bg-white hover:border-gray-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700",
                 isActive ? "bg-white drop-shadow-sm dark:bg-zinc-700 border-gray-200 dark:border-zinc-600" : "border-transparent"
               )
             }

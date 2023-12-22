@@ -1,14 +1,15 @@
 import { Button } from "@mui/joy";
 import copy from "copy-to-clipboard";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
-import { getDateTimeString } from "@/helpers/datetime";
+import { getDateTimeString, getTimeString } from "@/helpers/datetime";
 import useLoading from "@/hooks/useLoading";
 import toImage from "@/labs/html2image";
-import { useUserV1Store, extractUsernameFromName } from "@/store/v1";
+import { useUserV1Store, extractUsernameFromName, useMemoV1Store } from "@/store/v1";
+import { Memo } from "@/types/proto/api/v2/memo_service";
+import { Resource } from "@/types/proto/api/v2/resource_service";
 import { useTranslate } from "@/utils/i18n";
 import { generateDialog } from "./Dialog";
-import showEmbedMemoDialog from "./EmbedMemoDialog";
 import Icon from "./Icon";
 import MemoContent from "./MemoContent";
 import MemoResourceListView from "./MemoResourceListView";
@@ -20,21 +21,20 @@ interface Props extends DialogProps {
 }
 
 const ShareMemoDialog: React.FC<Props> = (props: Props) => {
-  const { memo: propsMemo, destroy } = props;
+  const { memo, destroy } = props;
   const t = useTranslate();
   const userV1Store = useUserV1Store();
+  const memoStore = useMemoV1Store();
   const downloadingImageState = useLoading(false);
   const loadingState = useLoading();
   const memoElRef = useRef<HTMLDivElement>(null);
-  const memo = {
-    ...propsMemo,
-    displayTsStr: getDateTimeString(propsMemo.displayTs),
-  };
-  const user = userV1Store.getUserByUsername(memo.creatorUsername);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const user = userV1Store.getUserByUsername(extractUsernameFromName(memo.creator));
 
   useEffect(() => {
     (async () => {
-      await userV1Store.getOrFetchUserByUsername(memo.creatorUsername);
+      setResources(await memoStore.fetchMemoResources(memo.id));
+      await userV1Store.getOrFetchUserByUsername(extractUsernameFromName(memo.creator));
       loadingState.setFinish();
     })();
   }, []);
@@ -65,10 +65,6 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
       });
   };
 
-  const handleShowEmbedMemoDialog = () => {
-    showEmbedMemoDialog(memo.id);
-  };
-
   const handleCopyLinkBtnClick = () => {
     copy(`${window.location.origin}/m/${memo.id}`);
     toast.success(t("message.succeed-copy-link"));
@@ -96,10 +92,6 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
             )}
             {t("common.image")}
           </Button>
-          <Button color="neutral" variant="outlined" onClick={handleShowEmbedMemoDialog}>
-            <Icon.Code className="w-4 h-auto mr-1" />
-            {t("memo.embed")}
-          </Button>
           <Button color="neutral" variant="outlined" onClick={handleCopyLinkBtnClick}>
             <Icon.Link className="w-4 h-auto mr-1" />
             {t("common.link")}
@@ -110,10 +102,10 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
             className="w-full h-auto select-none relative flex flex-col justify-start items-start bg-white dark:bg-zinc-800"
             ref={memoElRef}
           >
-            <span className="w-full px-6 pt-5 pb-2 text-sm text-gray-500">{memo.displayTsStr}</span>
+            <span className="w-full px-6 pt-5 pb-2 text-sm text-gray-500">{getTimeString(memo.displayTime)}</span>
             <div className="w-full px-6 text-base pb-4">
               <MemoContent content={memo.content} />
-              <MemoResourceListView resourceList={memo.resourceList} />
+              <MemoResourceListView resourceList={resources} />
             </div>
             <div className="flex flex-row justify-between items-center w-full bg-gray-100 dark:bg-zinc-700 py-4 px-6">
               <div className="flex flex-row justify-start items-center">

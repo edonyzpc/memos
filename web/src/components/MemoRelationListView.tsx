@@ -1,7 +1,9 @@
 import { Tooltip } from "@mui/joy";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useMemoCacheStore } from "@/store/v1";
+import { useMemoV1Store } from "@/store/v1";
+import { MemoRelation } from "@/types/proto/api/v2/memo_relation_service";
+import { Memo } from "@/types/proto/api/v2/memo_service";
 import Icon from "./Icon";
 
 interface Props {
@@ -11,7 +13,7 @@ interface Props {
 
 const MemoRelationListView = (props: Props) => {
   const { memo, relationList } = props;
-  const memoCacheStore = useMemoCacheStore();
+  const memoStore = useMemoV1Store();
   const [referencingMemoList, setReferencingMemoList] = useState<Memo[]>([]);
   const [referencedMemoList, setReferencedMemoList] = useState<Memo[]>([]);
 
@@ -20,13 +22,13 @@ const MemoRelationListView = (props: Props) => {
       const referencingMemoList = await Promise.all(
         relationList
           .filter((relation) => relation.memoId === memo.id && relation.relatedMemoId !== memo.id)
-          .map((relation) => memoCacheStore.getOrFetchMemoById(relation.relatedMemoId))
+          .map((relation) => memoStore.getOrFetchMemoById(relation.relatedMemoId))
       );
       setReferencingMemoList(referencingMemoList);
       const referencedMemoList = await Promise.all(
         relationList
           .filter((relation) => relation.memoId !== memo.id && relation.relatedMemoId === memo.id)
-          .map((relation) => memoCacheStore.getOrFetchMemoById(relation.memoId))
+          .map((relation) => memoStore.getOrFetchMemoById(relation.memoId))
       );
       setReferencedMemoList(referencedMemoList);
     })();
