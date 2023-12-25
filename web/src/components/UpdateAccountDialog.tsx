@@ -1,9 +1,10 @@
+import { Button } from "@mui/joy";
 import { isEqual } from "lodash-es";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { convertFileToBase64 } from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { UserNamePrefix, useUserV1Store } from "@/store/v1";
+import { UserNamePrefix, useUserStore } from "@/store/v1";
 import { User as UserPb } from "@/types/proto/api/v2/user_service";
 import { useTranslate } from "@/utils/i18n";
 import { generateDialog } from "./Dialog";
@@ -22,7 +23,7 @@ interface State {
 const UpdateAccountDialog: React.FC<Props> = ({ destroy }: Props) => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
-  const userV1Store = useUserV1Store();
+  const userStore = useUserStore();
   const [state, setState] = useState<State>({
     avatarUrl: currentUser.avatarUrl,
     username: currentUser.name.replace(UserNamePrefix, ""),
@@ -108,10 +109,10 @@ const UpdateAccountDialog: React.FC<Props> = ({ destroy }: Props) => {
       if (!isEqual(currentUser.email, state.email)) {
         updateMask.push("email");
       }
-      await userV1Store.updateUser(
+      await userStore.updateUser(
         UserPb.fromPartial({
-          name: `${UserNamePrefix}${state.username}`,
-          id: currentUser.id,
+          name: currentUser.name,
+          username: state.username,
           nickname: state.nickname,
           email: state.email,
           avatarUrl: state.avatarUrl,
@@ -167,13 +168,13 @@ const UpdateAccountDialog: React.FC<Props> = ({ destroy }: Props) => {
           <span className="text-sm text-gray-400 ml-1">{t("setting.account-section.email-note")}</span>
         </p>
         <input type="text" className="input-text" value={state.email} onChange={handleEmailChanged} />
-        <div className="pt-2 w-full flex flex-row justify-end items-center space-x-2">
-          <span className="btn-text" onClick={handleCloseBtnClick}>
+        <div className="w-full flex flex-row justify-end items-center pt-4 space-x-2">
+          <Button color="neutral" variant="plain" onClick={handleCloseBtnClick}>
             {t("common.cancel")}
-          </span>
-          <span className="btn-primary" onClick={handleSaveBtnClick}>
+          </Button>
+          <Button color="primary" onClick={handleSaveBtnClick}>
             {t("common.save")}
-          </span>
+          </Button>
         </div>
       </div>
     </>

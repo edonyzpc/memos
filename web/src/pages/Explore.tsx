@@ -7,17 +7,17 @@ import { DEFAULT_MEMO_LIMIT } from "@/helpers/consts";
 import { getTimeStampByDate } from "@/helpers/datetime";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useFilterStore } from "@/store/module";
-import { useMemoList, useMemoV1Store } from "@/store/v1";
+import { useMemoList, useMemoStore } from "@/store/v1";
 import { useTranslate } from "@/utils/i18n";
 
 const Explore = () => {
   const t = useTranslate();
   const user = useCurrentUser();
   const filterStore = useFilterStore();
-  const memoStore = useMemoV1Store();
+  const memoStore = useMemoStore();
   const memoList = useMemoList();
+  const [isRequesting, setIsRequesting] = useState(true);
   const [isComplete, setIsComplete] = useState(false);
-  const [isRequesting, setIsRequesting] = useState(false);
   const { tag: tagQuery, text: textQuery } = filterStore.state;
   const sortedMemos = memoList.value.sort((a, b) => getTimeStampByDate(b.displayTime) - getTimeStampByDate(a.displayTime));
 
@@ -54,7 +54,7 @@ const Explore = () => {
       <div className="relative w-full h-auto flex flex-col justify-start items-start px-4 sm:px-6">
         <MemoFilter />
         {sortedMemos.map((memo) => (
-          <MemoView key={memo.id} memo={memo} lazyRendering showCreator showParent />
+          <MemoView key={memo.id} memo={memo} showCreator showParent />
         ))}
 
         {isRequesting ? (

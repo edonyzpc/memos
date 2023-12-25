@@ -31,6 +31,8 @@
     - [GetUserSettingResponse](#memos-api-v2-GetUserSettingResponse)
     - [ListUserAccessTokensRequest](#memos-api-v2-ListUserAccessTokensRequest)
     - [ListUserAccessTokensResponse](#memos-api-v2-ListUserAccessTokensResponse)
+    - [ListUsersRequest](#memos-api-v2-ListUsersRequest)
+    - [ListUsersResponse](#memos-api-v2-ListUsersResponse)
     - [UpdateUserRequest](#memos-api-v2-UpdateUserRequest)
     - [UpdateUserResponse](#memos-api-v2-UpdateUserResponse)
     - [UpdateUserSettingRequest](#memos-api-v2-UpdateUserSettingRequest)
@@ -118,6 +120,9 @@
     - [DeleteMemoResponse](#memos-api-v2-DeleteMemoResponse)
     - [GetMemoRequest](#memos-api-v2-GetMemoRequest)
     - [GetMemoResponse](#memos-api-v2-GetMemoResponse)
+    - [GetUserMemosStatsRequest](#memos-api-v2-GetUserMemosStatsRequest)
+    - [GetUserMemosStatsResponse](#memos-api-v2-GetUserMemosStatsResponse)
+    - [GetUserMemosStatsResponse.MemoCreationStatsEntry](#memos-api-v2-GetUserMemosStatsResponse-MemoCreationStatsEntry)
     - [ListMemoCommentsRequest](#memos-api-v2-ListMemoCommentsRequest)
     - [ListMemoCommentsResponse](#memos-api-v2-ListMemoCommentsResponse)
     - [ListMemoRelationsRequest](#memos-api-v2-ListMemoRelationsRequest)
@@ -541,6 +546,31 @@
 
 
 
+<a name="memos-api-v2-ListUsersRequest"></a>
+
+### ListUsersRequest
+
+
+
+
+
+
+
+<a name="memos-api-v2-ListUsersResponse"></a>
+
+### ListUsersResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| users | [User](#memos-api-v2-User) | repeated |  |
+
+
+
+
+
+
 <a name="memos-api-v2-UpdateUserRequest"></a>
 
 ### UpdateUserRequest
@@ -614,6 +644,7 @@
 | name | [string](#string) |  | The name of the user. Format: users/{username} |
 | id | [int32](#int32) |  |  |
 | role | [User.Role](#memos-api-v2-User-Role) |  |  |
+| username | [string](#string) |  |  |
 | email | [string](#string) |  |  |
 | nickname | [string](#string) |  |  |
 | avatar_url | [string](#string) |  |  |
@@ -691,6 +722,7 @@
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
+| ListUsers | [ListUsersRequest](#memos-api-v2-ListUsersRequest) | [ListUsersResponse](#memos-api-v2-ListUsersResponse) | ListUsers returns a list of users. |
 | GetUser | [GetUserRequest](#memos-api-v2-GetUserRequest) | [GetUserResponse](#memos-api-v2-GetUserResponse) | GetUser gets a user by name. |
 | CreateUser | [CreateUserRequest](#memos-api-v2-CreateUserRequest) | [CreateUserResponse](#memos-api-v2-CreateUserResponse) | CreateUser creates a new user. |
 | UpdateUser | [UpdateUserRequest](#memos-api-v2-UpdateUserRequest) | [UpdateUserResponse](#memos-api-v2-UpdateUserResponse) | UpdateUser updates a user. |
@@ -1662,6 +1694,52 @@
 
 
 
+<a name="memos-api-v2-GetUserMemosStatsRequest"></a>
+
+### GetUserMemosStatsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | name is the name of the user to get stats for. Format: users/{username} |
+
+
+
+
+
+
+<a name="memos-api-v2-GetUserMemosStatsResponse"></a>
+
+### GetUserMemosStatsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| memo_creation_stats | [GetUserMemosStatsResponse.MemoCreationStatsEntry](#memos-api-v2-GetUserMemosStatsResponse-MemoCreationStatsEntry) | repeated | memo_creation_stats is the stats of memo creation. key is the year-month-day string. e.g. &#34;2020-01-01&#34;. value is the count of memos created. |
+
+
+
+
+
+
+<a name="memos-api-v2-GetUserMemosStatsResponse-MemoCreationStatsEntry"></a>
+
+### GetUserMemosStatsResponse.MemoCreationStatsEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [string](#string) |  |  |
+| value | [int32](#int32) |  |  |
+
+
+
+
+
+
 <a name="memos-api-v2-ListMemoCommentsRequest"></a>
 
 ### ListMemoCommentsRequest
@@ -1803,6 +1881,8 @@
 | nodes | [Node](#memos-api-v2-Node) | repeated |  |
 | visibility | [Visibility](#memos-api-v2-Visibility) |  |  |
 | pinned | [bool](#bool) |  |  |
+| resources | [Resource](#memos-api-v2-Resource) | repeated |  |
+| relations | [MemoRelation](#memos-api-v2-MemoRelation) | repeated |  |
 
 
 
@@ -1931,6 +2011,7 @@
 | ListMemoRelations | [ListMemoRelationsRequest](#memos-api-v2-ListMemoRelationsRequest) | [ListMemoRelationsResponse](#memos-api-v2-ListMemoRelationsResponse) | ListMemoRelations lists relations for a memo. |
 | CreateMemoComment | [CreateMemoCommentRequest](#memos-api-v2-CreateMemoCommentRequest) | [CreateMemoCommentResponse](#memos-api-v2-CreateMemoCommentResponse) | CreateMemoComment creates a comment for a memo. |
 | ListMemoComments | [ListMemoCommentsRequest](#memos-api-v2-ListMemoCommentsRequest) | [ListMemoCommentsResponse](#memos-api-v2-ListMemoCommentsResponse) | ListMemoComments lists comments for a memo. |
+| GetUserMemosStats | [GetUserMemosStatsRequest](#memos-api-v2-GetUserMemosStatsRequest) | [GetUserMemosStatsResponse](#memos-api-v2-GetUserMemosStatsResponse) | GetUserMemosStats gets stats of memos for a user. |
 
  
 

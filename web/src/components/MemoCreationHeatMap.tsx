@@ -1,21 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getMemoStats } from "@/helpers/api";
+import { memoServiceClient } from "@/grpcweb";
 import { DAILY_TIMESTAMP } from "@/helpers/consts";
 import { getDateStampByDate, getDateString, getTimeStampByDate } from "@/helpers/datetime";
 import * as utils from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
+import useNavigateTo from "@/hooks/useNavigateTo";
 import { useGlobalStore } from "@/store/module";
-import { useUserV1Store, extractUsernameFromName, useMemoV1Store } from "@/store/v1";
+import { useMemoStore } from "@/store/v1";
 import { useTranslate, Translations } from "@/utils/i18n";
-import { useFilterStore } from "../store/module";
 import "@/less/usage-heat-map.less";
+
+interface DailyUsageStat {
+  timestamp: number;
+  count: number;
+}
 
 const tableConfig = {
   width: 10,
   height: 7,
 };
 
-const getInitialUsageStat = (usedDaysAmount: number, beginDayTimestamp: number): DailyUsageStat[] => {
+const getInitialCreationStats = (usedDaysAmount: number, beginDayTimestamp: number): DailyUsageStat[] => {
   const initialUsageStat: DailyUsageStat[] = [];
   for (let i = 1; i <= usedDaysAmount; i++) {
     initialUsageStat.push({
@@ -26,17 +31,11 @@ const getInitialUsageStat = (usedDaysAmount: number, beginDayTimestamp: number):
   return initialUsageStat;
 };
 
-interface DailyUsageStat {
-  timestamp: number;
-  count: number;
-}
-
-const UsageHeatMap = () => {
+const MemoCreationHeatMap = () => {
   const t = useTranslate();
-  const filterStore = useFilterStore();
-  const userV1Store = useUserV1Store();
+  const navigateTo = useNavigateTo();
   const user = useCurrentUser();
-  const memoStore = useMemoV1Store();
+  const memoStore = useMemoStore();
   const todayTimeStamp = getDateStampByDate(Date.now());
   const weekDay = new Date(todayTimeStamp).getDay();
   const weekFromMonday = ["zh-Hans", "ko"].includes(useGlobalStore().state.locale);
@@ -46,45 +45,30 @@ const UsageHeatMap = () => {
   const usedDaysAmount = (tableConfig.width - 1) * tableConfig.height + todayDay;
   const beginDayTimestamp = todayTimeStamp - usedDaysAmount * DAILY_TIMESTAMP;
   const [memoAmount, setMemoAmount] = useState(0);
-  const [createdDays, setCreatedDays] = useState(0);
-  const [allStat, setAllStat] = useState<DailyUsageStat[]>(getInitialUsageStat(usedDaysAmount, beginDayTimestamp));
-  const [currentStat, setCurrentStat] = useState<DailyUsageStat | null>(null);
+  const [creationStatus, setCreationStatus] = useState<DailyUsageStat[]>(getInitialCreationStats(usedDaysAmount, beginDayTimestamp));
   const containerElRef = useRef<HTMLDivElement>(null);
-  const memos = Array.from(memoStore.getState().memoById.values());
-
-  useEffect(() => {
-    userV1Store.getOrFetchUserByUsername(extractUsernameFromName(user.name)).then((user) => {
-      if (!user) {
-        return;
-      }
-      setCreatedDays(Math.ceil((Date.now() - getTimeStampByDate(user.createTime)) / 1000 / 3600 / 24));
-    });
-  }, [user.name]);
+  const memos = Object.values(memoStore.getState().memoMapById);
+  const createdDays = Math.ceil((Date.now() - getTimeStampByDate(user.createTime)) / 1000 / 3600 / 24);
 
   useEffect(() => {
     if (memos.length === 0) {
       return;
     }
 
-    getMemoStats(extractUsernameFromName(user.name))
-      .then(({ data }) => {
-        setMemoAmount(data.length);
-        const newStat: DailyUsageStat[] = getInitialUsageStat(usedDaysAmount, beginDayTimestamp);
-        for (const record of data) {
-          const index = (getDateStampByDate(record * 1000) - beginDayTimestamp) / (1000 * 3600 * 24) - 1;
-          if (index >= 0) {
-            // because of dailight savings, some days may be 23 hours long instead of 24 hours long
-            // this causes the calculations to yield weird indices such as 40.93333333333
-            // rounding them may not give you the exact day on the heat map, but it's not too bad
-            const exactIndex = +index.toFixed(0);
-            newStat[exactIndex].count += 1;
-          }
-        }
-        setAllStat([...newStat]);
-      })
-      .catch((error) => {
-        console.error(error);
+    (async () => {
+      const { memoCreationStats } = await memoServiceClient.getUserMemosStats({
+        name: user.name,
       });
+      const tempStats = getInitialCreationStats(usedDaysAmount, beginDayTimestamp);
+      Object.entries(memoCreationStats).forEach(([k, v]) => {
+        const dayIndex = Math.floor((getDateStampByDate(k) - beginDayTimestamp) / DAILY_TIMESTAMP) - 1;
+        if (tempStats[dayIndex]) {
+          tempStats[dayIndex].count = v;
+        }
+      });
+      setCreationStatus(tempStats);
+      setMemoAmount(Object.values(memoCreationStats).reduce((acc, cur) => acc + cur, 0));
+    })();
   }, [memos.length, user.name]);
 
   const handleUsageStatItemMouseEnter = useCallback((event: React.MouseEvent, item: DailyUsageStat) => {
@@ -108,13 +92,7 @@ const UsageHeatMap = () => {
   }, []);
 
   const handleUsageStatItemClick = useCallback((item: DailyUsageStat) => {
-    if (filterStore.getState().duration?.from === item.timestamp) {
-      filterStore.setFromAndToFilter();
-      setCurrentStat(null);
-    } else if (item.count > 0) {
-      filterStore.setFromAndToFilter(item.timestamp, item.timestamp + DAILY_TIMESTAMP);
-      setCurrentStat(item);
-    }
+    navigateTo(`/timeline?timestamp=${item.timestamp}`);
   }, []);
 
   // This interpolation is not being used because of the current styling,
@@ -125,7 +103,8 @@ const UsageHeatMap = () => {
     <>
       <div className="usage-heat-map-wrapper" ref={containerElRef}>
         <div className="usage-heat-map">
-          {allStat.map((v, i) => {
+          {}
+          {creationStatus.map((v, i) => {
             const count = v.count;
             const colorLevel =
               count <= 0
@@ -146,11 +125,7 @@ const UsageHeatMap = () => {
                 onMouseLeave={handleUsageStatItemMouseLeave}
                 onClick={() => handleUsageStatItemClick(v)}
               >
-                <span
-                  className={`stat-container ${colorLevel} ${currentStat === v ? "current" : ""} ${
-                    todayTimeStamp === v.timestamp ? "today" : ""
-                  }`}
-                ></span>
+                <span className={`stat-container ${colorLevel} ${todayTimeStamp === v.timestamp ? "today" : ""}`}></span>
               </div>
             );
           })}
@@ -178,4 +153,4 @@ const UsageHeatMap = () => {
   );
 };
 
-export default UsageHeatMap;
+export default MemoCreationHeatMap;

@@ -27,6 +27,29 @@ var (
 	usernameMatcher = regexp.MustCompile("^[a-z0-9]([a-z0-9-]{1,30}[a-z0-9])$")
 )
 
+func (s *APIV2Service) ListUsers(ctx context.Context, _ *apiv2pb.ListUsersRequest) (*apiv2pb.ListUsersResponse, error) {
+	currentUser, err := getCurrentUser(ctx, s.Store)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
+	}
+	if currentUser.Role != store.RoleHost && currentUser.Role != store.RoleAdmin {
+		return nil, status.Errorf(codes.PermissionDenied, "permission denied")
+	}
+
+	users, err := s.Store.ListUsers(ctx, &store.FindUser{})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list users: %v", err)
+	}
+
+	response := &apiv2pb.ListUsersResponse{
+		Users: []*apiv2pb.User{},
+	}
+	for _, user := range users {
+		response.Users = append(response.Users, convertUserFromStore(user))
+	}
+	return response, nil
+}
+
 func (s *APIV2Service) GetUser(ctx context.Context, request *apiv2pb.GetUserRequest) (*apiv2pb.GetUserResponse, error) {
 	username, err := ExtractUsernameFromName(request.Name)
 	if err != nil {
@@ -118,10 +141,10 @@ func (s *APIV2Service) UpdateUser(ctx context.Context, request *apiv2pb.UpdateUs
 	}
 	for _, field := range request.UpdateMask.Paths {
 		if field == "username" {
-			if !usernameMatcher.MatchString(strings.ToLower(username)) {
-				return nil, status.Errorf(codes.InvalidArgument, "invalid username: %s", username)
+			if !usernameMatcher.MatchString(strings.ToLower(request.User.Username)) {
+				return nil, status.Errorf(codes.InvalidArgument, "invalid username: %s", request.User.Username)
 			}
-			update.Username = &username
+			update.Username = &request.User.Username
 		} else if field == "nickname" {
 			update.Nickname = &request.User.Nickname
 		} else if field == "email" {
@@ -478,6 +501,7 @@ func convertUserFromStore(user *store.User) *apiv2pb.User {
 		CreateTime: timestamppb.New(time.Unix(user.CreatedTs, 0)),
 		UpdateTime: timestamppb.New(time.Unix(user.UpdatedTs, 0)),
 		Role:       convertUserRoleFromStore(user.Role),
+		Username:   user.Username,
 		Email:      user.Email,
 		Nickname:   user.Nickname,
 		AvatarUrl:  user.AvatarURL,
