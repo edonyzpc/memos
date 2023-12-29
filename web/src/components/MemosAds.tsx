@@ -14,7 +14,12 @@ const MemosAds = () => {
     </script>
     `;
 
-  return <div className="w-full px-1 py-2 flex flex-col justify-start items-start shrink-0 space-y-2" dangerouslySetInnerHTML={{ __html: adSenseCode }} />;
+  return (
+    <div
+      className="w-full px-1 py-2 flex flex-col justify-start items-start shrink-0 space-y-2"
+      dangerouslySetInnerHTML={{ __html: adSenseCode }}
+    />
+  );
 };
 
 export default MemosAds;
