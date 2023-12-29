@@ -4,7 +4,7 @@ const MemosAds = () => {
   const adSenseCode = `
     <!-- Memos Ads -->
     <ins class="adsbygoogle"
-      style="display:block"
+      style="display:flex;align-items: center;"
       data-ad-client="ca-pub-1642118466411022"
       data-ad-slot="9206857864"
       data-ad-format="auto"
