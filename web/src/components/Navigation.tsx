@@ -6,7 +6,6 @@ import { useInboxStore } from "@/store/v1";
 import { Inbox_Status } from "@/types/proto/api/v2/inbox_service";
 import { useTranslate } from "@/utils/i18n";
 import Icon from "./Icon";
-import MemosAds from "./MemosAds";
 import UserBanner from "./UserBanner";
 
 interface NavLinkItem {
@@ -121,7 +120,6 @@ const Navigation = () => {
           </NavLink>
         ))}
       </div>
-      <MemosAds />
     </header>
   );
 };

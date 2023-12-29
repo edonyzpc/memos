@@ -2,6 +2,7 @@ import React from "react";
 
 const MemosAds = () => {
   const adSenseCode = `
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1642118466411022" crossorigin="anonymous"></script>
     <!-- Memos Ads -->
     <ins class="adsbygoogle"
       style="display:flex;align-items: center;"
