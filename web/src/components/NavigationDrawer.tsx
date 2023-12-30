@@ -2,6 +2,7 @@ import { Drawer, IconButton } from "@mui/joy";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Icon from "./Icon";
+import MemosAds from "./MemosAds";
 import Navigation from "./Navigation";
 
 const NavigationDrawer = () => {
@@ -28,6 +29,7 @@ const NavigationDrawer = () => {
       <Drawer anchor="left" size="sm" open={open} onClose={toggleDrawer(false)}>
         <div className="w-full h-full px-4 bg-zinc-100 dark:bg-zinc-800">
           <Navigation />
+          <MemosAds />
         </div>
       </Drawer>
     </>
