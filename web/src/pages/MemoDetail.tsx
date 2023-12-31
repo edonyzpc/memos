@@ -11,6 +11,7 @@ import showMemoEditorDialog from "@/components/MemoEditor/MemoEditorDialog";
 import MemoRelationListView from "@/components/MemoRelationListView";
 import MemoResourceListView from "@/components/MemoResourceListView";
 import MemoView from "@/components/MemoView";
+import MemosAds from "@/components/MemosAds";
 import MobileHeader from "@/components/MobileHeader";
 import showShareMemoDialog from "@/components/ShareMemoDialog";
 import UserAvatar from "@/components/UserAvatar";
@@ -209,6 +210,7 @@ const MemoDetail = () => {
             {currentUser && (
               <MemoEditor key={memo.id} cacheKey={`comment-editor-${memo.id}`} parentMemoId={memo.id} onConfirm={handleCommentCreated} />
             )}
+            <MemosAds />
           </div>
         </div>
       </div>
