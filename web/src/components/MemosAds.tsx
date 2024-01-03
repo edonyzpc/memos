@@ -22,7 +22,7 @@ const MemosAds = (props: any) => {
     <>
       <ins
         className="adsbygoogle"
-        style={{ display: "flex" }}
+        style={{ display: "block" }}
         data-ad-client="ca-pub-1642118466411022"
         data-ad-slot={dataAdSlot}
         data-ad-format="auto"
