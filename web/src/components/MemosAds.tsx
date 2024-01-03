@@ -7,7 +7,9 @@ declare global {
   }
 }
 
-const MemosAds = () => {
+const MemosAds = (props: any) => {
+  const { dataAdSlot } = props;
+
   useEffect(() => {
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -22,7 +24,7 @@ const MemosAds = () => {
         className="adsbygoogle"
         style={{ display: "flex" }}
         data-ad-client="ca-pub-1642118466411022"
-        data-ad-slot="9206857864"
+        data-ad-slot={dataAdSlot}
         data-ad-format="auto"
         data-full-width-responsive="true"
       ></ins>

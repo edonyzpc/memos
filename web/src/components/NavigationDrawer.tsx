@@ -29,7 +29,7 @@ const NavigationDrawer = () => {
       <Drawer anchor="left" size="sm" open={open} onClose={toggleDrawer(false)}>
         <div className="w-full h-full px-4 bg-zinc-100 dark:bg-zinc-800">
           <Navigation />
-          <MemosAds />
+          <MemosAds dataAdSlot="3633276605" />
         </div>
       </Drawer>
     </>
