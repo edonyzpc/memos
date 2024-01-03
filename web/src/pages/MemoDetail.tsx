@@ -210,7 +210,9 @@ const MemoDetail = () => {
             {currentUser && (
               <MemoEditor key={memo.id} cacheKey={`comment-editor-${memo.id}`} parentMemoId={memo.id} onConfirm={handleCommentCreated} />
             )}
-            <MemosAds dataAdSlot="4954151033" />
+            <div className="max-w-xs w-full flex flex-col justify-center items-center py-6 mb-2">
+              <MemosAds dataAdSlot="4954151033" />
+            </div>
           </div>
         </div>
       </div>
