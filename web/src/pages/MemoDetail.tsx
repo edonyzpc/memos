@@ -186,6 +186,9 @@ const MemoDetail = () => {
             </div>
           </div>
         </div>
+        <div className="relative flex-grow w-full min-h-full flex flex-col justify-start items-start border dark:border-zinc-700 bg-white dark:bg-zinc-700 shadow hover:shadow-xl transition-all p-4 pb-3 rounded-lg">
+          <MemosAds dataAdSlot="4954151033" />
+        </div>
         <div className="pt-8 pb-16 w-full">
           <div className="relative mx-auto flex-grow w-full min-h-full flex flex-col justify-start items-start gap-y-1">
             {comments.length === 0 ? (
@@ -210,9 +213,6 @@ const MemoDetail = () => {
             {currentUser && (
               <MemoEditor key={memo.id} cacheKey={`comment-editor-${memo.id}`} parentMemoId={memo.id} onConfirm={handleCommentCreated} />
             )}
-            <div className="w-full flex flex-col justify-center items-center py-6 mb-2">
-              <MemosAds dataAdSlot="4954151033" />
-            </div>
           </div>
         </div>
       </div>
