@@ -186,7 +186,7 @@ const MemoDetail = () => {
             </div>
           </div>
         </div>
-        <div className="relative flex-grow w-full min-h-full flex flex-col justify-start items-start border dark:border-zinc-700 bg-white dark:bg-zinc-700 shadow hover:shadow-xl transition-all p-4 pb-3 rounded-lg">
+        <div className="relative w-full min-h-full overflow-auto mt-4 mx-auto py-4 md:pt-6 z-30">
           <MemosAds dataAdSlot="4954151033" />
         </div>
         <div className="pt-8 pb-16 w-full">
