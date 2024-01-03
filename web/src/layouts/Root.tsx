@@ -14,7 +14,7 @@ function Root() {
         {sm && (
           <div className="hidden sm:block fixed top-0 left-0 w-56 md:w-64 px-4 border-r dark:border-zinc-800 h-full bg-zinc-50 dark:bg-zinc-700 dark:bg-opacity-40 transition-all hover:shadow-xl z-2">
             <Navigation />
-            <div className="w-full h-full overflow-auto flex flex-col justify-start items-start py-4 md:pt-6 z-30">
+            <div className="w-full h-full overflow-auto justify-start items-start py-4 md:pt-6 z-30">
               <MemosAds dataAdSlot="9206857864" />
             </div>
           </div>
