@@ -75,7 +75,7 @@ const TagList = () => {
         <span className="text-sm leading-6 font-mono text-gray-400">{t("common.tags")}</span>
         <button
           onClick={() => showCreateTagDialog()}
-          className="flex flex-col justify-center items-center w-5 h-5 bg-gray-200 dark:bg-zinc-700 rounded ml-2 hover:shadow"
+          className="flex flex-col justify-center items-center w-5 h-5 bg-gray-200 dark:bg-zinc-800 rounded ml-2 hover:shadow"
         >
           <Icon.Plus className="w-4 h-4 text-gray-400" />
         </button>
@@ -122,7 +122,7 @@ const TagItemContainer: React.FC<TagItemContainerProps> = (props: TagItemContain
       >
         <div
           className={`flex flex-row justify-start items-center truncate shrink leading-5 mr-1 text-gray-600 dark:text-gray-400 ${
-            isActive && "text-green-600"
+            isActive && "!text-blue-600"
           }`}
         >
           <Icon.Hash className="w-4 h-auto shrink-0 opacity-60 mr-1" />
@@ -141,7 +141,7 @@ const TagItemContainer: React.FC<TagItemContainerProps> = (props: TagItemContain
       </div>
       {hasSubTags ? (
         <div
-          className={`w-[calc(100%-0.5rem)] flex flex-col justify-start items-start h-auto ml-2 pl-2 border-l-2 border-l-gray-200 dark:border-l-gray-400 ${
+          className={`w-[calc(100%-0.5rem)] flex flex-col justify-start items-start h-auto ml-2 pl-2 border-l-2 border-l-gray-200 dark:border-l-zinc-800 ${
             !showSubTags && "!hidden"
           }`}
         >
