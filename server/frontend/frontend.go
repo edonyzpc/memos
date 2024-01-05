@@ -80,8 +80,9 @@ func (s *FrontendService) registerRoutes(e *echo.Echo) {
 		}
 
 		// Inject memo metadata into `index.html`.
-		//indexHTML := strings.ReplaceAll(rawIndexHTML, "<!-- memos.metadata.head -->", generateMemoMetadata(memo, creator).String())
-		indexHTML := strings.ReplaceAll(rawIndexHTML, "<!-- memos.metadata.head -->", generateMemoMetadataEdony(memo, creator, nil))
+		// indexHTML := strings.ReplaceAll(rawIndexHTML, "<!-- memos.metadata.head -->", generateMemoMetadata(memo, creator).String())
+		_ = generateMemoMetadata(memo, creator).String()
+		indexHTML := strings.ReplaceAll(rawIndexHTML, "<!-- memos.metadata.head -->", generateMemoMetadataEdony(memo, creator))
 		indexHTML = strings.ReplaceAll(indexHTML, "<!-- memos.metadata.body -->", fmt.Sprintf("<!-- memos.memo.%d -->", memo.ID))
 		return c.HTML(http.StatusOK, indexHTML)
 	})
@@ -186,7 +187,7 @@ func (m *Metadata) String() string {
 	return strings.Join(metadataList, "\n")
 }
 
-func generateMemoMetadataEdony(memo *store.Memo, creator *store.User, res *store.Resource) string {
+func generateMemoMetadataEdony(memo *store.Memo, creator *store.User) string {
 	tokens := tokenizer.Tokenize(memo.Content)
 	nodes, _ := parser.Parse(tokens)
 	description := renderer.NewStringRenderer().Render(nodes)
