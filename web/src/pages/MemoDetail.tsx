@@ -25,6 +25,7 @@ import { Memo, Visibility } from "@/types/proto/api/v2/memo_service";
 import { User } from "@/types/proto/api/v2/user_service";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityToString } from "@/utils/memo";
+import { updateMeta } from "@/utils/meta";
 
 const MemoDetail = () => {
   const t = useTranslate();
@@ -80,6 +81,14 @@ const MemoDetail = () => {
       }
       await Promise.all(commentRelations.map((relation) => memoStore.getOrFetchMemoById(relation.memoId)));
     })();
+  }, [memo]);
+
+  // update head meta according to memo content
+  useEffect(() => {
+    if (!memo) {
+      return;
+    }
+    updateMeta(memo);
   }, [memo]);
 
   if (!memo) {
