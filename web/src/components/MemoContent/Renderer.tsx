@@ -22,7 +22,6 @@ import {
   TextNode,
   UnorderedListNode,
 } from "@/types/proto/api/v2/markdown_service";
-import AutoLink from "./AutoLink";
 import Blockquote from "./Blockquote";
 import Bold from "./Bold";
 import BoldItalic from "./BoldItalic";
@@ -45,29 +44,30 @@ import Text from "./Text";
 import UnorderedList from "./UnorderedList";
 
 interface Props {
+  index: string;
   node: Node;
 }
 
-const Renderer: React.FC<Props> = ({ node }: Props) => {
+const Renderer: React.FC<Props> = ({ index, node }: Props) => {
   switch (node.type) {
     case NodeType.LINE_BREAK:
-      return <LineBreak />;
+      return <LineBreak index={index} />;
     case NodeType.PARAGRAPH:
-      return <Paragraph {...(node.paragraphNode as ParagraphNode)} />;
+      return <Paragraph index={index} {...(node.paragraphNode as ParagraphNode)} />;
     case NodeType.CODE_BLOCK:
-      return <CodeBlock {...(node.codeBlockNode as CodeBlockNode)} />;
+      return <CodeBlock index={index} {...(node.codeBlockNode as CodeBlockNode)} />;
     case NodeType.HEADING:
-      return <Heading {...(node.headingNode as HeadingNode)} />;
+      return <Heading index={index} {...(node.headingNode as HeadingNode)} />;
     case NodeType.HORIZONTAL_RULE:
-      return <HorizontalRule {...(node.horizontalRuleNode as HorizontalRuleNode)} />;
+      return <HorizontalRule index={index} {...(node.horizontalRuleNode as HorizontalRuleNode)} />;
     case NodeType.BLOCKQUOTE:
-      return <Blockquote {...(node.blockquoteNode as BlockquoteNode)} />;
+      return <Blockquote index={index} {...(node.blockquoteNode as BlockquoteNode)} />;
     case NodeType.ORDERED_LIST:
-      return <OrderedList {...(node.orderedListNode as OrderedListNode)} />;
+      return <OrderedList index={index} {...(node.orderedListNode as OrderedListNode)} />;
     case NodeType.UNORDERED_LIST:
       return <UnorderedList {...(node.unorderedListNode as UnorderedListNode)} />;
     case NodeType.TASK_LIST:
-      return <TaskList {...(node.taskListNode as TaskListNode)} />;
+      return <TaskList index={index} {...(node.taskListNode as TaskListNode)} />;
     case NodeType.MATH_BLOCK:
       return <Math {...(node.mathBlockNode as MathNode)} block={true} />;
     case NodeType.TEXT:
@@ -85,7 +85,7 @@ const Renderer: React.FC<Props> = ({ node }: Props) => {
     case NodeType.LINK:
       return <Link {...(node.linkNode as LinkNode)} />;
     case NodeType.AUTO_LINK:
-      return <AutoLink {...(node.autoLinkNode as AutoLinkNode)} />;
+      return <Link {...(node.autoLinkNode as AutoLinkNode)} />;
     case NodeType.TAG:
       return <Tag {...(node.tagNode as TagNode)} />;
     case NodeType.STRIKETHROUGH:
