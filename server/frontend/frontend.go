@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -79,8 +80,15 @@ func (s *FrontendService) registerRoutes(e *echo.Echo) {
 		}
 
 		// Inject memo metadata into `index.html`.
-		indexHTML := strings.ReplaceAll(rawIndexHTML, "<!-- memos.metadata.head -->", generateMemoMetadata(memo, creator).String())
+		//indexHTML := strings.ReplaceAll(rawIndexHTML, "<!-- memos.metadata.head -->", generateMemoMetadata(memo, creator).String())
+		indexHTML := strings.ReplaceAll(rawIndexHTML, "<!-- memos.metadata.head -->", generateMemoMetadataEdony(memo, creator, nil))
 		indexHTML = strings.ReplaceAll(indexHTML, "<!-- memos.metadata.body -->", fmt.Sprintf("<!-- memos.memo.%d -->", memo.ID))
+		return c.HTML(http.StatusOK, indexHTML)
+	})
+
+	e.GET("/", func(c echo.Context) error {
+		// Inject memo metadata into `index.html`.
+		indexHTML := strings.ReplaceAll(rawIndexHTML, "<!-- memos.metadata.head -->", generateDefaultIndexMetadataEdony())
 		return c.HTML(http.StatusOK, indexHTML)
 	})
 }
@@ -176,4 +184,55 @@ func (m *Metadata) String() string {
 		`<meta name="twitter:creator" content="memos" />`,
 	}
 	return strings.Join(metadataList, "\n")
+}
+
+func generateMemoMetadataEdony(memo *store.Memo, creator *store.User, res *store.Resource) string {
+	tokens := tokenizer.Tokenize(memo.Content)
+	nodes, _ := parser.Parse(tokens)
+	description := renderer.NewStringRenderer().Render(nodes)
+	if len(description) == 0 {
+		description = memo.Content
+	}
+	if len(description) > maxMetadataDescriptionLength {
+		description = description[:maxMetadataDescriptionLength] + "..."
+	}
+	t := time.Unix(memo.UpdatedTs, 0)
+
+	title := fmt.Sprintf("%d %s | %s(@%s) on Memos", memo.ID, t.Format("2006-01-02"), creator.Nickname, creator.Username)
+
+	return fmt.Sprintf(`<!-- HTML Meta Tags -->
+<meta name="description" content="Despite the ever-changing external world, I long for you to remain true to yourself, just as I strive to remain true to who I am.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Edony's Memos">
+<meta property="og:title" content="%s">
+<meta property="og:description" content="%s">
+<meta property="og:url" content="https://twitter.edony.ink/">
+<meta property="og:image" content="https://img.edony.ink/memos/A822B6B9-500F-49C8-881A-477C130FCB17.jpg">
+<!-- Twitter Meta Tags -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="%s">
+<meta name="twitter:site" content="@amidummystud">
+<meta property="twitter:domain" content="twitter.edony.ink">
+<meta property="twitter:url" content="https://twitter.edony.ink/">
+<meta name="twitter:description" content="%s">
+<meta name="twitter:image" content="https://img.edony.ink/memos/A822B6B9-500F-49C8-881A-477C130FCB17.jpg">`, title, description, title, description)
+}
+
+func generateDefaultIndexMetadataEdony() string {
+	return `<!-- HTML Meta Tags -->
+<meta name="description" content="Despite the ever-changing external world, I long for you to remain true to yourself, just as I strive to remain true to who I am.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Edony's Memos">
+<meta property="og:title" content="Edony's Memos">
+<meta property="og:description" content="Despite the ever-changing external world, I long for you to remain true to yourself, just as I strive to remain true to who I am.">
+<meta property="og:url" content="https://twitter.edony.ink/">
+<meta property="og:image" content="https://img.edony.ink/memos/A822B6B9-500F-49C8-881A-477C130FCB17.jpg">
+<!-- Twitter Meta Tags -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Edony's Memos">
+<meta name="twitter:site" content="@amidummystud">
+<meta property="twitter:domain" content="twitter.edony.ink">
+<meta property="twitter:url" content="https://twitter.edony.ink/">
+<meta name="twitter:description" content="Despite the ever-changing external world, I long for you to remain true to yourself, just as I strive to remain true to who I am.">
+<meta name="twitter:image" content="https://img.edony.ink/memos/A822B6B9-500F-49C8-881A-477C130FCB17.jpg">`
 }
