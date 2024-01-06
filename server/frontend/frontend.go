@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -80,9 +79,7 @@ func (s *FrontendService) registerRoutes(e *echo.Echo) {
 		}
 
 		// Inject memo metadata into `index.html`.
-		// indexHTML := strings.ReplaceAll(rawIndexHTML, "<!-- memos.metadata.head -->", generateMemoMetadata(memo, creator).String())
-		_ = generateMemoMetadata(memo, creator).String()
-		indexHTML := generateMemoMetadataEdony(rawIndexHTML, memo, creator)
+		indexHTML := strings.ReplaceAll(rawIndexHTML, "<!-- memos.metadata.head -->", generateMemoMetadata(memo, creator).String())
 		indexHTML = strings.ReplaceAll(indexHTML, "<!-- memos.metadata.body -->", fmt.Sprintf("<!-- memos.memo.%d -->", memo.ID))
 		return c.HTML(http.StatusOK, indexHTML)
 	})
@@ -165,6 +162,11 @@ func getDefaultMetadata() *Metadata {
 }
 
 func (m *Metadata) String() string {
+	return fmt.Sprintf("<!-- memos.metadata.head.%s -->", m.Title)
+}
+
+/*
+func (m *Metadata) String() string {
 	metadataList := []string{
 		fmt.Sprintf(`<meta name="description" content="%s" />`, m.Description),
 		fmt.Sprintf(`<meta property="og:title" content="%s" />`, m.Title),
@@ -180,7 +182,8 @@ func (m *Metadata) String() string {
 	}
 	return strings.Join(metadataList, "\n")
 }
-
+*/
+/*
 func generateMemoMetadataEdony(indexHTML string, memo *store.Memo, creator *store.User) string {
 	tokens := tokenizer.Tokenize(memo.Content)
 	nodes, _ := parser.Parse(tokens)
@@ -202,3 +205,4 @@ func generateMemoMetadataEdony(indexHTML string, memo *store.Memo, creator *stor
 
 	return index
 }
+*/
