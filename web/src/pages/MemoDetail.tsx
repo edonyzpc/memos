@@ -12,6 +12,7 @@ import MemoRelationListView from "@/components/MemoRelationListView";
 import MemoResourceListView from "@/components/MemoResourceListView";
 import MemoView from "@/components/MemoView";
 import MemosAds from "@/components/MemosAds";
+import MemosMultiplexAds from "@/components/MemosMultiplexAds";
 import MobileHeader from "@/components/MobileHeader";
 import showShareMemoDialog from "@/components/ShareMemoDialog";
 import UserAvatar from "@/components/UserAvatar";
@@ -185,6 +186,9 @@ const MemoDetail = () => {
         </div>
         <div className="relative w-full min-h-full overflow-auto mt-4 mx-auto py-4 md:pt-6 z-30">
           <MemosAds dataAdSlot="4954151033" />
+        </div>
+        <div className="relative w-full min-h-full overflow-auto mt-4 mx-auto py-4 md:pt-6 z-30">
+          <MemosMultiplexAds dataAdSlot="7148428595" />
         </div>
         <div className="pt-8 pb-16 w-full">
           <div className="relative mx-auto flex-grow w-full min-h-full flex flex-col justify-start items-start gap-y-1">
