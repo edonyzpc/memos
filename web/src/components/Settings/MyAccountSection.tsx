@@ -1,6 +1,7 @@
 import { Button } from "@mui/joy";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useTranslate } from "@/utils/i18n";
+import showAboutSiteDialog from "../AboutSiteDialog";
 import showChangePasswordDialog from "../ChangePasswordDialog";
 import showUpdateAccountDialog from "../UpdateAccountDialog";
 import UserAvatar from "../UserAvatar";
@@ -27,6 +28,9 @@ const MyAccountSection = () => {
           </Button>
           <Button variant="outlined" onClick={showChangePasswordDialog}>
             {t("setting.account-section.change-password")}
+          </Button>
+          <Button variant="outlined" onClick={showAboutSiteDialog}>
+            Customize Info
           </Button>
         </div>
 

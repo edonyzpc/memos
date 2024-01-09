@@ -33,7 +33,6 @@ const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
         <p className="text-sm mt-2">{customizedProfile.description || t("about.no-server-description")}</p>
         <Divider className="!my-3" />
         <div className="w-full flex flex-row justify-start items-center text-sm italic">
-          {t("about.powered-by")}
           <a className="shrink-0 flex flex-row justify-start items-center mx-1 hover:underline" href="https://usememos.com" target="_blank">
             <img className="w-auto h-7" src="https://www.usememos.com/full-logo-landscape.png" alt="" />
           </a>
@@ -42,10 +41,10 @@ const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
             href="https://github.com/edonyzpc/memos/"
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-6 justify-end text-sm hover:underline italic text-red-500"
+            className="flex ml-6 justify-end text-sm hover:underline italic text-red-500"
           >
             <img className="w-auto h-7" src="https://img.edony.ink/1573133907wings-cricut-freesvg.org.shadow.walker.edit.svg" alt="" />
-            <span>{customizedInfo}</span>
+            <span className="mx-4 my-auto">{customizedInfo}</span>
           </a>
         </div>
       </div>
