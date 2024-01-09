@@ -110,7 +110,7 @@ func (s *APIV2Service) CreateMemo(ctx context.Context, request *apiv2pb.CreateMe
 			// Telegram HTML has a lot wired condition. And I cannot do some formatting things for now
 			// API Test: https://api.telegram.org/bot{BOT-TOKEN}/sendMessage?chat_id={CHAT-ID}&parse_mode=HTML&text=%3Ca%20href=%22twitter.edony.ink%22%3E@memos%20says:%20%3C/a%3E%3Cpre%3E%20%3C/pre%3E%3Cpre%3Etest%20newline%3C/pre%3E
 			memoURL := "https://twitter.edony.ink/m/" + fmt.Sprint(memoMessage.Id)
-			contentGroup := `<a href="` + memoURL + `">@memos</a> says: <pre>` + "\n" + memoMessage.Content + `</pre>`
+			contentGroup := `<a href="` + memoURL + `">@memos</a> says: <code class="language-markdown">` + "\n" + memoMessage.Content + `</code>`
 			_, err = telegramBot.SendHTMLMessage(ctx, -1001233204358, contentGroup)
 			if err != nil {
 				log.Error("Failed to send Telegram notification", zap.Error(err))
