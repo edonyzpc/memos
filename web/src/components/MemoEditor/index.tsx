@@ -1,11 +1,12 @@
 import { Select, Option, Button, IconButton, Divider } from "@mui/joy";
 import { uniqBy } from "lodash-es";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import useLocalStorage from "react-use/lib/useLocalStorage";
 import { memoServiceClient } from "@/grpcweb";
 import { TAB_SPACE_WIDTH, UNKNOWN_ID } from "@/helpers/consts";
+import { isValidUrl } from "@/helpers/utils";
 import { useGlobalStore, useResourceStore } from "@/store/module";
 import { useMemoStore, useUserStore } from "@/store/v1";
 import { MemoRelation, MemoRelation_Type } from "@/types/proto/api/v2/memo_relation_service";
@@ -18,10 +19,12 @@ import showCreateMemoRelationDialog from "../CreateMemoRelationDialog";
 import showCreateResourceDialog from "../CreateResourceDialog";
 import Icon from "../Icon";
 import VisibilityIcon from "../VisibilityIcon";
+import MarkdownMenu from "./ActionButton/MarkdownMenu";
 import TagSelector from "./ActionButton/TagSelector";
 import Editor, { EditorRefActions } from "./Editor";
 import RelationListView from "./RelationListView";
 import ResourceListView from "./ResourceListView";
+import { handleEditorKeydownWithMarkdownShortcuts, hyperlinkHighlightedText } from "./handlers";
 
 interface Props {
   className?: string;
@@ -114,6 +117,8 @@ const MemoEditor = (props: Props) => {
         handleSaveBtnClick();
         return;
       }
+
+      handleEditorKeydownWithMarkdownShortcuts(event, editorRef.current);
     }
     if (event.key === "Tab") {
       event.preventDefault();
@@ -238,6 +243,13 @@ const MemoEditor = (props: Props) => {
     if (event.clipboardData && event.clipboardData.files.length > 0) {
       event.preventDefault();
       await uploadMultiFiles(event.clipboardData.files);
+    } else if (
+      editorRef.current != null &&
+      editorRef.current.getSelectedContent().length != 0 &&
+      isValidUrl(event.clipboardData.getData("Text"))
+    ) {
+      event.preventDefault();
+      hyperlinkHighlightedText(editorRef.current, event.clipboardData.getData("Text"));
     }
   };
 
@@ -334,10 +346,6 @@ const MemoEditor = (props: Props) => {
     });
   };
 
-  const handleTagSelectorClick = useCallback((tag: string) => {
-    editorRef.current?.insertText(`#${tag} `);
-  }, []);
-
   const handleEditorFocus = () => {
     editorRef.current?.focus();
   };
@@ -366,21 +374,14 @@ const MemoEditor = (props: Props) => {
       onFocus={handleEditorFocus}
     >
       <Editor ref={editorRef} {...editorConfig} />
-      <div className="relative w-full flex flex-row justify-between items-center pt-2">
-        <div className="flex flex-row justify-start items-center">
-          <TagSelector onTagSelectorClick={(tag) => handleTagSelectorClick(tag)} />
-          <IconButton
-            className="flex flex-row justify-center items-center p-1 w-auto h-auto mr-1 select-none rounded cursor-pointer text-gray-600 dark:!text-gray-400 hover:bg-gray-300 dark:hover:bg-zinc-800 hover:shadow"
-            size="sm"
-            onClick={handleUploadFileBtnClick}
-          >
+      <div className="relative w-full flex flex-row justify-between items-center pt-2" onFocus={(e) => e.stopPropagation()}>
+        <div className="flex flex-row justify-start items-center opacity-80">
+          <MarkdownMenu editorRef={editorRef} />
+          <TagSelector editorRef={editorRef} />
+          <IconButton size="sm" onClick={handleUploadFileBtnClick}>
             <Icon.Image className="w-5 h-5 mx-auto" />
           </IconButton>
-          <IconButton
-            className="flex flex-row justify-center items-center p-1 w-auto h-auto mr-1 select-none rounded cursor-pointer text-gray-600 dark:!text-gray-400 hover:bg-gray-300 dark:hover:bg-zinc-800 hover:shadow"
-            size="sm"
-            onClick={handleAddMemoRelationBtnClick}
-          >
+          <IconButton size="sm" onClick={handleAddMemoRelationBtnClick}>
             <Icon.Link className="w-5 h-5 mx-auto" />
           </IconButton>
         </div>
