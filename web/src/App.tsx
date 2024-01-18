@@ -16,6 +16,7 @@ const App = () => {
   const userStore = useUserStore();
   const [loading, setLoading] = useState(true);
   const { appearance, locale, systemStatus } = globalStore.state;
+  const userSetting = userStore.userSetting;
 
   // Redirect to sign up page if no host.
   useEffect(() => {
@@ -82,8 +83,17 @@ const App = () => {
   }, [systemStatus.customizedProfile]);
 
   useEffect(() => {
+    if (!userSetting) {
+      return;
+    }
+
+    globalStore.setLocale(userSetting.locale);
+    globalStore.setAppearance(userSetting.appearance as Appearance);
+  }, [userSetting?.locale, userSetting?.appearance]);
+
+  useEffect(() => {
     const { locale: storageLocale } = storage.get(["locale"]);
-    const currentLocale = storageLocale || userStore?.userSetting?.locale || locale;
+    const currentLocale = storageLocale || locale;
     i18n.changeLanguage(currentLocale);
     document.documentElement.setAttribute("lang", currentLocale);
     if (currentLocale === "ar") {
@@ -91,16 +101,21 @@ const App = () => {
     } else {
       document.documentElement.setAttribute("dir", "ltr");
     }
+    storage.set({
+      locale: currentLocale,
+    });
   }, [locale]);
 
   useEffect(() => {
     const { appearance: storageAppearance } = storage.get(["appearance"]);
-    let currentAppearance = (storageAppearance || userStore?.userSetting?.appearance || appearance) as Appearance;
+    let currentAppearance = (storageAppearance || appearance) as Appearance;
     if (currentAppearance === "system") {
       currentAppearance = getSystemColorScheme();
     }
-
     setMode(currentAppearance);
+    storage.set({
+      appearance: currentAppearance,
+    });
   }, [appearance]);
 
   useEffect(() => {

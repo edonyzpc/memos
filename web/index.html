@@ -27,6 +27,13 @@
     <meta name="twitter:image" content="https://img.edony.ink/memos/A822B6B9-500F-49C8-881A-477C130FCB17.jpg">
     <title>Memos</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1642118466411022" crossorigin="anonymous"></script>
+    <script>
+      // Prevent flash of light mode.
+      const appearance = localStorage.getItem("appearance");
+      if (appearance === `"dark"`) {
+        document.documentElement.classList.add("dark");
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
