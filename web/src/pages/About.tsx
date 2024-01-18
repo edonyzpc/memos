@@ -1,12 +1,9 @@
 import { Link } from "@mui/joy";
 import Icon from "@/components/Icon";
 import MobileHeader from "@/components/MobileHeader";
-import { useGlobalStore } from "@/store/module";
 import { edonyVersion } from "@/utils/version";
 
 const About = () => {
-  const globalStore = useGlobalStore();
-  const profile = globalStore.state.systemStatus.profile;
   const customizedInfo = edonyVersion;
 
   return (
@@ -36,20 +33,21 @@ const About = () => {
             </Link>
           </div>
         </div>
-        <div className="w-full flex flex-row justify-start items-center text-sm italic">
-          <a className="shrink-0 flex flex-row justify-start items-center mx-1 hover:underline" href="https://usememos.com" target="_blank">
-            <img className="w-auto h-7" src="https://www.usememos.com/full-logo-landscape.png" alt="" />
-          </a>
-          <span>v{profile.version}</span>
+        <div className="w-full shadow flex flex-col justify-start items-start mt-2 px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 text-black dark:text-gray-300">
           <a
             href="https://github.com/edonyzpc/memos/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex ml-6 justify-end text-sm hover:underline italic text-red-500"
+            className="flex justify-end text-6xl hover:underline font-bold text-red-500"
           >
-            <img className="w-auto h-7" src="https://img.edony.ink/1573133907wings-cricut-freesvg.org.shadow.walker.edit.svg" alt="" />
-            <span className="mx-4 my-auto">{customizedInfo}</span>
+            <img
+              className="w-auto h-12"
+              src="https://img.edony.ink/1573133907wings-cricut-freesvg.org.shadow.walker.edit.svg"
+              alt="shadow walker logo"
+            />
+            <span className="mx-4 my-auto text-base">{customizedInfo}</span>
           </a>
+          <p className="text-base">云边有做小卖部，来自松烟阁的点滴记录</p>
         </div>
       </div>
     </section>
