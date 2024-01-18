@@ -10,7 +10,7 @@ import MemoFilter from "@/components/MemoFilter";
 import MemoView from "@/components/MemoView";
 import MobileHeader from "@/components/MobileHeader";
 import { memoServiceClient } from "@/grpcweb";
-import { DEFAULT_MEMO_LIMIT } from "@/helpers/consts";
+import { DAILY_TIMESTAMP, DEFAULT_MEMO_LIMIT } from "@/helpers/consts";
 import { getNormalizedTimeString, getTimeStampByDate } from "@/helpers/datetime";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useResponsiveWidth from "@/hooks/useResponsiveWidth";
@@ -52,6 +52,7 @@ const Timeline = () => {
   const memoList = useMemoList();
   const filterStore = useFilterStore();
   const [activityStats, setActivityStats] = useState<Record<string, number>>({});
+  const [selectedDay, setSelectedDay] = useState<string | undefined>();
   const [isRequesting, setIsRequesting] = useState(true);
   const [isComplete, setIsComplete] = useState(false);
   const { tag: tagQuery, text: textQuery } = filterStore.state;
@@ -61,7 +62,7 @@ const Timeline = () => {
   useEffect(() => {
     memoList.reset();
     fetchMemos();
-  }, [tagQuery, textQuery]);
+  }, [selectedDay, tagQuery, textQuery]);
 
   useEffect(() => {
     (async () => {
@@ -97,6 +98,12 @@ const Timeline = () => {
     if (contentSearch.length > 0) {
       filters.push(`content_search == [${contentSearch.join(", ")}]`);
     }
+    if (selectedDay) {
+      const selectedDateStamp = getTimeStampByDate(selectedDay) + new Date().getTimezoneOffset() * 60 * 1000;
+      filters.push(
+        ...[`display_time_after == ${selectedDateStamp / 1000}`, `display_time_before == ${(selectedDateStamp + DAILY_TIMESTAMP) / 1000}`]
+      );
+    }
     setIsRequesting(true);
     const data = await memoStore.fetchMemos({
       filter: filters.join(" && "),
@@ -118,10 +125,13 @@ const Timeline = () => {
         <div className="w-full shadow flex flex-col justify-start items-start px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 text-black dark:text-gray-300">
           <div className="relative w-full flex flex-row justify-between items-center">
             <div>
-              <p className="py-1 flex flex-row justify-start items-center select-none opacity-80">
+              <div
+                className="py-1 flex flex-row justify-start items-center select-none opacity-80"
+                onClick={() => setSelectedDay(undefined)}
+              >
                 <Icon.GanttChartSquare className="w-6 h-auto mr-1 opacity-80" />
                 <span className="text-lg">{t("timeline.title")}</span>
-              </p>
+              </div>
             </div>
             <div className="flex justify-end items-center gap-2">
               <IconButton variant="outlined" size="sm" onClick={() => handleNewMemo()}>
@@ -143,7 +153,7 @@ const Timeline = () => {
                       <span className="opacity-60">{new Date(group.month).getFullYear()}</span>
                       <span className="text-xs opacity-40">Total: {sum(Object.values(group.data))}</span>
                     </div>
-                    <ActivityCalendar month={group.month} data={group.data} />
+                    <ActivityCalendar month={group.month} data={group.data} onClick={(date) => setSelectedDay(date)} />
                   </div>
 
                   <div className={classNames("flex flex-col justify-start items-start", md ? "w-[calc(100%-8rem)]" : "w-full")}>

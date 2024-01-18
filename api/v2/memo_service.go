@@ -56,6 +56,15 @@ func (s *APIV2Service) CreateMemo(ctx context.Context, request *apiv2pb.CreateMe
 		Content:    request.Content,
 		Visibility: store.Visibility(request.Visibility.String()),
 	}
+	// Find disable public memos system setting.
+	disablePublicMemosSystem, err := s.getDisablePublicMemosSystemSettingValue(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get system setting")
+	}
+	if disablePublicMemosSystem && create.Visibility == store.Public {
+		return nil, status.Errorf(codes.PermissionDenied, "disable public memos system setting is enabled")
+	}
+
 	memo, err := s.Store.CreateMemo(ctx, create)
 	if err != nil {
 		return nil, err
@@ -144,11 +153,27 @@ func (s *APIV2Service) ListMemos(ctx context.Context, request *apiv2pb.ListMemos
 		if filter.OrderByPinned {
 			memoFind.OrderByPinned = filter.OrderByPinned
 		}
-		if filter.CreatedTsBefore != nil {
-			memoFind.CreatedTsBefore = filter.CreatedTsBefore
+		if filter.DisplayTimeAfter != nil {
+			displayWithUpdatedTs, err := s.getMemoDisplayWithUpdatedTsSettingValue(ctx)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to get memo display with updated ts setting value")
+			}
+			if displayWithUpdatedTs {
+				memoFind.UpdatedTsAfter = filter.DisplayTimeAfter
+			} else {
+				memoFind.CreatedTsAfter = filter.DisplayTimeAfter
+			}
 		}
-		if filter.CreatedTsAfter != nil {
-			memoFind.CreatedTsAfter = filter.CreatedTsAfter
+		if filter.DisplayTimeBefore != nil {
+			displayWithUpdatedTs, err := s.getMemoDisplayWithUpdatedTsSettingValue(ctx)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to get memo display with updated ts setting value")
+			}
+			if displayWithUpdatedTs {
+				memoFind.UpdatedTsBefore = filter.DisplayTimeBefore
+			} else {
+				memoFind.CreatedTsBefore = filter.DisplayTimeBefore
+			}
 		}
 		if filter.Creator != nil {
 			username, err := ExtractUsernameFromName(*filter.Creator)
@@ -502,11 +527,27 @@ func (s *APIV2Service) GetUserMemosStats(ctx context.Context, request *apiv2pb.G
 		if filter.OrderByPinned {
 			memoFind.OrderByPinned = filter.OrderByPinned
 		}
-		if filter.CreatedTsBefore != nil {
-			memoFind.CreatedTsBefore = filter.CreatedTsBefore
+		if filter.DisplayTimeAfter != nil {
+			displayWithUpdatedTs, err := s.getMemoDisplayWithUpdatedTsSettingValue(ctx)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to get memo display with updated ts setting value")
+			}
+			if displayWithUpdatedTs {
+				memoFind.UpdatedTsAfter = filter.DisplayTimeAfter
+			} else {
+				memoFind.CreatedTsAfter = filter.DisplayTimeAfter
+			}
 		}
-		if filter.CreatedTsAfter != nil {
-			memoFind.CreatedTsAfter = filter.CreatedTsAfter
+		if filter.DisplayTimeBefore != nil {
+			displayWithUpdatedTs, err := s.getMemoDisplayWithUpdatedTsSettingValue(ctx)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to get memo display with updated ts setting value")
+			}
+			if displayWithUpdatedTs {
+				memoFind.UpdatedTsBefore = filter.DisplayTimeBefore
+			} else {
+				memoFind.CreatedTsBefore = filter.DisplayTimeBefore
+			}
 		}
 		if filter.RowStatus != nil {
 			memoFind.RowStatus = filter.RowStatus
@@ -588,14 +629,33 @@ func (s *APIV2Service) getMemoDisplayWithUpdatedTsSettingValue(ctx context.Conte
 	if err != nil {
 		return false, errors.Wrap(err, "failed to find system setting")
 	}
+	if memoDisplayWithUpdatedTsSetting == nil {
+		return false, nil
+	}
+
 	memoDisplayWithUpdatedTs := false
-	if memoDisplayWithUpdatedTsSetting != nil {
-		err = json.Unmarshal([]byte(memoDisplayWithUpdatedTsSetting.Value), &memoDisplayWithUpdatedTs)
-		if err != nil {
-			return false, errors.Wrap(err, "failed to unmarshal system setting value")
-		}
+	if err := json.Unmarshal([]byte(memoDisplayWithUpdatedTsSetting.Value), &memoDisplayWithUpdatedTs); err != nil {
+		return false, errors.Wrap(err, "failed to unmarshal system setting value")
 	}
 	return memoDisplayWithUpdatedTs, nil
+}
+
+func (s *APIV2Service) getDisablePublicMemosSystemSettingValue(ctx context.Context) (bool, error) {
+	disablePublicMemosSystemSetting, err := s.Store.GetSystemSetting(ctx, &store.FindSystemSetting{
+		Name: apiv1.SystemSettingDisablePublicMemosName.String(),
+	})
+	if err != nil {
+		return false, errors.Wrap(err, "failed to find system setting")
+	}
+	if disablePublicMemosSystemSetting == nil {
+		return false, nil
+	}
+
+	disablePublicMemos := false
+	if err := json.Unmarshal([]byte(disablePublicMemosSystemSetting.Value), &disablePublicMemos); err != nil {
+		return false, errors.Wrap(err, "failed to unmarshal system setting value")
+	}
+	return disablePublicMemos, nil
 }
 
 func convertVisibilityFromStore(visibility store.Visibility) apiv2pb.Visibility {
@@ -629,20 +689,20 @@ var ListMemosFilterCELAttributes = []cel.EnvOption{
 	cel.Variable("content_search", cel.ListType(cel.StringType)),
 	cel.Variable("visibilities", cel.ListType(cel.StringType)),
 	cel.Variable("order_by_pinned", cel.BoolType),
-	cel.Variable("created_ts_before", cel.IntType),
-	cel.Variable("created_ts_after", cel.IntType),
+	cel.Variable("display_time_before", cel.IntType),
+	cel.Variable("display_time_after", cel.IntType),
 	cel.Variable("creator", cel.StringType),
 	cel.Variable("row_status", cel.StringType),
 }
 
 type ListMemosFilter struct {
-	ContentSearch   []string
-	Visibilities    []store.Visibility
-	OrderByPinned   bool
-	CreatedTsBefore *int64
-	CreatedTsAfter  *int64
-	Creator         *string
-	RowStatus       *store.RowStatus
+	ContentSearch     []string
+	Visibilities      []store.Visibility
+	OrderByPinned     bool
+	DisplayTimeBefore *int64
+	DisplayTimeAfter  *int64
+	Creator           *string
+	RowStatus         *store.RowStatus
 }
 
 func parseListMemosFilter(expression string) (*ListMemosFilter, error) {
@@ -685,12 +745,12 @@ func findField(callExpr *expr.Expr_Call, filter *ListMemosFilter) {
 			} else if idExpr.Name == "order_by_pinned" {
 				value := callExpr.Args[1].GetConstExpr().GetBoolValue()
 				filter.OrderByPinned = value
-			} else if idExpr.Name == "created_ts_before" {
-				createdTsBefore := callExpr.Args[1].GetConstExpr().GetInt64Value()
-				filter.CreatedTsBefore = &createdTsBefore
-			} else if idExpr.Name == "created_ts_after" {
-				createdTsAfter := callExpr.Args[1].GetConstExpr().GetInt64Value()
-				filter.CreatedTsAfter = &createdTsAfter
+			} else if idExpr.Name == "display_time_before" {
+				displayTimeBefore := callExpr.Args[1].GetConstExpr().GetInt64Value()
+				filter.DisplayTimeBefore = &displayTimeBefore
+			} else if idExpr.Name == "display_time_after" {
+				displayTimeAfter := callExpr.Args[1].GetConstExpr().GetInt64Value()
+				filter.DisplayTimeAfter = &displayTimeAfter
 			} else if idExpr.Name == "creator" {
 				creator := callExpr.Args[1].GetConstExpr().GetStringValue()
 				filter.Creator = &creator
