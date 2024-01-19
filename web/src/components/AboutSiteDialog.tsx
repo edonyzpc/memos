@@ -28,7 +28,7 @@ const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
           <Icon.X className="opacity-70" />
         </IconButton>
       </div>
-      <div className="flex flex-col justify-start items-start w-96">
+      <div className="flex flex-col justify-start items-start w-auto">
         <p className="text-xs">{t("about.memos-description")}</p>
         <p className="text-sm mt-2">{customizedProfile.description || t("about.no-server-description")}</p>
         <Divider className="!my-3" />
@@ -44,7 +44,7 @@ const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
             className="flex ml-6 justify-end text-sm hover:underline italic text-red-500"
           >
             <img className="w-auto h-7" src="https://img.edony.ink/1573133907wings-cricut-freesvg.org.shadow.walker.edit.svg" alt="" />
-            <span className="mx-4 my-auto">{customizedInfo}</span>
+            <span className="mx-2 my-auto text-">{customizedInfo}</span>
           </a>
         </div>
       </div>

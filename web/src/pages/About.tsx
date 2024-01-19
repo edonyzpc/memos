@@ -45,9 +45,13 @@ const About = () => {
               src="https://img.edony.ink/1573133907wings-cricut-freesvg.org.shadow.walker.edit.svg"
               alt="shadow walker logo"
             />
-            <span className="mx-4 my-auto text-base">{customizedInfo}</span>
+            <span className="mx-4 my-auto text-lg">{customizedInfo}</span>
           </a>
-          <p className="text-base">云边有做小卖部，来自松烟阁的点滴记录</p>
+          <p className="text-base">
+            生命是有光的，在我熄灭以前，能够照亮你一点，就是我所有能做的了。
+            <br />
+            山风微微，像月光下晃动的海浪，温和而柔软，停留在时光的背后，变成小时候听过的故事。
+          </p>
         </div>
       </div>
     </section>
