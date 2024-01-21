@@ -35,8 +35,8 @@ const MemoDetail = () => {
   const memoStore = useMemoStore();
   const userStore = useUserStore();
   const [creator, setCreator] = useState<User>();
-  const memoId = Number(params.memoId);
-  const memo = memoStore.getMemoById(memoId);
+  const memoName = params.memoName;
+  const memo = memoStore.getMemoByName(memoName || "");
   const [parentMemo, setParentMemo] = useState<Memo | undefined>(undefined);
   const referenceRelations = memo?.relations.filter((relation) => relation.type === MemoRelation_Type.REFERENCE) || [];
   const commentRelations =
@@ -46,9 +46,9 @@ const MemoDetail = () => {
 
   // Prepare memo.
   useEffect(() => {
-    if (memoId && !isNaN(memoId)) {
+    if (memoName) {
       memoStore
-        .getOrFetchMemoById(memoId)
+        .getOrFetchMemoByName(memoName)
         .then(async (memo) => {
           const user = await userStore.getOrFetchUserByUsername(extractUsernameFromName(memo.creator));
           setCreator(user);
@@ -60,7 +60,7 @@ const MemoDetail = () => {
     } else {
       navigateTo("/404");
     }
-  }, [memoId]);
+  }, [memoName]);
 
   // Prepare memo comments.
   useEffect(() => {
@@ -97,11 +97,12 @@ const MemoDetail = () => {
   const handleEditMemoClick = () => {
     showMemoEditorDialog({
       memoId: memo.id,
+      cacheKey: `${memo.id}-${memo.updateTime}`,
     });
   };
 
   const handleCopyLinkBtnClick = () => {
-    copy(`${window.location.origin}/m/${memo.id}`);
+    copy(`${window.location.origin}/m/${memo.name}`);
     toast.success(t("message.succeed-copy-link"));
   };
 
@@ -130,7 +131,7 @@ const MemoDetail = () => {
             <div className="w-auto mb-2">
               <Link
                 className="px-3 py-1 border rounded-lg max-w-xs w-auto text-sm flex flex-row justify-start items-center flex-nowrap text-gray-600 dark:text-gray-400 dark:border-gray-500 hover:shadow hover:opacity-80"
-                to={`/m/${parentMemo.id}`}
+                to={`/m/${parentMemo.name}`}
                 unstable_viewTransition
               >
                 <Icon.ArrowUpLeftFromCircle className="w-4 h-auto shrink-0 opacity-60 mr-2" />
@@ -139,7 +140,7 @@ const MemoDetail = () => {
             </div>
           )}
           <MemoContent memoId={memo.id} nodes={memo.nodes} readonly={readonly} />
-          <MemoResourceListView resourceList={memo.resources} />
+          <MemoResourceListView resources={memo.resources} />
           <MemoRelationListView memo={memo} relationList={referenceRelations} />
           <div className="w-full mt-3 flex flex-row justify-between items-center gap-2">
             <div className="flex flex-row justify-start items-center">

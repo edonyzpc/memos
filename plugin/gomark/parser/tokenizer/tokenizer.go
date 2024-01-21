@@ -12,6 +12,7 @@ const (
 	LeftParenthesis    TokenType = "("
 	RightParenthesis   TokenType = ")"
 	ExclamationMark    TokenType = "!"
+	QuestionMark       TokenType = "?"
 	Tilde              TokenType = "~"
 	Hyphen             TokenType = "-"
 	PlusSign           TokenType = "+"
@@ -22,6 +23,7 @@ const (
 	EqualSign          TokenType = "="
 	Pipe               TokenType = "|"
 	Colon              TokenType = ":"
+	Caret              TokenType = "^"
 	Backslash          TokenType = "\\"
 	Newline            TokenType = "\n"
 	Space              TokenType = " "
@@ -66,6 +68,8 @@ func Tokenize(text string) []*Token {
 			tokens = append(tokens, NewToken(RightParenthesis, ")"))
 		case '!':
 			tokens = append(tokens, NewToken(ExclamationMark, "!"))
+		case '?':
+			tokens = append(tokens, NewToken(QuestionMark, "?"))
 		case '~':
 			tokens = append(tokens, NewToken(Tilde, "~"))
 		case '-':
@@ -86,6 +90,8 @@ func Tokenize(text string) []*Token {
 			tokens = append(tokens, NewToken(Pipe, "|"))
 		case ':':
 			tokens = append(tokens, NewToken(Colon, ":"))
+		case '^':
+			tokens = append(tokens, NewToken(Caret, "^"))
 		case '\\':
 			tokens = append(tokens, NewToken(Backslash, `\`))
 		case '\n':
@@ -129,20 +135,29 @@ func Stringify(tokens []*Token) string {
 }
 
 func Split(tokens []*Token, delimiter TokenType) [][]*Token {
+	if len(tokens) == 0 {
+		return [][]*Token{}
+	}
+
 	result := make([][]*Token, 0)
 	current := make([]*Token, 0)
 	for _, token := range tokens {
 		if token.Type == delimiter {
-			if len(current) > 0 {
-				result = append(result, current)
-				current = make([]*Token, 0)
-			}
+			result = append(result, current)
+			current = make([]*Token, 0)
 		} else {
 			current = append(current, token)
 		}
 	}
-	if len(current) > 0 {
-		result = append(result, current)
-	}
+	result = append(result, current)
 	return result
+}
+
+func Find(tokens []*Token, delimiter TokenType) (int, bool) {
+	for index, token := range tokens {
+		if token.Type == delimiter {
+			return index, true
+		}
+	}
+	return 0, false
 }

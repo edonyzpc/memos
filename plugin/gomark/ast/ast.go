@@ -16,6 +16,7 @@ const (
 	TaskListNode
 	MathBlockNode
 	TableNode
+	EmbeddedContentNode
 	// Inline nodes.
 	TextNode
 	BoldNode
@@ -30,6 +31,8 @@ const (
 	EscapingCharacterNode
 	MathNode
 	HighlightNode
+	SubscriptNode
+	SuperscriptNode
 )
 
 type Node interface {
