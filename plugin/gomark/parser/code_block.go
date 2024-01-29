@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"errors"
+	"slices"
 
 	"github.com/usememos/memos/plugin/gomark/ast"
 	"github.com/usememos/memos/plugin/gomark/parser/tokenizer"
@@ -16,61 +16,57 @@ func NewCodeBlockParser() *CodeBlockParser {
 	return &CodeBlockParser{}
 }
 
-func (*CodeBlockParser) Match(tokens []*tokenizer.Token) (int, bool) {
-	if len(tokens) < 9 {
-		return 0, false
+func (*CodeBlockParser) Match(tokens []*tokenizer.Token) (ast.Node, int) {
+	rows := tokenizer.Split(tokens, tokenizer.NewLine)
+	if len(rows) < 3 {
+		return nil, 0
 	}
 
-	if tokens[0].Type != tokenizer.Backtick || tokens[1].Type != tokenizer.Backtick || tokens[2].Type != tokenizer.Backtick {
-		return 0, false
+	firstRow := rows[0]
+	if len(firstRow) < 3 {
+		return nil, 0
 	}
-	if tokens[3].Type != tokenizer.Newline && tokens[4].Type != tokenizer.Newline {
-		return 0, false
+	if firstRow[0].Type != tokenizer.Backtick || firstRow[1].Type != tokenizer.Backtick || firstRow[2].Type != tokenizer.Backtick {
+		return nil, 0
 	}
-	cursor := 4
-	if tokens[3].Type != tokenizer.Newline {
-		cursor = 5
-	}
-
-	matched := false
-	for ; cursor < len(tokens)-3; cursor++ {
-		if tokens[cursor].Type == tokenizer.Newline && tokens[cursor+1].Type == tokenizer.Backtick && tokens[cursor+2].Type == tokenizer.Backtick && tokens[cursor+3].Type == tokenizer.Backtick {
-			if cursor+3 == len(tokens)-1 {
-				cursor += 4
-				matched = true
-				break
-			} else if tokens[cursor+4].Type == tokenizer.Newline {
-				cursor += 4
-				matched = true
-				break
+	languageTokens := []*tokenizer.Token{}
+	if len(firstRow) > 3 {
+		languageTokens = firstRow[3:]
+		// Check if language is valid.
+		availableLanguageTokenTypes := []tokenizer.TokenType{tokenizer.Text, tokenizer.Number, tokenizer.Underscore}
+		for _, token := range languageTokens {
+			if !slices.Contains(availableLanguageTokenTypes, token.Type) {
+				return nil, 0
 			}
 		}
 	}
+
+	contentRows := [][]*tokenizer.Token{}
+	matched := false
+	for _, row := range rows[1:] {
+		if len(row) == 3 && row[0].Type == tokenizer.Backtick && row[1].Type == tokenizer.Backtick && row[2].Type == tokenizer.Backtick {
+			matched = true
+			break
+		}
+		contentRows = append(contentRows, row)
+	}
 	if !matched {
-		return 0, false
+		return nil, 0
 	}
 
-	return cursor, true
-}
-
-func (p *CodeBlockParser) Parse(tokens []*tokenizer.Token) (ast.Node, error) {
-	size, ok := p.Match(tokens)
-	if size == 0 || !ok {
-		return nil, errors.New("not matched")
+	contentTokens := []*tokenizer.Token{}
+	for index, row := range contentRows {
+		contentTokens = append(contentTokens, row...)
+		if index != len(contentRows)-1 {
+			contentTokens = append(contentTokens, &tokenizer.Token{
+				Type:  tokenizer.NewLine,
+				Value: "\n",
+			})
+		}
 	}
 
-	languageToken := tokens[3]
-	contentStart, contentEnd := 5, size-4
-	if languageToken.Type == tokenizer.Newline {
-		languageToken = nil
-		contentStart = 4
-	}
-
-	codeBlock := &ast.CodeBlock{
-		Content: tokenizer.Stringify(tokens[contentStart:contentEnd]),
-	}
-	if languageToken != nil {
-		codeBlock.Language = languageToken.String()
-	}
-	return codeBlock, nil
+	return &ast.CodeBlock{
+		Content:  tokenizer.Stringify(contentTokens),
+		Language: tokenizer.Stringify(languageTokens),
+	}, 4 + len(languageTokens) + len(contentTokens) + 4
 }

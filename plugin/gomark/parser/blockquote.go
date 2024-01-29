@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"errors"
-
 	"github.com/usememos/memos/plugin/gomark/ast"
 	"github.com/usememos/memos/plugin/gomark/parser/tokenizer"
 )
@@ -13,40 +11,39 @@ func NewBlockquoteParser() *BlockquoteParser {
 	return &BlockquoteParser{}
 }
 
-func (*BlockquoteParser) Match(tokens []*tokenizer.Token) (int, bool) {
-	if len(tokens) < 3 {
-		return 0, false
-	}
-	if tokens[0].Type != tokenizer.GreaterThan || tokens[1].Type != tokenizer.Space {
-		return 0, false
-	}
-
-	contentTokens := []*tokenizer.Token{}
-	for _, token := range tokens[2:] {
-		if token.Type == tokenizer.Newline {
+func (*BlockquoteParser) Match(tokens []*tokenizer.Token) (ast.Node, int) {
+	rows := tokenizer.Split(tokens, tokenizer.NewLine)
+	contentRows := [][]*tokenizer.Token{}
+	for _, row := range rows {
+		if len(row) < 3 || row[0].Type != tokenizer.GreaterThan || row[1].Type != tokenizer.Space {
 			break
 		}
-		contentTokens = append(contentTokens, token)
+		contentRows = append(contentRows, row)
 	}
-	if len(contentTokens) == 0 {
-		return 0, false
-	}
-
-	return len(contentTokens) + 2, true
-}
-
-func (p *BlockquoteParser) Parse(tokens []*tokenizer.Token) (ast.Node, error) {
-	size, ok := p.Match(tokens)
-	if size == 0 || !ok {
-		return nil, errors.New("not matched")
+	if len(contentRows) == 0 {
+		return nil, 0
 	}
 
-	contentTokens := tokens[2:size]
-	children, err := ParseBlockWithParsers(contentTokens, []BlockParser{NewParagraphParser(), NewLineBreakParser()})
-	if err != nil {
-		return nil, err
+	children := []ast.Node{}
+	size := 0
+	for index, row := range contentRows {
+		contentTokens := row[2:]
+		nodes, err := ParseBlockWithParsers(contentTokens, []BlockParser{NewBlockquoteParser(), NewParagraphParser()})
+		if err != nil {
+			return nil, 0
+		}
+		if len(nodes) != 1 {
+			return nil, 0
+		}
+
+		children = append(children, nodes[0])
+		size += len(row)
+		if index != len(contentRows)-1 {
+			size++ // NewLine.
+		}
 	}
+
 	return &ast.Blockquote{
 		Children: children,
-	}, nil
+	}, size
 }
