@@ -58,6 +58,6 @@ export default function showAboutSiteDialog(): void {
       className: "about-site-dialog",
       dialogName: "about-site-dialog",
     },
-    AboutSiteDialog
+    AboutSiteDialog,
   );
 }
