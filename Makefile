@@ -6,7 +6,10 @@ memos:
 proto-gen:
 	cd proto && buf generate && cd -
 
-web: proto-gen
+web-lint:
+	cd web && pnpm i && pnpm lint
+
+web: proto-gen web-lint
 	cd web && pnpm i && DEV_PROXY_SERVER='http://localhost:5230' pnpm dev
 
 upgrade:

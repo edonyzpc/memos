@@ -15,7 +15,7 @@ export const updateMeta = async (memo: Memo) => {
     if (meta.getAttribute("property") === "og:title" || meta.getAttribute("name") === "twitter:title") {
       meta.setAttribute(
         "content",
-        `${memo.id}-${memo.createTime?.getFullYear()}/${memo.createTime?.getMonth()}/${memo.createTime?.getDay()} | Edony's Memos`
+        `${memo.id}-${memo.createTime?.getFullYear()}/${memo.createTime?.getMonth()}/${memo.createTime?.getDay()} | Edony's Memos`,
       );
     }
     if (meta.getAttribute("property") === "og:description" || meta.getAttribute("name") === "twitter:description") {
