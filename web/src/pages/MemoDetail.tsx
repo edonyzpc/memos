@@ -185,10 +185,10 @@ const MemoDetail = () => {
             </div>
           </div>
         </div>
-        <div className="relative w-full min-h-full overflow-auto mt-4 mx-auto py-4 md:pt-6 z-30">
+        <div className="relative w-full h-auto overflow-auto mt-4 mx-auto py-4 md:pt-6 z-30">
           <MemosAds dataAdSlot="4954151033" />
         </div>
-        <div className="relative w-full min-h-full overflow-auto mt-4 mx-auto py-4 md:pt-6 z-30">
+        <div className="relative w-full h-auto overflow-auto mt-4 mx-auto py-4 md:pt-6 z-30">
           <MemosMultiplexAds dataAdSlot="7148428595" />
         </div>
         <div className="pt-8 pb-16 w-full">
