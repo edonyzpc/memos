@@ -44,6 +44,8 @@ const MyAccountSection = () => {
         <Button variant="outlined" onClick={() => downloadExportedMemos(user)}>
           {t("setting.account-section.export-memos")}
         </Button>
+      </div>
+      <div className="w-full flex flex-row flex-wrap justify-start items-center mt-2 space-x-2">
         <Button variant="outlined" onClick={showAboutSiteDialog}>
           Customize Info
         </Button>
