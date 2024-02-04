@@ -1,6 +1,6 @@
 import { Dropdown, Menu, MenuButton, MenuItem } from "@mui/joy";
 import classNames from "classnames";
-import * as api from "@/helpers/api";
+import { authServiceClient } from "@/grpcweb";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useGlobalStore } from "@/store/module";
 import { useTranslate } from "@/utils/i18n";
@@ -21,7 +21,7 @@ const UserBanner = (props: Props) => {
   const avatarUrl = user ? user.avatarUrl : systemStatus.customizedProfile.logoUrl;
 
   const handleSignOut = async () => {
-    await api.signout();
+    await authServiceClient.signOut({});
     window.location.href = "/auth";
   };
 
@@ -39,9 +39,9 @@ const UserBanner = (props: Props) => {
             {!collapsed && <span className="ml-2 text-lg font-medium text-slate-800 dark:text-gray-200 shrink truncate">{title}</span>}
           </div>
         </MenuButton>
-        <Menu placement="bottom-start">
+        <Menu placement="bottom-start" size="sm" style={{ zIndex: "9999" }}>
           <MenuItem onClick={handleSignOut}>
-            <Icon.LogOut className="w-5 h-auto opacity-60 shrink-0" />
+            <Icon.LogOut className="w-4 h-auto opacity-60 shrink-0" />
             <span className="truncate">{t("common.sign-out")}</span>
           </MenuItem>
         </Menu>

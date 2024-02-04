@@ -139,7 +139,7 @@ const MemoDetail = () => {
               </Link>
             </div>
           )}
-          <MemoContent memoId={memo.id} nodes={memo.nodes} readonly={readonly} />
+          <MemoContent key={`${memo.id}-${memo.updateTime}`} memoId={memo.id} content={memo.content} readonly={readonly} />
           <MemoResourceListView resources={memo.resources} />
           <MemoRelationListView memo={memo} relationList={referenceRelations} />
           <div className="w-full mt-3 flex flex-row justify-between items-center gap-2">

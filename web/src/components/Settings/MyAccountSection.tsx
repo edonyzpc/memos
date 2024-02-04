@@ -1,4 +1,6 @@
 import { Button } from "@mui/joy";
+import { memoServiceClient } from "@/grpcweb";
+import { downloadFileFromUrl } from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useTranslate } from "@/utils/i18n";
 import showAboutSiteDialog from "../AboutSiteDialog";
@@ -10,6 +12,17 @@ import AccessTokenSection from "./AccessTokenSection";
 const MyAccountSection = () => {
   const t = useTranslate();
   const user = useCurrentUser();
+
+  const downloadExportedMemos = async (user: any) => {
+    const chunks = [];
+    for await (const response of memoServiceClient.exportMemos({ filter: `creator == "${user.name}"` })) {
+      chunks.push(response.file.buffer);
+    }
+    const blob = new Blob(chunks);
+    const downloadUrl = window.URL.createObjectURL(blob);
+    downloadFileFromUrl(downloadUrl, "memos-export.zip");
+    URL.revokeObjectURL(downloadUrl);
+  };
 
   return (
     <div className="w-full gap-2 pt-2 pb-4">
@@ -27,6 +40,9 @@ const MyAccountSection = () => {
         </Button>
         <Button variant="outlined" onClick={showChangePasswordDialog}>
           {t("setting.account-section.change-password")}
+        </Button>
+        <Button variant="outlined" onClick={() => downloadExportedMemos(user)}>
+          {t("setting.account-section.export-memos")}
         </Button>
         <Button variant="outlined" onClick={showAboutSiteDialog}>
           Customize Info

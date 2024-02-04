@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
+	"github.com/usememos/memos/internal/jobs"
+
 	"github.com/usememos/memos/internal/log"
 	"github.com/usememos/memos/server"
 	_profile "github.com/usememos/memos/server/profile"
@@ -59,12 +61,6 @@ var (
 			}
 
 			storeInstance := store.New(dbDriver, profile)
-			if err := storeInstance.MigrateManually(ctx); err != nil {
-				cancel()
-				log.Error("failed to migrate manually", zap.Error(err))
-				return
-			}
-
 			s, err := server.NewServer(ctx, profile, storeInstance)
 			if err != nil {
 				cancel()
@@ -90,6 +86,9 @@ var (
 			}()
 
 			printGreetings()
+
+			// update (pre-sign) object storage links if applicable
+			go jobs.RunPreSignLinks(ctx, storeInstance)
 
 			if err := s.Start(ctx); err != nil {
 				if err != http.ErrServerClosed {

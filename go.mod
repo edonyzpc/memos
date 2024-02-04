@@ -13,7 +13,7 @@ require (
 	github.com/google/cel-go v0.19.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/feeds v1.1.2
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.4
@@ -25,6 +25,7 @@ require (
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/swag v1.16.2
+	github.com/yourselfhosted/gomark v0.0.0-20240203134956-f26563ba0069
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.18.0
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
@@ -64,7 +65,7 @@ require (
 	lukechampine.com/uint128 v1.3.0 // indirect
 	modernc.org/cc/v3 v3.41.0 // indirect
 	modernc.org/ccgo/v3 v3.16.15 // indirect
-	modernc.org/libc v1.40.7 // indirect
+	modernc.org/libc v1.40.8 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/opt v0.1.3 // indirect

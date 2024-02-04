@@ -9,12 +9,12 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/yourselfhosted/gomark/parser"
+	"github.com/yourselfhosted/gomark/parser/tokenizer"
+	"github.com/yourselfhosted/gomark/renderer"
 
 	apiv1 "github.com/usememos/memos/api/v1"
 	"github.com/usememos/memos/internal/util"
-	"github.com/usememos/memos/plugin/gomark/parser"
-	"github.com/usememos/memos/plugin/gomark/parser/tokenizer"
-	"github.com/usememos/memos/plugin/gomark/renderer"
 	"github.com/usememos/memos/server/profile"
 	"github.com/usememos/memos/store"
 )
@@ -81,7 +81,7 @@ func (s *FrontendService) registerRoutes(e *echo.Echo) {
 }
 
 func (s *FrontendService) registerFileRoutes(ctx context.Context, e *echo.Echo) {
-	instanceURLSetting, err := s.Store.GetSystemSetting(ctx, &store.FindSystemSetting{
+	instanceURLSetting, err := s.Store.GetWorkspaceSetting(ctx, &store.FindWorkspaceSetting{
 		Name: apiv1.SystemSettingInstanceURLName.String(),
 	})
 	if err != nil || instanceURLSetting == nil {
