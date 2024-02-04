@@ -13,4 +13,4 @@ web: proto-gen web-lint
 	cd web && pnpm i && DEV_PROXY_SERVER='http://localhost:5230' pnpm dev
 
 upgrade:
-	git fech upstream && git tag -d $(git tag --list | grep "v") && git checkout main && git merge upstream/main
+	git fetch upstream && git tag -d $(git tag --list | grep "v") && git checkout main && git merge upstream/main
