@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import useLocalStorage from "react-use/lib/useLocalStorage";
 import Icon from "@/components/Icon";
-import MemosAds from "@/components/MemosAds";
 import Navigation from "@/components/Navigation";
 import useResponsiveWidth from "@/hooks/useResponsiveWidth";
 import Loading from "@/pages/Loading";
@@ -29,9 +28,6 @@ function Root() {
             )}
           >
             <Navigation className="!h-auto" collapsed={collapsed} />
-            <div className="w-full h-auto">
-              <MemosAds dataAdSlot="9206857864" />
-            </div>
             <div className={classNames("w-full grow h-auto flex flex-col justify-end", collapsed ? "items-center" : "items-start")}>
               <div
                 className={classNames("hidden py-3 group-hover:flex flex-col justify-center items-center")}
