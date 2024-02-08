@@ -1,4 +1,5 @@
 import { Link } from "@mui/joy";
+import MemosAds from "@/components//MemosAds";
 import Icon from "@/components/Icon";
 import MobileHeader from "@/components/MobileHeader";
 import { edonyVersion } from "@/utils/version";
@@ -52,6 +53,9 @@ const About = () => {
             <br />
             山风微微，像月光下晃动的海浪，温和而柔软，停留在时光的背后，变成小时候听过的故事。
           </p>
+        </div>
+        <div className="w-full h-auto shadow justify-start items-start mt-2 px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 text-black dark:text-gray-300">
+          <MemosAds dataAdSlot="9206857864" />
         </div>
       </div>
     </section>
