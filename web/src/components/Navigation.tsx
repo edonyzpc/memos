@@ -157,6 +157,9 @@ const Navigation = (props: Props) => {
       <div className="w-full h-auto">
         <MemosAds dataAdSlot="3633276605" />
       </div>
+      <div className="w-full h-auto">
+        <MemosAds dataAdSlot="9206857864" />
+      </div>
     </header>
   );
 };
