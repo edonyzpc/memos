@@ -154,7 +154,7 @@ const Navigation = (props: Props) => {
           </NavLink>
         ))}
       </div>
-      <div className="w-full h-auto py-3">
+      <div className="w-full h-24 py-3">
         <MemosAds dataAdSlot="3633276605" />
       </div>
     </header>
