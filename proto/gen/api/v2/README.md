@@ -80,6 +80,11 @@
   
     - [MemoRelation.Type](#memos-api-v2-MemoRelation-Type)
   
+- [api/v2/reaction_service.proto](#api_v2_reaction_service-proto)
+    - [Reaction](#memos-api-v2-Reaction)
+  
+    - [Reaction.Type](#memos-api-v2-Reaction-Type)
+  
 - [api/v2/resource_service.proto](#api_v2_resource_service-proto)
     - [CreateResourceRequest](#memos-api-v2-CreateResourceRequest)
     - [CreateResourceResponse](#memos-api-v2-CreateResourceResponse)
@@ -102,6 +107,8 @@
     - [CreateMemoCommentResponse](#memos-api-v2-CreateMemoCommentResponse)
     - [CreateMemoRequest](#memos-api-v2-CreateMemoRequest)
     - [CreateMemoResponse](#memos-api-v2-CreateMemoResponse)
+    - [DeleteMemoReactionRequest](#memos-api-v2-DeleteMemoReactionRequest)
+    - [DeleteMemoReactionResponse](#memos-api-v2-DeleteMemoReactionResponse)
     - [DeleteMemoRequest](#memos-api-v2-DeleteMemoRequest)
     - [DeleteMemoResponse](#memos-api-v2-DeleteMemoResponse)
     - [ExportMemosRequest](#memos-api-v2-ExportMemosRequest)
@@ -115,6 +122,8 @@
     - [GetUserMemosStatsResponse.StatsEntry](#memos-api-v2-GetUserMemosStatsResponse-StatsEntry)
     - [ListMemoCommentsRequest](#memos-api-v2-ListMemoCommentsRequest)
     - [ListMemoCommentsResponse](#memos-api-v2-ListMemoCommentsResponse)
+    - [ListMemoReactionsRequest](#memos-api-v2-ListMemoReactionsRequest)
+    - [ListMemoReactionsResponse](#memos-api-v2-ListMemoReactionsResponse)
     - [ListMemoRelationsRequest](#memos-api-v2-ListMemoRelationsRequest)
     - [ListMemoRelationsResponse](#memos-api-v2-ListMemoRelationsResponse)
     - [ListMemoResourcesRequest](#memos-api-v2-ListMemoResourcesRequest)
@@ -128,6 +137,8 @@
     - [SetMemoResourcesResponse](#memos-api-v2-SetMemoResourcesResponse)
     - [UpdateMemoRequest](#memos-api-v2-UpdateMemoRequest)
     - [UpdateMemoResponse](#memos-api-v2-UpdateMemoResponse)
+    - [UpsertMemoReactionRequest](#memos-api-v2-UpsertMemoReactionRequest)
+    - [UpsertMemoReactionResponse](#memos-api-v2-UpsertMemoReactionResponse)
   
     - [Visibility](#memos-api-v2-Visibility)
   
@@ -168,11 +179,19 @@
 - [api/v2/workspace_service.proto](#api_v2_workspace_service-proto)
     - [GetWorkspaceProfileRequest](#memos-api-v2-GetWorkspaceProfileRequest)
     - [GetWorkspaceProfileResponse](#memos-api-v2-GetWorkspaceProfileResponse)
-    - [UpdateWorkspaceProfileRequest](#memos-api-v2-UpdateWorkspaceProfileRequest)
-    - [UpdateWorkspaceProfileResponse](#memos-api-v2-UpdateWorkspaceProfileResponse)
     - [WorkspaceProfile](#memos-api-v2-WorkspaceProfile)
   
     - [WorkspaceService](#memos-api-v2-WorkspaceService)
+  
+- [api/v2/workspace_setting_service.proto](#api_v2_workspace_setting_service-proto)
+    - [GetWorkspaceSettingRequest](#memos-api-v2-GetWorkspaceSettingRequest)
+    - [GetWorkspaceSettingResponse](#memos-api-v2-GetWorkspaceSettingResponse)
+    - [SetWorkspaceSettingRequest](#memos-api-v2-SetWorkspaceSettingRequest)
+    - [SetWorkspaceSettingResponse](#memos-api-v2-SetWorkspaceSettingResponse)
+    - [WorkspaceGeneralSetting](#memos-api-v2-WorkspaceGeneralSetting)
+    - [WorkspaceSetting](#memos-api-v2-WorkspaceSetting)
+  
+    - [WorkspaceSettingService](#memos-api-v2-WorkspaceSettingService)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -699,6 +718,7 @@ Used internally for obfuscating the page token.
 | appearance | [string](#string) |  | The preferred appearance of the user. |
 | memo_visibility | [string](#string) |  | The default visibility of the memo. |
 | telegram_user_id | [string](#string) |  | The telegram user id of the user. |
+| compact_view | [bool](#bool) |  | The compact view for a memo. |
 
 
 
@@ -932,7 +952,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the inbox to delete. Format: inboxes/{inbox} |
+| name | [string](#string) |  | The name of the inbox to delete. Format: inboxes/{uid} |
 
 
 
@@ -957,7 +977,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the inbox. Format: inboxes/{id} |
+| name | [string](#string) |  | The name of the inbox. Format: inboxes/{uid} |
 | sender | [string](#string) |  | Format: users/{username} |
 | receiver | [string](#string) |  | Format: users/{username} |
 | status | [Inbox.Status](#memos-api-v2-Inbox-Status) |  |  |
@@ -1114,6 +1134,63 @@ Used internally for obfuscating the page token.
 | TYPE_UNSPECIFIED | 0 |  |
 | REFERENCE | 1 |  |
 | COMMENT | 2 |  |
+
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="api_v2_reaction_service-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## api/v2/reaction_service.proto
+
+
+
+<a name="memos-api-v2-Reaction"></a>
+
+### Reaction
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [int32](#int32) |  |  |
+| creator | [string](#string) |  |  |
+| content_id | [string](#string) |  |  |
+| reaction_type | [Reaction.Type](#memos-api-v2-Reaction-Type) |  |  |
+
+
+
+
+
+ 
+
+
+<a name="memos-api-v2-Reaction-Type"></a>
+
+### Reaction.Type
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| TYPE_UNSPECIFIED | 0 |  |
+| THUMBS_UP | 1 |  |
+| THUMBS_DOWN | 2 |  |
+| HEART | 3 |  |
+| FIRE | 4 |  |
+| CLAPPING_HANDS | 5 |  |
+| LAUGH | 6 |  |
+| OK_HAND | 7 |  |
+| ROCKET | 8 |  |
+| EYES | 9 |  |
+| THINKING_FACE | 10 |  |
+| CLOWN_FACE | 11 |  |
+| QUESTION_MARK | 12 |  |
 
 
  
@@ -1420,6 +1497,32 @@ Used internally for obfuscating the page token.
 
 
 
+<a name="memos-api-v2-DeleteMemoReactionRequest"></a>
+
+### DeleteMemoReactionRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [int32](#int32) |  |  |
+| reaction_id | [int32](#int32) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-DeleteMemoReactionResponse"></a>
+
+### DeleteMemoReactionResponse
+
+
+
+
+
+
+
 <a name="memos-api-v2-DeleteMemoRequest"></a>
 
 ### DeleteMemoRequest
@@ -1613,6 +1716,36 @@ Used internally for obfuscating the page token.
 
 
 
+<a name="memos-api-v2-ListMemoReactionsRequest"></a>
+
+### ListMemoReactionsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [int32](#int32) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-ListMemoReactionsResponse"></a>
+
+### ListMemoReactionsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| reactions | [Reaction](#memos-api-v2-Reaction) | repeated |  |
+
+
+
+
+
+
 <a name="memos-api-v2-ListMemoRelationsRequest"></a>
 
 ### ListMemoRelationsRequest
@@ -1728,6 +1861,7 @@ Used internally for obfuscating the page token.
 | parent_id | [int32](#int32) | optional |  |
 | resources | [Resource](#memos-api-v2-Resource) | repeated |  |
 | relations | [MemoRelation](#memos-api-v2-MemoRelation) | repeated |  |
+| reactions | [Reaction](#memos-api-v2-Reaction) | repeated |  |
 
 
 
@@ -1794,7 +1928,6 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
 | memo | [Memo](#memos-api-v2-Memo) |  |  |
 | update_mask | [google.protobuf.FieldMask](#google-protobuf-FieldMask) |  |  |
 
@@ -1812,6 +1945,37 @@ Used internally for obfuscating the page token.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | memo | [Memo](#memos-api-v2-Memo) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-UpsertMemoReactionRequest"></a>
+
+### UpsertMemoReactionRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [int32](#int32) |  |  |
+| reaction | [Reaction](#memos-api-v2-Reaction) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-UpsertMemoReactionResponse"></a>
+
+### UpsertMemoReactionResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| reaction | [Reaction](#memos-api-v2-Reaction) |  |  |
 
 
 
@@ -1851,14 +2015,17 @@ Used internally for obfuscating the page token.
 | GetMemoByName | [GetMemoByNameRequest](#memos-api-v2-GetMemoByNameRequest) | [GetMemoByNameResponse](#memos-api-v2-GetMemoByNameResponse) | GetMemoByName gets a memo by name. |
 | UpdateMemo | [UpdateMemoRequest](#memos-api-v2-UpdateMemoRequest) | [UpdateMemoResponse](#memos-api-v2-UpdateMemoResponse) | UpdateMemo updates a memo. |
 | DeleteMemo | [DeleteMemoRequest](#memos-api-v2-DeleteMemoRequest) | [DeleteMemoResponse](#memos-api-v2-DeleteMemoResponse) | DeleteMemo deletes a memo by id. |
+| ExportMemos | [ExportMemosRequest](#memos-api-v2-ExportMemosRequest) | [ExportMemosResponse](#memos-api-v2-ExportMemosResponse) | ExportMemos exports memos. |
 | SetMemoResources | [SetMemoResourcesRequest](#memos-api-v2-SetMemoResourcesRequest) | [SetMemoResourcesResponse](#memos-api-v2-SetMemoResourcesResponse) | SetMemoResources sets resources for a memo. |
 | ListMemoResources | [ListMemoResourcesRequest](#memos-api-v2-ListMemoResourcesRequest) | [ListMemoResourcesResponse](#memos-api-v2-ListMemoResourcesResponse) | ListMemoResources lists resources for a memo. |
 | SetMemoRelations | [SetMemoRelationsRequest](#memos-api-v2-SetMemoRelationsRequest) | [SetMemoRelationsResponse](#memos-api-v2-SetMemoRelationsResponse) | SetMemoRelations sets relations for a memo. |
 | ListMemoRelations | [ListMemoRelationsRequest](#memos-api-v2-ListMemoRelationsRequest) | [ListMemoRelationsResponse](#memos-api-v2-ListMemoRelationsResponse) | ListMemoRelations lists relations for a memo. |
 | CreateMemoComment | [CreateMemoCommentRequest](#memos-api-v2-CreateMemoCommentRequest) | [CreateMemoCommentResponse](#memos-api-v2-CreateMemoCommentResponse) | CreateMemoComment creates a comment for a memo. |
 | ListMemoComments | [ListMemoCommentsRequest](#memos-api-v2-ListMemoCommentsRequest) | [ListMemoCommentsResponse](#memos-api-v2-ListMemoCommentsResponse) | ListMemoComments lists comments for a memo. |
-| ExportMemos | [ExportMemosRequest](#memos-api-v2-ExportMemosRequest) | [ExportMemosResponse](#memos-api-v2-ExportMemosResponse) | ExportMemos exports memos. |
 | GetUserMemosStats | [GetUserMemosStatsRequest](#memos-api-v2-GetUserMemosStatsRequest) | [GetUserMemosStatsResponse](#memos-api-v2-GetUserMemosStatsResponse) | GetUserMemosStats gets stats of memos for a user. |
+| ListMemoReactions | [ListMemoReactionsRequest](#memos-api-v2-ListMemoReactionsRequest) | [ListMemoReactionsResponse](#memos-api-v2-ListMemoReactionsResponse) | ListMemoReactions lists reactions for a memo. |
+| UpsertMemoReaction | [UpsertMemoReactionRequest](#memos-api-v2-UpsertMemoReactionRequest) | [UpsertMemoReactionResponse](#memos-api-v2-UpsertMemoReactionResponse) | UpsertMemoReaction upserts a reaction for a memo. |
+| DeleteMemoReaction | [DeleteMemoReactionRequest](#memos-api-v2-DeleteMemoReactionRequest) | [DeleteMemoReactionResponse](#memos-api-v2-DeleteMemoReactionResponse) | DeleteMemoReaction deletes a reaction for a memo. |
 
  
 
@@ -2313,37 +2480,6 @@ Used internally for obfuscating the page token.
 
 
 
-<a name="memos-api-v2-UpdateWorkspaceProfileRequest"></a>
-
-### UpdateWorkspaceProfileRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| workspace_profile | [WorkspaceProfile](#memos-api-v2-WorkspaceProfile) |  | System info is the updated data. |
-| update_mask | [google.protobuf.FieldMask](#google-protobuf-FieldMask) |  |  |
-
-
-
-
-
-
-<a name="memos-api-v2-UpdateWorkspaceProfileResponse"></a>
-
-### UpdateWorkspaceProfileResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| workspace_profile | [WorkspaceProfile](#memos-api-v2-WorkspaceProfile) |  |  |
-
-
-
-
-
-
 <a name="memos-api-v2-WorkspaceProfile"></a>
 
 ### WorkspaceProfile
@@ -2352,12 +2488,12 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| version | [string](#string) |  |  |
-| mode | [string](#string) |  |  |
-| allow_registration | [bool](#bool) |  |  |
-| disable_password_login | [bool](#bool) |  |  |
-| additional_script | [string](#string) |  |  |
-| additional_style | [string](#string) |  |  |
+| version | [string](#string) |  | version is the current version of instance |
+| mode | [string](#string) |  | mode is the instance mode (e.g. &#34;prod&#34;, &#34;dev&#34; or &#34;demo&#34;). |
+| allow_registration | [bool](#bool) |  | allow_registration is whether the registration is allowed. |
+| disable_password_login | [bool](#bool) |  | allow_password_login is whether the password login is allowed. |
+| additional_script | [string](#string) |  | additional_script is the additional script. |
+| additional_style | [string](#string) |  | additional_style is the additional style. |
 
 
 
@@ -2378,7 +2514,128 @@ Used internally for obfuscating the page token.
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | GetWorkspaceProfile | [GetWorkspaceProfileRequest](#memos-api-v2-GetWorkspaceProfileRequest) | [GetWorkspaceProfileResponse](#memos-api-v2-GetWorkspaceProfileResponse) | GetWorkspaceProfile returns the workspace profile. |
-| UpdateWorkspaceProfile | [UpdateWorkspaceProfileRequest](#memos-api-v2-UpdateWorkspaceProfileRequest) | [UpdateWorkspaceProfileResponse](#memos-api-v2-UpdateWorkspaceProfileResponse) | UpdateWorkspaceProfile updates the workspace profile. |
+
+ 
+
+
+
+<a name="api_v2_workspace_setting_service-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## api/v2/workspace_setting_service.proto
+
+
+
+<a name="memos-api-v2-GetWorkspaceSettingRequest"></a>
+
+### GetWorkspaceSettingRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | The resource name of the workspace setting. Format: settings/{setting} |
+
+
+
+
+
+
+<a name="memos-api-v2-GetWorkspaceSettingResponse"></a>
+
+### GetWorkspaceSettingResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| setting | [WorkspaceSetting](#memos-api-v2-WorkspaceSetting) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-SetWorkspaceSettingRequest"></a>
+
+### SetWorkspaceSettingRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| setting | [WorkspaceSetting](#memos-api-v2-WorkspaceSetting) |  | setting is the setting to update. |
+
+
+
+
+
+
+<a name="memos-api-v2-SetWorkspaceSettingResponse"></a>
+
+### SetWorkspaceSettingResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| setting | [WorkspaceSetting](#memos-api-v2-WorkspaceSetting) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-WorkspaceGeneralSetting"></a>
+
+### WorkspaceGeneralSetting
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| instance_url | [string](#string) |  | instance_url is the instance URL. |
+| disallow_signup | [bool](#bool) |  | disallow_signup is the flag to disallow signup. |
+| disallow_password_login | [bool](#bool) |  | disallow_password_login is the flag to disallow password login. |
+| additional_script | [string](#string) |  | additional_script is the additional script. |
+| additional_style | [string](#string) |  | additional_style is the additional style. |
+
+
+
+
+
+
+<a name="memos-api-v2-WorkspaceSetting"></a>
+
+### WorkspaceSetting
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | name is the name of the setting. Format: settings/{setting} |
+| general_setting | [WorkspaceGeneralSetting](#memos-api-v2-WorkspaceGeneralSetting) |  | general_setting is the general setting of workspace. |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+
+<a name="memos-api-v2-WorkspaceSettingService"></a>
+
+### WorkspaceSettingService
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| GetWorkspaceSetting | [GetWorkspaceSettingRequest](#memos-api-v2-GetWorkspaceSettingRequest) | [GetWorkspaceSettingResponse](#memos-api-v2-GetWorkspaceSettingResponse) | GetWorkspaceSetting returns the setting by name. |
+| SetWorkspaceSetting | [SetWorkspaceSettingRequest](#memos-api-v2-SetWorkspaceSettingRequest) | [SetWorkspaceSettingResponse](#memos-api-v2-SetWorkspaceSettingResponse) | SetWorkspaceSetting updates the setting. |
 
  
 

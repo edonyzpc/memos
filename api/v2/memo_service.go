@@ -26,7 +26,6 @@ import (
 	apiv2pb "github.com/usememos/memos/proto/gen/api/v2"
 	storepb "github.com/usememos/memos/proto/gen/store"
 	"github.com/usememos/memos/server/integration"
-	"github.com/usememos/memos/server/service/metric"
 	"github.com/usememos/memos/store"
 )
 
@@ -67,7 +66,6 @@ func (s *APIV2Service) CreateMemo(ctx context.Context, request *apiv2pb.CreateMe
 	if err != nil {
 		return nil, err
 	}
-	metric.Enqueue("memo create")
 
 	memoMessage, err := s.convertMemoFromStore(ctx, memo)
 	if err != nil {
@@ -247,7 +245,7 @@ func (s *APIV2Service) UpdateMemo(ctx context.Context, request *apiv2pb.UpdateMe
 	}
 
 	memo, err := s.Store.GetMemo(ctx, &store.FindMemo{
-		ID: &request.Id,
+		ID: &request.Memo.Id,
 	})
 	if err != nil {
 		return nil, err
@@ -263,7 +261,7 @@ func (s *APIV2Service) UpdateMemo(ctx context.Context, request *apiv2pb.UpdateMe
 
 	currentTs := time.Now().Unix()
 	update := &store.UpdateMemo{
-		ID:        request.Id,
+		ID:        request.Memo.Id,
 		UpdatedTs: &currentTs,
 	}
 	for _, path := range request.UpdateMask.Paths {
@@ -287,14 +285,13 @@ func (s *APIV2Service) UpdateMemo(ctx context.Context, request *apiv2pb.UpdateMe
 			update.Visibility = &visibility
 		} else if path == "row_status" {
 			rowStatus := convertRowStatusToStore(request.Memo.RowStatus)
-			println("rowStatus", rowStatus)
 			update.RowStatus = &rowStatus
 		} else if path == "created_ts" {
 			createdTs := request.Memo.CreateTime.AsTime().Unix()
 			update.CreatedTs = &createdTs
 		} else if path == "pinned" {
 			if _, err := s.Store.UpsertMemoOrganizer(ctx, &store.MemoOrganizer{
-				MemoID: request.Id,
+				MemoID: request.Memo.Id,
 				UserID: user.ID,
 				Pinned: request.Memo.Pinned,
 			}); err != nil {
@@ -311,7 +308,7 @@ func (s *APIV2Service) UpdateMemo(ctx context.Context, request *apiv2pb.UpdateMe
 	}
 
 	memo, err = s.Store.GetMemo(ctx, &store.FindMemo{
-		ID: &request.Id,
+		ID: &request.Memo.Id,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get memo")
@@ -411,7 +408,6 @@ func (s *APIV2Service) CreateMemoComment(ctx context.Context, request *apiv2pb.C
 			return nil, status.Errorf(codes.Internal, "failed to create inbox")
 		}
 	}
-	metric.Enqueue("memo comment create")
 
 	response := &apiv2pb.CreateMemoCommentResponse{
 		Memo: memo,
@@ -569,6 +565,11 @@ func (s *APIV2Service) convertMemoFromStore(ctx context.Context, memo *store.Mem
 		return nil, errors.Wrap(err, "failed to list memo resources")
 	}
 
+	listMemoReactionsResponse, err := s.ListMemoReactions(ctx, &apiv2pb.ListMemoReactionsRequest{Id: memo.ID})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list memo reactions")
+	}
+
 	return &apiv2pb.Memo{
 		Id:          int32(memo.ID),
 		Name:        memo.ResourceName,
@@ -584,6 +585,7 @@ func (s *APIV2Service) convertMemoFromStore(ctx context.Context, memo *store.Mem
 		ParentId:    memo.ParentID,
 		Relations:   listMemoRelationsResponse.Relations,
 		Resources:   listMemoResourcesResponse.Resources,
+		Reactions:   listMemoReactionsResponse.Reactions,
 	}, nil
 }
 
@@ -840,7 +842,6 @@ func (s *APIV2Service) dispatchMemoRelatedWebhook(ctx context.Context, memo *api
 	if err != nil {
 		return err
 	}
-	metric.Enqueue("webhook dispatch")
 	for _, hook := range webhooks {
 		payload := convertMemoToWebhookPayload(memo)
 		payload.ActivityType = activityType

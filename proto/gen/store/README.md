@@ -16,6 +16,11 @@
   
     - [InboxMessage.Type](#memos-store-InboxMessage-Type)
   
+- [store/reaction.proto](#store_reaction-proto)
+    - [Reaction](#memos-store-Reaction)
+  
+    - [Reaction.Type](#memos-store-Reaction-Type)
+  
 - [store/user_setting.proto](#store_user_setting-proto)
     - [AccessTokensUserSetting](#memos-store-AccessTokensUserSetting)
     - [AccessTokensUserSetting.AccessToken](#memos-store-AccessTokensUserSetting-AccessToken)
@@ -28,6 +33,7 @@
   
 - [store/workspace_setting.proto](#store_workspace_setting-proto)
     - [WorkspaceGeneralSetting](#memos-store-WorkspaceGeneralSetting)
+    - [WorkspaceSetting](#memos-store-WorkspaceSetting)
   
     - [WorkspaceSettingKey](#memos-store-WorkspaceSettingKey)
   
@@ -172,6 +178,64 @@
 
 
 
+<a name="store_reaction-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## store/reaction.proto
+
+
+
+<a name="memos-store-Reaction"></a>
+
+### Reaction
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [int32](#int32) |  |  |
+| created_ts | [int64](#int64) |  |  |
+| creator_id | [int32](#int32) |  |  |
+| content_id | [string](#string) |  | content_id is the id of the content that the reaction is for. This can be a memo. e.g. memos/101 |
+| reaction_type | [Reaction.Type](#memos-store-Reaction-Type) |  |  |
+
+
+
+
+
+ 
+
+
+<a name="memos-store-Reaction-Type"></a>
+
+### Reaction.Type
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| TYPE_UNSPECIFIED | 0 |  |
+| THUMBS_UP | 1 |  |
+| THUMBS_DOWN | 2 |  |
+| HEART | 3 |  |
+| FIRE | 4 |  |
+| CLAPPING_HANDS | 5 |  |
+| LAUGH | 6 |  |
+| OK_HAND | 7 |  |
+| ROCKET | 8 |  |
+| EYES | 9 |  |
+| THINKING_FACE | 10 |  |
+| CLOWN_FACE | 11 |  |
+| QUESTION_MARK | 12 |  |
+
+
+ 
+
+ 
+
+ 
+
+
+
 <a name="store_user_setting-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -225,6 +289,7 @@
 | appearance | [string](#string) |  |  |
 | memo_visibility | [string](#string) |  |  |
 | telegram_user_id | [string](#string) |  |  |
+| compact_view | [bool](#bool) |  |  |
 
 
 
@@ -246,6 +311,7 @@
 | USER_SETTING_APPEARANCE | 3 | The appearance of the user. |
 | USER_SETTING_MEMO_VISIBILITY | 4 | The visibility of the memo. |
 | USER_SETTING_TELEGRAM_USER_ID | 5 | The telegram user id of the user. |
+| USER_SETTING_COMPACT_VIEW | 6 | The compact view for a memo. |
 
 
  
@@ -308,9 +374,27 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| instance_url | [string](#string) |  |  |
-| disallow_signup | [bool](#bool) |  |  |
-| disallow_password_login | [bool](#bool) |  |  |
+| instance_url | [string](#string) |  | instance_url is the instance URL. |
+| disallow_signup | [bool](#bool) |  | disallow_signup is the flag to disallow signup. |
+| disallow_password_login | [bool](#bool) |  | disallow_password_login is the flag to disallow password login. |
+| additional_script | [string](#string) |  | additional_script is the additional script. |
+| additional_style | [string](#string) |  | additional_style is the additional style. |
+
+
+
+
+
+
+<a name="memos-store-WorkspaceSetting"></a>
+
+### WorkspaceSetting
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [WorkspaceSettingKey](#memos-store-WorkspaceSettingKey) |  |  |
+| general | [WorkspaceGeneralSetting](#memos-store-WorkspaceGeneralSetting) |  |  |
 
 
 
@@ -327,7 +411,7 @@
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | WORKSPACE_SETTING_KEY_UNSPECIFIED | 0 |  |
-| WORKSPACE_SETTING_GENERAL | 1 |  |
+| WORKSPACE_SETTING_GENERAL | 1 | WORKSPACE_SETTING_GENERAL is the key for general settings. |
 
 
  

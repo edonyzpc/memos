@@ -16,7 +16,6 @@ import (
 	"github.com/usememos/memos/plugin/telegram"
 	"github.com/usememos/memos/plugin/webhook"
 	storepb "github.com/usememos/memos/proto/gen/store"
-	"github.com/usememos/memos/server/service/metric"
 	"github.com/usememos/memos/store"
 )
 
@@ -29,7 +28,12 @@ func NewTelegramHandler(store *store.Store) *TelegramHandler {
 }
 
 func (t *TelegramHandler) BotToken(ctx context.Context) string {
-	return t.store.GetWorkspaceSettingWithDefaultValue(ctx, apiv1.SystemSettingTelegramBotTokenName.String(), "")
+	if setting, err := t.store.GetWorkspaceSetting(ctx, &store.FindWorkspaceSetting{
+		Name: apiv1.SystemSettingTelegramBotTokenName.String(),
+	}); err == nil && setting != nil {
+		return setting.Value
+	}
+	return ""
 }
 
 const (
@@ -124,6 +128,20 @@ func (t *TelegramHandler) CallbackQueryHandle(ctx context.Context, bot *telegram
 	n, err := fmt.Sscanf(callbackQuery.Data, "%s %d", &visibility, &memoID)
 	if err != nil || n != 2 {
 		return bot.AnswerCallbackQuery(ctx, callbackQuery.ID, fmt.Sprintf("Failed to parse callbackQuery.Data %s", callbackQuery.Data))
+	}
+
+	memo, err := t.store.GetMemo(ctx, &store.FindMemo{
+		ID: &memoID,
+	})
+	if err != nil {
+		return bot.AnswerCallbackQuery(ctx, callbackQuery.ID, fmt.Sprintf("Failed to call FindMemo %s", err))
+	}
+	if memo == nil {
+		_, err = bot.EditMessage(ctx, callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID, fmt.Sprintf("Memo %d not found", memoID), nil)
+		if err != nil {
+			return bot.AnswerCallbackQuery(ctx, callbackQuery.ID, fmt.Sprintf("Failed to EditMessage %s", err))
+		}
+		return bot.AnswerCallbackQuery(ctx, callbackQuery.ID, fmt.Sprintf("Memo %d not found, possibly deleted elsewhere", memoID))
 	}
 
 	update := store.UpdateMemo{
@@ -226,7 +244,6 @@ func (t *TelegramHandler) dispatchMemoRelatedWebhook(ctx context.Context, memo s
 	if err != nil {
 		return err
 	}
-	metric.Enqueue("webhook dispatch")
 	for _, hook := range webhooks {
 		payload := t.convertMemoToWebhookPayload(ctx, memo)
 		payload.ActivityType = activityType

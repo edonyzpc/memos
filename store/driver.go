@@ -52,6 +52,9 @@ type Driver interface {
 	// WorkspaceSetting model related methods.
 	UpsertWorkspaceSetting(ctx context.Context, upsert *WorkspaceSetting) (*WorkspaceSetting, error)
 	ListWorkspaceSettings(ctx context.Context, find *FindWorkspaceSetting) ([]*WorkspaceSetting, error)
+	DeleteWorkspaceSetting(ctx context.Context, delete *DeleteWorkspaceSetting) error
+	UpsertWorkspaceSettingV1(ctx context.Context, upsert *storepb.WorkspaceSetting) (*storepb.WorkspaceSetting, error)
+	ListWorkspaceSettingsV1(ctx context.Context, find *FindWorkspaceSettingV1) ([]*storepb.WorkspaceSetting, error)
 
 	// User model related methods.
 	CreateUser(ctx context.Context, create *User) (*User, error)
@@ -91,4 +94,9 @@ type Driver interface {
 	ListWebhooks(ctx context.Context, find *FindWebhook) ([]*storepb.Webhook, error)
 	UpdateWebhook(ctx context.Context, update *UpdateWebhook) (*storepb.Webhook, error)
 	DeleteWebhook(ctx context.Context, delete *DeleteWebhook) error
+
+	// Reaction model related methods.
+	UpsertReaction(ctx context.Context, create *storepb.Reaction) (*storepb.Reaction, error)
+	ListReactions(ctx context.Context, find *FindReaction) ([]*storepb.Reaction, error)
+	DeleteReaction(ctx context.Context, delete *DeleteReaction) error
 }
