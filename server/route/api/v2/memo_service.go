@@ -6,10 +6,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"time"
 
 	"github.com/google/cel-go/cel"
+	"github.com/labstack/gommon/log"
 	"github.com/lithammer/shortuuid/v4"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -18,7 +20,6 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/usememos/memos/internal/log"
 	"github.com/usememos/memos/internal/util"
 	"github.com/usememos/memos/plugin/telegram"
 	"github.com/usememos/memos/plugin/webhook"
@@ -73,7 +74,7 @@ func (s *APIV2Service) CreateMemo(ctx context.Context, request *apiv2pb.CreateMe
 	}
 	// Try to dispatch webhook when memo is created.
 	if err := s.DispatchMemoCreatedWebhook(ctx, memoMessage); err != nil {
-		log.Warn("Failed to dispatch memo created webhook", zap.Error(err))
+		slog.Warn("Failed to dispatch memo created webhook", err)
 	}
 	// Send notification to telegram if memo is not private.
 	if memoMessage.Visibility != apiv2pb.Visibility_PRIVATE {
@@ -319,7 +320,7 @@ func (s *APIV2Service) UpdateMemo(ctx context.Context, request *apiv2pb.UpdateMe
 	}
 	// Try to dispatch webhook when memo is updated.
 	if err := s.DispatchMemoUpdatedWebhook(ctx, memoMessage); err != nil {
-		log.Warn("Failed to dispatch memo updated webhook", zap.Error(err))
+		slog.Warn("Failed to dispatch memo updated webhook", err)
 	}
 
 	return &apiv2pb.UpdateMemoResponse{
@@ -346,7 +347,7 @@ func (s *APIV2Service) DeleteMemo(ctx context.Context, request *apiv2pb.DeleteMe
 	if memoMessage, err := s.convertMemoFromStore(ctx, memo); err == nil {
 		// Try to dispatch webhook when memo is deleted.
 		if err := s.DispatchMemoDeletedWebhook(ctx, memoMessage); err != nil {
-			log.Warn("Failed to dispatch memo deleted webhook", zap.Error(err))
+			slog.Warn("Failed to dispatch memo deleted webhook", err)
 		}
 	}
 
