@@ -25,7 +25,7 @@ import (
 	"github.com/usememos/memos/plugin/webhook"
 	apiv2pb "github.com/usememos/memos/proto/gen/api/v2"
 	storepb "github.com/usememos/memos/proto/gen/store"
-	"github.com/usememos/memos/server/integration"
+	"github.com/usememos/memos/server/integration/custom"
 	apiv1 "github.com/usememos/memos/server/route/api/v1"
 	"github.com/usememos/memos/store"
 )
@@ -91,7 +91,7 @@ func (s *APIV2Service) CreateMemo(ctx context.Context, request *apiv2pb.CreateMe
 			}
 
 			// send notification to telegram
-			telegramBot := telegram.NewBotWithHandler(integration.NewTelegramHandler(s.Store))
+			telegramBot := telegram.NewBotWithHandler(custom.NewTelegramHandler(s.Store))
 			content := memoMessage.Creator + " Says:\n\n" + memoMessage.Content
 			_, err = telegramBot.SendMessage(ctx, tgUserID, content)
 			if err != nil {
