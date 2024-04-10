@@ -66,10 +66,7 @@
     "yourself": "نفسك"
   },
   "editor": {
-    "cancel-edit": "إلغاء التعديل",
-    "editing": "تعديل...",
-    "local": "محلي",
-    "placeholder": "أية أفكار...",
+    "any-thoughts": "أية أفكار...",
     "save": "حفظ"
   },
   "memo": {
@@ -151,8 +148,6 @@
     "preference": "التفضيلات",
     "preference-section": {
       "default-memo-sort-option": "وقت عرض المذكرة",
-      "enable-double-click": "الضغط مرتين للتعديل",
-      "mobile-editor-style": "تصميم محرر الهاتف",
       "theme": "السمة"
     },
     "storage": "المساحة التخزينية",

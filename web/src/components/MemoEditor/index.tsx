@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import useLocalStorage from "react-use/lib/useLocalStorage";
 import { memoServiceClient } from "@/grpcweb";
-import { TAB_SPACE_WIDTH, UNKNOWN_ID } from "@/helpers/consts";
+import { TAB_SPACE_WIDTH } from "@/helpers/consts";
 import { isValidUrl } from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useGlobalStore, useResourceStore, useTagStore } from "@/store/module";
@@ -30,13 +30,14 @@ import { MemoEditorContext } from "./types";
 
 interface Props {
   className?: string;
-  editorClassName?: string;
   cacheKey?: string;
-  memoId?: number;
-  parentMemoId?: number;
+  placeholder?: string;
+  memoName?: string;
+  parentMemoName?: string;
   relationList?: MemoRelation[];
   autoFocus?: boolean;
-  onConfirm?: (memoId: number) => void;
+  onConfirm?: (memoName: string) => void;
+  onEditPrevious?: () => void;
 }
 
 interface State {
@@ -49,7 +50,7 @@ interface State {
 }
 
 const MemoEditor = (props: Props) => {
-  const { className, editorClassName, cacheKey, memoId, parentMemoId, autoFocus, onConfirm } = props;
+  const { className, cacheKey, memoName, parentMemoName, autoFocus, onConfirm } = props;
   const { i18n } = useTranslation();
   const t = useTranslate();
   const {
@@ -73,9 +74,9 @@ const MemoEditor = (props: Props) => {
   const userSetting = userStore.userSetting as UserSetting;
   const contentCacheKey = `${currentUser.name}-${cacheKey || ""}`;
   const [contentCache, setContentCache] = useLocalStorage<string>(contentCacheKey, "");
-  const referenceRelations = memoId
+  const referenceRelations = memoName
     ? state.relationList.filter(
-        (relation) => relation.memoId === memoId && relation.relatedMemoId !== memoId && relation.type === MemoRelation_Type.REFERENCE,
+        (relation) => relation.memo === memoName && relation.relatedMemo !== memoName && relation.type === MemoRelation_Type.REFERENCE,
       )
     : state.relationList.filter((relation) => relation.type === MemoRelation_Type.REFERENCE);
 
@@ -101,8 +102,8 @@ const MemoEditor = (props: Props) => {
   }, [userSetting.memoVisibility, systemStatus.disablePublicMemos]);
 
   useEffect(() => {
-    if (memoId) {
-      memoStore.getOrFetchMemoById(memoId ?? UNKNOWN_ID).then((memo) => {
+    if (memoName) {
+      memoStore.getOrFetchMemoByName(memoName).then((memo) => {
         if (memo) {
           handleEditorFocus();
           setState((prevState) => ({
@@ -117,7 +118,7 @@ const MemoEditor = (props: Props) => {
         }
       });
     }
-  }, [memoId]);
+  }, [memoName]);
 
   const handleCompositionStart = () => {
     setState((prevState) => ({
@@ -141,7 +142,7 @@ const MemoEditor = (props: Props) => {
     const isMetaKey = event.ctrlKey || event.metaKey;
     if (isMetaKey) {
       if (event.key === "Enter") {
-        handleSaveBtnClick();
+        void handleSaveBtnClick();
         return;
       }
 
@@ -156,6 +157,12 @@ const MemoEditor = (props: Props) => {
       if (selectedContent) {
         editorRef.current.setCursorPosition(cursorPosition + TAB_SPACE_WIDTH);
       }
+      return;
+    }
+
+    if (!!props.onEditPrevious && event.key === "ArrowDown" && !state.isComposing && editorRef.current.getContent() === "") {
+      event.preventDefault();
+      props.onEditPrevious();
       return;
     }
   };
@@ -223,13 +230,13 @@ const MemoEditor = (props: Props) => {
       const resource = await handleUploadResource(file);
       if (resource) {
         uploadedResourceList.push(resource);
-        if (memoId) {
+        if (memoName) {
           await resourceStore.updateResource({
             resource: Resource.fromPartial({
-              id: resource.id,
-              memoId,
+              name: resource.name,
+              memo: memoName,
             }),
-            updateMask: ["memo_id"],
+            updateMask: ["memo"],
           });
         }
       }
@@ -286,41 +293,41 @@ const MemoEditor = (props: Props) => {
     const content = editorRef.current?.getContent() ?? "";
     try {
       // Update memo.
-      if (memoId && memoId !== UNKNOWN_ID) {
-        const prevMemo = await memoStore.getOrFetchMemoById(memoId ?? UNKNOWN_ID);
+      if (memoName) {
+        const prevMemo = await memoStore.getOrFetchMemoByName(memoName);
         if (prevMemo) {
           const memo = await memoStore.updateMemo(
             {
-              id: prevMemo.id,
+              name: prevMemo.name,
               content,
               visibility: state.memoVisibility,
             },
             ["content", "visibility"],
           );
           await memoServiceClient.setMemoResources({
-            id: memo.id,
+            name: memo.name,
             resources: state.resourceList,
           });
           await memoServiceClient.setMemoRelations({
-            id: memo.id,
+            name: memo.name,
             relations: state.relationList,
           });
-          await memoStore.getOrFetchMemoById(memo.id, { skipCache: true });
+          await memoStore.getOrFetchMemoByName(memo.name, { skipCache: true });
           if (onConfirm) {
-            onConfirm(memo.id);
+            onConfirm(memo.name);
           }
         }
       } else {
         // Create memo or memo comment.
-        const request = !parentMemoId
+        const request = !parentMemoName
           ? memoStore.createMemo({
               content,
               visibility: state.memoVisibility,
             })
           : memoServiceClient
               .createMemoComment({
-                id: parentMemoId,
-                create: {
+                name: parentMemoName,
+                comment: {
                   content,
                   visibility: state.memoVisibility,
                 },
@@ -328,16 +335,16 @@ const MemoEditor = (props: Props) => {
               .then(({ memo }) => memo as Memo);
         const memo = await request;
         await memoServiceClient.setMemoResources({
-          id: memo.id,
+          name: memo.name,
           resources: state.resourceList,
         });
         await memoServiceClient.setMemoRelations({
-          id: memo.id,
+          name: memo.name,
           relations: state.relationList,
         });
-        await memoStore.getOrFetchMemoById(memo.id, { skipCache: true });
+        await memoStore.getOrFetchMemoByName(memo.name, { skipCache: true });
         if (onConfirm) {
-          onConfirm(memo.id);
+          onConfirm(memo.name);
         }
       }
       editorRef.current?.setContent("");
@@ -366,9 +373,9 @@ const MemoEditor = (props: Props) => {
 
   const editorConfig = useMemo(
     () => ({
-      className: editorClassName ?? "",
+      className: "",
       initialContent: "",
-      placeholder: t("editor.placeholder"),
+      placeholder: props.placeholder ?? t("editor.any-thoughts"),
       onContentChange: handleContentChange,
       onPaste: handlePasteEvent,
     }),
@@ -387,7 +394,7 @@ const MemoEditor = (props: Props) => {
             relationList,
           }));
         },
-        memoId,
+        memoName,
       }}
     >
       <div

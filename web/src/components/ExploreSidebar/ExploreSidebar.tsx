@@ -1,12 +1,12 @@
 import classNames from "classnames";
-import SearchBar from "./SearchBar";
-import TagList from "./TagList";
+import SearchBar from "@/components/SearchBar";
+import UsersSection from "./UsersSection";
 
 interface Props {
   className?: string;
 }
 
-const TimelineSidebar = (props: Props) => {
+const ExploreSidebar = (props: Props) => {
   return (
     <aside
       className={classNames(
@@ -15,9 +15,9 @@ const TimelineSidebar = (props: Props) => {
       )}
     >
       <SearchBar />
-      <TagList />
+      <UsersSection />
     </aside>
   );
 };
 
-export default TimelineSidebar;
+export default ExploreSidebar;

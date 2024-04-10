@@ -1,8 +1,8 @@
 import classNames from "classnames";
+import SearchBar from "@/components/SearchBar";
+import UserStatisticsView from "@/components/UserStatisticsView";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import PersonalStatistics from "./PersonalStatistics";
-import SearchBar from "./SearchBar";
-import TagList from "./TagList";
+import TagsSection from "./TagsSection";
 
 interface Props {
   className?: string;
@@ -19,8 +19,8 @@ const HomeSidebar = (props: Props) => {
       )}
     >
       <SearchBar />
-      <PersonalStatistics user={currentUser} />
-      <TagList />
+      <UserStatisticsView user={currentUser} />
+      <TagsSection />
     </aside>
   );
 };

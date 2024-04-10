@@ -13,11 +13,11 @@ const ReferencedMemo = ({ resourceId, params: paramsStr }: Props) => {
   const navigateTo = useNavigateTo();
   const loadingState = useLoading();
   const memoStore = useMemoStore();
-  const memo = memoStore.getMemoByName(resourceId);
+  const memo = memoStore.getMemoByUid(resourceId);
   const params = new URLSearchParams(paramsStr);
 
   useEffect(() => {
-    memoStore.getOrFetchMemoByName(resourceId).finally(() => loadingState.setFinish());
+    memoStore.searchMemos(`uid == "${resourceId}"`).finally(() => loadingState.setFinish());
   }, [resourceId]);
 
   if (loadingState.isLoading) {
@@ -31,7 +31,7 @@ const ReferencedMemo = ({ resourceId, params: paramsStr }: Props) => {
   const displayContent = paramsText || (memo.content.length > 12 ? `${memo.content.slice(0, 12)}...` : memo.content);
 
   const handleGotoMemoDetailPage = () => {
-    navigateTo(`/m/${memo.name}`);
+    navigateTo(`/m/${memo.uid}`);
   };
 
   return (

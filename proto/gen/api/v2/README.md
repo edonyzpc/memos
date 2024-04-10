@@ -35,6 +35,8 @@
     - [ListUserAccessTokensResponse](#memos-api-v2-ListUserAccessTokensResponse)
     - [ListUsersRequest](#memos-api-v2-ListUsersRequest)
     - [ListUsersResponse](#memos-api-v2-ListUsersResponse)
+    - [SearchUsersRequest](#memos-api-v2-SearchUsersRequest)
+    - [SearchUsersResponse](#memos-api-v2-SearchUsersResponse)
     - [UpdateUserRequest](#memos-api-v2-UpdateUserRequest)
     - [UpdateUserResponse](#memos-api-v2-UpdateUserResponse)
     - [UpdateUserSettingRequest](#memos-api-v2-UpdateUserSettingRequest)
@@ -61,6 +63,26 @@
   
     - [AuthService](#memos-api-v2-AuthService)
   
+- [api/v2/idp_service.proto](#api_v2_idp_service-proto)
+    - [CreateIdentityProviderRequest](#memos-api-v2-CreateIdentityProviderRequest)
+    - [CreateIdentityProviderResponse](#memos-api-v2-CreateIdentityProviderResponse)
+    - [DeleteIdentityProviderRequest](#memos-api-v2-DeleteIdentityProviderRequest)
+    - [DeleteIdentityProviderResponse](#memos-api-v2-DeleteIdentityProviderResponse)
+    - [GetIdentityProviderRequest](#memos-api-v2-GetIdentityProviderRequest)
+    - [GetIdentityProviderResponse](#memos-api-v2-GetIdentityProviderResponse)
+    - [IdentityProvider](#memos-api-v2-IdentityProvider)
+    - [IdentityProvider.Config](#memos-api-v2-IdentityProvider-Config)
+    - [IdentityProvider.Config.FieldMapping](#memos-api-v2-IdentityProvider-Config-FieldMapping)
+    - [IdentityProvider.Config.OAuth2](#memos-api-v2-IdentityProvider-Config-OAuth2)
+    - [ListIdentityProvidersRequest](#memos-api-v2-ListIdentityProvidersRequest)
+    - [ListIdentityProvidersResponse](#memos-api-v2-ListIdentityProvidersResponse)
+    - [UpdateIdentityProviderRequest](#memos-api-v2-UpdateIdentityProviderRequest)
+    - [UpdateIdentityProviderResponse](#memos-api-v2-UpdateIdentityProviderResponse)
+  
+    - [IdentityProvider.Type](#memos-api-v2-IdentityProvider-Type)
+  
+    - [IdentityProviderService](#memos-api-v2-IdentityProviderService)
+  
 - [api/v2/inbox_service.proto](#api_v2_inbox_service-proto)
     - [DeleteInboxRequest](#memos-api-v2-DeleteInboxRequest)
     - [DeleteInboxResponse](#memos-api-v2-DeleteInboxResponse)
@@ -74,6 +96,13 @@
     - [Inbox.Type](#memos-api-v2-Inbox-Type)
   
     - [InboxService](#memos-api-v2-InboxService)
+  
+- [api/v2/link_service.proto](#api_v2_link_service-proto)
+    - [GetLinkMetadataRequest](#memos-api-v2-GetLinkMetadataRequest)
+    - [GetLinkMetadataResponse](#memos-api-v2-GetLinkMetadataResponse)
+    - [LinkMetadata](#memos-api-v2-LinkMetadata)
+  
+    - [LinkService](#memos-api-v2-LinkService)
   
 - [api/v2/memo_relation_service.proto](#api_v2_memo_relation_service-proto)
     - [MemoRelation](#memos-api-v2-MemoRelation)
@@ -90,13 +119,13 @@
     - [CreateResourceResponse](#memos-api-v2-CreateResourceResponse)
     - [DeleteResourceRequest](#memos-api-v2-DeleteResourceRequest)
     - [DeleteResourceResponse](#memos-api-v2-DeleteResourceResponse)
-    - [GetResourceByNameRequest](#memos-api-v2-GetResourceByNameRequest)
-    - [GetResourceByNameResponse](#memos-api-v2-GetResourceByNameResponse)
     - [GetResourceRequest](#memos-api-v2-GetResourceRequest)
     - [GetResourceResponse](#memos-api-v2-GetResourceResponse)
     - [ListResourcesRequest](#memos-api-v2-ListResourcesRequest)
     - [ListResourcesResponse](#memos-api-v2-ListResourcesResponse)
     - [Resource](#memos-api-v2-Resource)
+    - [SearchResourcesRequest](#memos-api-v2-SearchResourcesRequest)
+    - [SearchResourcesResponse](#memos-api-v2-SearchResourcesResponse)
     - [UpdateResourceRequest](#memos-api-v2-UpdateResourceRequest)
     - [UpdateResourceResponse](#memos-api-v2-UpdateResourceResponse)
   
@@ -113,8 +142,6 @@
     - [DeleteMemoResponse](#memos-api-v2-DeleteMemoResponse)
     - [ExportMemosRequest](#memos-api-v2-ExportMemosRequest)
     - [ExportMemosResponse](#memos-api-v2-ExportMemosResponse)
-    - [GetMemoByNameRequest](#memos-api-v2-GetMemoByNameRequest)
-    - [GetMemoByNameResponse](#memos-api-v2-GetMemoByNameResponse)
     - [GetMemoRequest](#memos-api-v2-GetMemoRequest)
     - [GetMemoResponse](#memos-api-v2-GetMemoResponse)
     - [GetUserMemosStatsRequest](#memos-api-v2-GetUserMemosStatsRequest)
@@ -131,6 +158,8 @@
     - [ListMemosRequest](#memos-api-v2-ListMemosRequest)
     - [ListMemosResponse](#memos-api-v2-ListMemosResponse)
     - [Memo](#memos-api-v2-Memo)
+    - [SearchMemosRequest](#memos-api-v2-SearchMemosRequest)
+    - [SearchMemosResponse](#memos-api-v2-SearchMemosResponse)
     - [SetMemoRelationsRequest](#memos-api-v2-SetMemoRelationsRequest)
     - [SetMemoRelationsResponse](#memos-api-v2-SetMemoRelationsResponse)
     - [SetMemoResourcesRequest](#memos-api-v2-SetMemoResourcesRequest)
@@ -380,7 +409,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the user. Format: users/{username} |
+| name | [string](#string) |  | The name of the user. Format: users/{id} |
 | description | [string](#string) |  |  |
 | expires_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) | optional |  |
 
@@ -442,7 +471,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the user. Format: users/{username} |
+| name | [string](#string) |  | The name of the user. Format: users/{id} |
 | access_token | [string](#string) |  | access_token is the access token to delete. |
 
 
@@ -468,7 +497,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the user. Format: users/{username} |
+| name | [string](#string) |  | The name of the user. Format: users/{id} |
 
 
 
@@ -493,7 +522,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the user. Format: users/{username} |
+| name | [string](#string) |  | The name of the user. Format: users/{id} |
 
 
 
@@ -523,7 +552,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the user. Format: users/{username} |
+| name | [string](#string) |  | The name of the user. Format: users/{id} |
 
 
 
@@ -553,7 +582,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the user. Format: users/{username} |
+| name | [string](#string) |  | The name of the user. Format: users/{id} |
 
 
 
@@ -588,6 +617,36 @@ Used internally for obfuscating the page token.
 <a name="memos-api-v2-ListUsersResponse"></a>
 
 ### ListUsersResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| users | [User](#memos-api-v2-User) | repeated |  |
+
+
+
+
+
+
+<a name="memos-api-v2-SearchUsersRequest"></a>
+
+### SearchUsersRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| filter | [string](#string) |  | Filter is used to filter users returned in the list. Format: &#34;username == frank&#34; |
+
+
+
+
+
+
+<a name="memos-api-v2-SearchUsersResponse"></a>
+
+### SearchUsersResponse
 
 
 
@@ -670,13 +729,14 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the user. Format: users/{username} |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  | The name of the user. Format: users/{id} |
+| id | [int32](#int32) |  | The system generated uid of the user. |
 | role | [User.Role](#memos-api-v2-User-Role) |  |  |
 | username | [string](#string) |  |  |
 | email | [string](#string) |  |  |
 | nickname | [string](#string) |  |  |
 | avatar_url | [string](#string) |  |  |
+| description | [string](#string) |  |  |
 | password | [string](#string) |  |  |
 | row_status | [RowStatus](#memos-api-v2-RowStatus) |  |  |
 | create_time | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
@@ -713,7 +773,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the user. Format: users/{username} |
+| name | [string](#string) |  | The name of the user. Format: users/{id} |
 | locale | [string](#string) |  | The preferred locale of the user. |
 | appearance | [string](#string) |  | The preferred appearance of the user. |
 | memo_visibility | [string](#string) |  | The default visibility of the memo. |
@@ -752,6 +812,7 @@ Used internally for obfuscating the page token.
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | ListUsers | [ListUsersRequest](#memos-api-v2-ListUsersRequest) | [ListUsersResponse](#memos-api-v2-ListUsersResponse) | ListUsers returns a list of users. |
+| SearchUsers | [SearchUsersRequest](#memos-api-v2-SearchUsersRequest) | [SearchUsersResponse](#memos-api-v2-SearchUsersResponse) | SearchUsers searches users by filter. |
 | GetUser | [GetUserRequest](#memos-api-v2-GetUserRequest) | [GetUserResponse](#memos-api-v2-GetUserResponse) | GetUser gets a user by name. |
 | CreateUser | [CreateUserRequest](#memos-api-v2-CreateUserRequest) | [CreateUserResponse](#memos-api-v2-CreateUserResponse) | CreateUser creates a new user. |
 | UpdateUser | [UpdateUserRequest](#memos-api-v2-UpdateUserRequest) | [UpdateUserResponse](#memos-api-v2-UpdateUserResponse) | UpdateUser updates a user. |
@@ -936,6 +997,261 @@ Used internally for obfuscating the page token.
 
 
 
+<a name="api_v2_idp_service-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## api/v2/idp_service.proto
+
+
+
+<a name="memos-api-v2-CreateIdentityProviderRequest"></a>
+
+### CreateIdentityProviderRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| identity_provider | [IdentityProvider](#memos-api-v2-IdentityProvider) |  | The identityProvider to create. |
+
+
+
+
+
+
+<a name="memos-api-v2-CreateIdentityProviderResponse"></a>
+
+### CreateIdentityProviderResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| identity_provider | [IdentityProvider](#memos-api-v2-IdentityProvider) |  | The created identityProvider. |
+
+
+
+
+
+
+<a name="memos-api-v2-DeleteIdentityProviderRequest"></a>
+
+### DeleteIdentityProviderRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | The name of the identityProvider to delete. Format: identityProviders/{id} |
+
+
+
+
+
+
+<a name="memos-api-v2-DeleteIdentityProviderResponse"></a>
+
+### DeleteIdentityProviderResponse
+
+
+
+
+
+
+
+<a name="memos-api-v2-GetIdentityProviderRequest"></a>
+
+### GetIdentityProviderRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | The name of the identityProvider to get. Format: identityProviders/{id} |
+
+
+
+
+
+
+<a name="memos-api-v2-GetIdentityProviderResponse"></a>
+
+### GetIdentityProviderResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| identity_provider | [IdentityProvider](#memos-api-v2-IdentityProvider) |  | The identityProvider. |
+
+
+
+
+
+
+<a name="memos-api-v2-IdentityProvider"></a>
+
+### IdentityProvider
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | The name of the identityProvider. Format: identityProviders/{id} |
+| type | [IdentityProvider.Type](#memos-api-v2-IdentityProvider-Type) |  |  |
+| title | [string](#string) |  |  |
+| identifier_filter | [string](#string) |  |  |
+| config | [IdentityProvider.Config](#memos-api-v2-IdentityProvider-Config) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-IdentityProvider-Config"></a>
+
+### IdentityProvider.Config
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| oauth2 | [IdentityProvider.Config.OAuth2](#memos-api-v2-IdentityProvider-Config-OAuth2) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-IdentityProvider-Config-FieldMapping"></a>
+
+### IdentityProvider.Config.FieldMapping
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| identifier | [string](#string) |  |  |
+| display_name | [string](#string) |  |  |
+| email | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-IdentityProvider-Config-OAuth2"></a>
+
+### IdentityProvider.Config.OAuth2
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| client_id | [string](#string) |  |  |
+| client_secret | [string](#string) |  |  |
+| auth_url | [string](#string) |  |  |
+| token_url | [string](#string) |  |  |
+| user_info_url | [string](#string) |  |  |
+| scopes | [string](#string) | repeated |  |
+| field_mapping | [IdentityProvider.Config.FieldMapping](#memos-api-v2-IdentityProvider-Config-FieldMapping) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-ListIdentityProvidersRequest"></a>
+
+### ListIdentityProvidersRequest
+
+
+
+
+
+
+
+<a name="memos-api-v2-ListIdentityProvidersResponse"></a>
+
+### ListIdentityProvidersResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| identity_providers | [IdentityProvider](#memos-api-v2-IdentityProvider) | repeated |  |
+
+
+
+
+
+
+<a name="memos-api-v2-UpdateIdentityProviderRequest"></a>
+
+### UpdateIdentityProviderRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| identity_provider | [IdentityProvider](#memos-api-v2-IdentityProvider) |  | The identityProvider to update. |
+| update_mask | [google.protobuf.FieldMask](#google-protobuf-FieldMask) |  | The update mask applies to the resource. Only the top level fields of IdentityProvider are supported. |
+
+
+
+
+
+
+<a name="memos-api-v2-UpdateIdentityProviderResponse"></a>
+
+### UpdateIdentityProviderResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| identity_provider | [IdentityProvider](#memos-api-v2-IdentityProvider) |  | The updated identityProvider. |
+
+
+
+
+
+ 
+
+
+<a name="memos-api-v2-IdentityProvider-Type"></a>
+
+### IdentityProvider.Type
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| TYPE_UNSPECIFIED | 0 |  |
+| OAUTH2 | 1 |  |
+
+
+ 
+
+ 
+
+
+<a name="memos-api-v2-IdentityProviderService"></a>
+
+### IdentityProviderService
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| ListIdentityProviders | [ListIdentityProvidersRequest](#memos-api-v2-ListIdentityProvidersRequest) | [ListIdentityProvidersResponse](#memos-api-v2-ListIdentityProvidersResponse) |  |
+| GetIdentityProvider | [GetIdentityProviderRequest](#memos-api-v2-GetIdentityProviderRequest) | [GetIdentityProviderResponse](#memos-api-v2-GetIdentityProviderResponse) |  |
+| CreateIdentityProvider | [CreateIdentityProviderRequest](#memos-api-v2-CreateIdentityProviderRequest) | [CreateIdentityProviderResponse](#memos-api-v2-CreateIdentityProviderResponse) |  |
+| UpdateIdentityProvider | [UpdateIdentityProviderRequest](#memos-api-v2-UpdateIdentityProviderRequest) | [UpdateIdentityProviderResponse](#memos-api-v2-UpdateIdentityProviderResponse) | UpdateIdentityProvider updates an identity provider. |
+| DeleteIdentityProvider | [DeleteIdentityProviderRequest](#memos-api-v2-DeleteIdentityProviderRequest) | [DeleteIdentityProviderResponse](#memos-api-v2-DeleteIdentityProviderResponse) | DeleteIdentityProvider deletes an identity provider. |
+
+ 
+
+
+
 <a name="api_v2_inbox_service-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -951,7 +1267,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the inbox to delete. Format: inboxes/{uid} |
+| name | [string](#string) |  | The name of the inbox to delete. Format: inboxes/{id} |
 
 
 
@@ -976,9 +1292,9 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | The name of the inbox. Format: inboxes/{uid} |
-| sender | [string](#string) |  | Format: users/{username} |
-| receiver | [string](#string) |  | Format: users/{username} |
+| name | [string](#string) |  | The name of the inbox. Format: inboxes/{id} |
+| sender | [string](#string) |  | Format: users/{id} |
+| receiver | [string](#string) |  | Format: users/{id} |
 | status | [Inbox.Status](#memos-api-v2-Inbox-Status) |  |  |
 | create_time | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | type | [Inbox.Type](#memos-api-v2-Inbox-Type) |  |  |
@@ -997,7 +1313,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| user | [string](#string) |  | Format: users/{username} |
+| user | [string](#string) |  | Format: users/{id} |
 
 
 
@@ -1097,6 +1413,79 @@ Used internally for obfuscating the page token.
 
 
 
+<a name="api_v2_link_service-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## api/v2/link_service.proto
+
+
+
+<a name="memos-api-v2-GetLinkMetadataRequest"></a>
+
+### GetLinkMetadataRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| link | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-GetLinkMetadataResponse"></a>
+
+### GetLinkMetadataResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| link_metadata | [LinkMetadata](#memos-api-v2-LinkMetadata) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-LinkMetadata"></a>
+
+### LinkMetadata
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| title | [string](#string) |  |  |
+| description | [string](#string) |  |  |
+| image | [string](#string) |  |  |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+
+<a name="memos-api-v2-LinkService"></a>
+
+### LinkService
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| GetLinkMetadata | [GetLinkMetadataRequest](#memos-api-v2-GetLinkMetadataRequest) | [GetLinkMetadataResponse](#memos-api-v2-GetLinkMetadataResponse) |  |
+
+ 
+
+
+
 <a name="api_v2_memo_relation_service-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -1112,8 +1501,8 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| memo_id | [int32](#int32) |  |  |
-| related_memo_id | [int32](#int32) |  |  |
+| memo | [string](#string) |  | The name of memo. Format: &#34;memos/{uid}&#34; |
+| related_memo | [string](#string) |  | The name of related memo. Format: &#34;memos/{uid}&#34; |
 | type | [MemoRelation.Type](#memos-api-v2-MemoRelation-Type) |  |  |
 
 
@@ -1159,7 +1548,7 @@ Used internally for obfuscating the page token.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | id | [int32](#int32) |  |  |
-| creator | [string](#string) |  |  |
+| creator | [string](#string) |  | The name of the creator. Format: users/{id} |
 | content_id | [string](#string) |  |  |
 | reaction_type | [Reaction.Type](#memos-api-v2-Reaction-Type) |  |  |
 
@@ -1218,7 +1607,7 @@ Used internally for obfuscating the page token.
 | filename | [string](#string) |  |  |
 | external_link | [string](#string) |  |  |
 | type | [string](#string) |  |  |
-| memo_id | [int32](#int32) | optional |  |
+| memo | [string](#string) | optional | Format: memos/{id} |
 
 
 
@@ -1248,7 +1637,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  |  |
 
 
 
@@ -1265,36 +1654,6 @@ Used internally for obfuscating the page token.
 
 
 
-<a name="memos-api-v2-GetResourceByNameRequest"></a>
-
-### GetResourceByNameRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="memos-api-v2-GetResourceByNameResponse"></a>
-
-### GetResourceByNameResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| resource | [Resource](#memos-api-v2-Resource) |  |  |
-
-
-
-
-
-
 <a name="memos-api-v2-GetResourceRequest"></a>
 
 ### GetResourceRequest
@@ -1303,7 +1662,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  |  |
 
 
 
@@ -1358,14 +1717,44 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  | id is the system generated unique identifier. |
-| name | [string](#string) |  | name is the user provided name. |
+| name | [string](#string) |  | The name of the resource. Format: resources/{id} id is the system generated unique identifier. |
+| uid | [string](#string) |  | The user defined id of the resource. |
 | create_time | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | filename | [string](#string) |  |  |
 | external_link | [string](#string) |  |  |
 | type | [string](#string) |  |  |
 | size | [int64](#int64) |  |  |
-| memo_id | [int32](#int32) | optional |  |
+| memo | [string](#string) | optional | Format: memos/{id} |
+
+
+
+
+
+
+<a name="memos-api-v2-SearchResourcesRequest"></a>
+
+### SearchResourcesRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| filter | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="memos-api-v2-SearchResourcesResponse"></a>
+
+### SearchResourcesResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| resources | [Resource](#memos-api-v2-Resource) | repeated |  |
 
 
 
@@ -1418,10 +1807,10 @@ Used internally for obfuscating the page token.
 | ----------- | ------------ | ------------- | ------------|
 | CreateResource | [CreateResourceRequest](#memos-api-v2-CreateResourceRequest) | [CreateResourceResponse](#memos-api-v2-CreateResourceResponse) | CreateResource creates a new resource. |
 | ListResources | [ListResourcesRequest](#memos-api-v2-ListResourcesRequest) | [ListResourcesResponse](#memos-api-v2-ListResourcesResponse) | ListResources lists all resources. |
-| GetResource | [GetResourceRequest](#memos-api-v2-GetResourceRequest) | [GetResourceResponse](#memos-api-v2-GetResourceResponse) | GetResource returns a resource by id. |
-| GetResourceByName | [GetResourceByNameRequest](#memos-api-v2-GetResourceByNameRequest) | [GetResourceByNameResponse](#memos-api-v2-GetResourceByNameResponse) | GetResourceByName returns a resource by name. |
+| SearchResources | [SearchResourcesRequest](#memos-api-v2-SearchResourcesRequest) | [SearchResourcesResponse](#memos-api-v2-SearchResourcesResponse) | SearchResources searches memos. |
+| GetResource | [GetResourceRequest](#memos-api-v2-GetResourceRequest) | [GetResourceResponse](#memos-api-v2-GetResourceResponse) | GetResource returns a resource by name. |
 | UpdateResource | [UpdateResourceRequest](#memos-api-v2-UpdateResourceRequest) | [UpdateResourceResponse](#memos-api-v2-UpdateResourceResponse) | UpdateResource updates a resource. |
-| DeleteResource | [DeleteResourceRequest](#memos-api-v2-DeleteResourceRequest) | [DeleteResourceResponse](#memos-api-v2-DeleteResourceResponse) | DeleteResource deletes a resource by id. |
+| DeleteResource | [DeleteResourceRequest](#memos-api-v2-DeleteResourceRequest) | [DeleteResourceResponse](#memos-api-v2-DeleteResourceResponse) | DeleteResource deletes a resource by name. |
 
  
 
@@ -1442,8 +1831,8 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  | id is the memo id to create comment for. |
-| create | [CreateMemoRequest](#memos-api-v2-CreateMemoRequest) |  |  |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} |
+| comment | [CreateMemoRequest](#memos-api-v2-CreateMemoRequest) |  |  |
 
 
 
@@ -1504,7 +1893,6 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
 | reaction_id | [int32](#int32) |  |  |
 
 
@@ -1530,7 +1918,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} |
 
 
 
@@ -1577,36 +1965,6 @@ Used internally for obfuscating the page token.
 
 
 
-<a name="memos-api-v2-GetMemoByNameRequest"></a>
-
-### GetMemoByNameRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="memos-api-v2-GetMemoByNameResponse"></a>
-
-### GetMemoByNameResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| memo | [Memo](#memos-api-v2-Memo) |  |  |
-
-
-
-
-
-
 <a name="memos-api-v2-GetMemoRequest"></a>
 
 ### GetMemoRequest
@@ -1615,7 +1973,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} |
 
 
 
@@ -1645,7 +2003,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | name is the name of the user to get stats for. Format: users/{username} |
+| name | [string](#string) |  | name is the name of the user to get stats for. Format: users/{id} |
 | timezone | [string](#string) |  | timezone location Format: uses tz identifier https://en.wikipedia.org/wiki/List_of_tz_database_time_zones |
 | filter | [string](#string) |  | Same as ListMemosRequest.filter |
 
@@ -1693,7 +2051,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} |
 
 
 
@@ -1723,7 +2081,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} |
 
 
 
@@ -1753,7 +2111,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} |
 
 
 
@@ -1783,7 +2141,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} |
 
 
 
@@ -1815,7 +2173,7 @@ Used internally for obfuscating the page token.
 | ----- | ---- | ----- | ----------- |
 | page_size | [int32](#int32) |  | The maximum number of memos to return. |
 | page_token | [string](#string) |  | A page token, received from a previous `ListMemos` call. Provide this to retrieve the subsequent page. |
-| filter | [string](#string) |  | Filter is used to filter memos returned in the list. Format: &#34;creator == users/{username} &amp;&amp; visibilities == [&#39;PUBLIC&#39;, &#39;PROTECTED&#39;]&#34; |
+| filter | [string](#string) |  | Filter is used to filter memos returned in the list. Format: &#34;creator == users/{uid} &amp;&amp; visibilities == [&#39;PUBLIC&#39;, &#39;PROTECTED&#39;]&#34; |
 
 
 
@@ -1846,11 +2204,10 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  | id is the system generated unique identifier. |
-| name | [string](#string) |  | name is the user provided name. |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} id is the system generated id. |
+| uid | [string](#string) |  | The user defined id of the memo. |
 | row_status | [RowStatus](#memos-api-v2-RowStatus) |  |  |
-| creator | [string](#string) |  | The name of the creator. Format: users/{username} |
-| creator_id | [int32](#int32) |  |  |
+| creator | [string](#string) |  | The name of the creator. Format: users/{id} |
 | create_time | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | update_time | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
 | display_time | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
@@ -1867,6 +2224,36 @@ Used internally for obfuscating the page token.
 
 
 
+<a name="memos-api-v2-SearchMemosRequest"></a>
+
+### SearchMemosRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| filter | [string](#string) |  | Filter is used to filter memos returned. Format: &#34;creator == users/{uid} &amp;&amp; visibilities == [&#39;PUBLIC&#39;, &#39;PROTECTED&#39;]&#34; |
+
+
+
+
+
+
+<a name="memos-api-v2-SearchMemosResponse"></a>
+
+### SearchMemosResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| memos | [Memo](#memos-api-v2-Memo) | repeated |  |
+
+
+
+
+
+
 <a name="memos-api-v2-SetMemoRelationsRequest"></a>
 
 ### SetMemoRelationsRequest
@@ -1875,7 +2262,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} |
 | relations | [MemoRelation](#memos-api-v2-MemoRelation) | repeated |  |
 
 
@@ -1901,7 +2288,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} |
 | resources | [Resource](#memos-api-v2-Resource) | repeated |  |
 
 
@@ -1958,7 +2345,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [int32](#int32) |  |  |
+| name | [string](#string) |  | The name of the memo. Format: memos/{id} |
 | reaction | [Reaction](#memos-api-v2-Reaction) |  |  |
 
 
@@ -2010,10 +2397,10 @@ Used internally for obfuscating the page token.
 | ----------- | ------------ | ------------- | ------------|
 | CreateMemo | [CreateMemoRequest](#memos-api-v2-CreateMemoRequest) | [CreateMemoResponse](#memos-api-v2-CreateMemoResponse) | CreateMemo creates a memo. |
 | ListMemos | [ListMemosRequest](#memos-api-v2-ListMemosRequest) | [ListMemosResponse](#memos-api-v2-ListMemosResponse) | ListMemos lists memos with pagination and filter. |
-| GetMemo | [GetMemoRequest](#memos-api-v2-GetMemoRequest) | [GetMemoResponse](#memos-api-v2-GetMemoResponse) | GetMemo gets a memo by id. |
-| GetMemoByName | [GetMemoByNameRequest](#memos-api-v2-GetMemoByNameRequest) | [GetMemoByNameResponse](#memos-api-v2-GetMemoByNameResponse) | GetMemoByName gets a memo by name. |
+| SearchMemos | [SearchMemosRequest](#memos-api-v2-SearchMemosRequest) | [SearchMemosResponse](#memos-api-v2-SearchMemosResponse) | SearchMemos searches memos. |
+| GetMemo | [GetMemoRequest](#memos-api-v2-GetMemoRequest) | [GetMemoResponse](#memos-api-v2-GetMemoResponse) | GetMemo gets a memo. |
 | UpdateMemo | [UpdateMemoRequest](#memos-api-v2-UpdateMemoRequest) | [UpdateMemoResponse](#memos-api-v2-UpdateMemoResponse) | UpdateMemo updates a memo. |
-| DeleteMemo | [DeleteMemoRequest](#memos-api-v2-DeleteMemoRequest) | [DeleteMemoResponse](#memos-api-v2-DeleteMemoResponse) | DeleteMemo deletes a memo by id. |
+| DeleteMemo | [DeleteMemoRequest](#memos-api-v2-DeleteMemoRequest) | [DeleteMemoResponse](#memos-api-v2-DeleteMemoResponse) | DeleteMemo deletes a memo. |
 | ExportMemos | [ExportMemosRequest](#memos-api-v2-ExportMemosRequest) | [ExportMemosResponse](#memos-api-v2-ExportMemosResponse) | ExportMemos exports memos. |
 | SetMemoResources | [SetMemoResourcesRequest](#memos-api-v2-SetMemoResourcesRequest) | [SetMemoResourcesResponse](#memos-api-v2-SetMemoResourcesResponse) | SetMemoResources sets resources for a memo. |
 | ListMemoResources | [ListMemoResourcesRequest](#memos-api-v2-ListMemoResourcesRequest) | [ListMemoResourcesResponse](#memos-api-v2-ListMemoResourcesResponse) | ListMemoResources lists resources for a memo. |
@@ -2095,7 +2482,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| user | [string](#string) |  | The creator of tags. Format: users/{username} |
+| user | [string](#string) |  | The creator of tags. Format: users/{id} |
 
 
 
@@ -2125,7 +2512,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| user | [string](#string) |  | The creator of tags. Format: users/{username} |
+| user | [string](#string) |  | The creator of tags. Format: users/{id} |
 
 
 
@@ -2155,7 +2542,7 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| user | [string](#string) |  | The creator of tags. Format: users/{username} |
+| user | [string](#string) |  | The creator of tags. Format: users/{id} |
 | old_name | [string](#string) |  |  |
 | new_name | [string](#string) |  |  |
 
@@ -2188,7 +2575,7 @@ Used internally for obfuscating the page token.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  |  |
-| creator | [string](#string) |  | The creator of tags. Format: users/{username} |
+| creator | [string](#string) |  | The creator of tags. Format: users/{id} |
 
 
 
@@ -2487,10 +2874,11 @@ Used internally for obfuscating the page token.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| owner | [string](#string) |  | The name of intance owner. Format: &#34;users/{id}&#34; |
 | version | [string](#string) |  | version is the current version of instance |
 | mode | [string](#string) |  | mode is the instance mode (e.g. &#34;prod&#34;, &#34;dev&#34; or &#34;demo&#34;). |
-| allow_registration | [bool](#bool) |  | allow_registration is whether the registration is allowed. |
-| disable_password_login | [bool](#bool) |  | allow_password_login is whether the password login is allowed. |
+| disallow_signup | [bool](#bool) |  | disallow_signup is whether the signup is disallowed. |
+| disable_password_login | [bool](#bool) |  | disable_password_login is whether the password login is disabled. |
 | additional_script | [string](#string) |  | additional_script is the additional script. |
 | additional_style | [string](#string) |  | additional_style is the additional style. |
 

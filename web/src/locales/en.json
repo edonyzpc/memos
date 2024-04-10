@@ -60,7 +60,11 @@
     "profile": "Profile",
     "inbox": "Inbox",
     "search": "Search",
-    "role": "Role"
+    "role": "Role",
+    "description": "Description",
+    "statistics": "Statistics",
+    "days": "Days",
+    "memos": "Memos"
   },
   "router": {
     "go-to-home": "Go to Home",
@@ -75,11 +79,9 @@
     "repeat-new-password": "Repeat the new password"
   },
   "editor": {
-    "editing": "Editing...",
-    "cancel-edit": "Cancel edit",
     "save": "Save",
-    "placeholder": "Any thoughts...",
-    "local": "Local"
+    "any-thoughts": "Any thoughts...",
+    "add-your-comment-here": "Add your comment here..."
   },
   "memo": {
     "view-detail": "View Detail",
@@ -104,6 +106,12 @@
       "no-comment": "No comment"
     },
     "show-more": "Show more"
+  },
+  "reference": {
+    "add-references": "Add references",
+    "search-bar-placeholder": "Search content",
+    "no-memos-found": "No memos found",
+    "embedded-usage": "Use as Embedded Content"
   },
   "resource": {
     "no-resources": "No resources.",
@@ -179,18 +187,9 @@
     "preference-section": {
       "theme": "Theme",
       "default-memo-visibility": "Default memo visibility",
-      "default-resource-visibility": "Default resource visibility",
-      "enable-folding-memo": "Enable folding memo",
-      "enable-double-click": "Enable double-click to edit",
-      "editor-font-style": "Editor font style",
-      "mobile-editor-style": "Mobile editor style",
       "default-memo-sort-option": "Memo display time",
       "telegram-user-id": "Telegram UserID",
-      "telegram-user-id-placeholder": "Send any words to your Telegram Bot as a memo",
-      "created_ts": "Created Time",
-      "updated_ts": "Updated Time",
-      "daily-review-time-offset": "Daily Review Time Offset",
-      "auto-collapse": "Auto Collapse"
+      "telegram-user-id-placeholder": "Send any words to your Telegram Bot as a memo"
     },
     "storage-section": {
       "current-storage": "Current object storage",
@@ -307,14 +306,6 @@
     "only-public-supported": "* Only public memos can be embedded.",
     "copy": "Copy"
   },
-  "heatmap": {
-    "memo-in": "memo in {{period}}",
-    "memos-in": "memos in {{period}}",
-    "memo-on": "{{amount}} memo on {{date}}",
-    "memos-on": "{{amount}} memos on {{date}}",
-    "day": "day",
-    "days": "days"
-  },
   "about": {
     "about-memos": "About memos",
     "memos-description": "memos is a web-based note-taking application that you can use to write, organize, and share notes.",
@@ -326,6 +317,7 @@
     "no-data": "No data found.",
     "memos-ready": "all memos are ready",
     "resource-ready": "all resource are ready",
+    "archived-successfully": "Archived successfully",
     "restored-successfully": "Restored successfully",
     "memo-updated-datetime": "Memo created datetime changed.",
     "invalid-created-datetime": "Invalid created datetime.",

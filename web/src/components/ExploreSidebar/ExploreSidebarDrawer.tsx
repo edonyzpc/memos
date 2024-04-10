@@ -1,10 +1,10 @@
 import { Drawer, IconButton } from "@mui/joy";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import Icon from "./Icon";
-import TimelineSidebar from "./TimelineSidebar";
+import Icon from "../Icon";
+import ExploreSidebar from "./ExploreSidebar";
 
-const TimelineSidebarDrawer = () => {
+const ExploreSidebarDrawer = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
@@ -27,11 +27,11 @@ const TimelineSidebarDrawer = () => {
       </IconButton>
       <Drawer anchor="right" size="sm" open={open} onClose={toggleDrawer(false)}>
         <div className="w-full h-full px-5 bg-zinc-100 dark:bg-zinc-900">
-          <TimelineSidebar className="py-4" />
+          <ExploreSidebar className="py-4" />
         </div>
       </Drawer>
     </>
   );
 };
 
-export default TimelineSidebarDrawer;
+export default ExploreSidebarDrawer;

@@ -21,14 +21,14 @@ const MemoRelationListView = (props: Props) => {
     (async () => {
       const referencingMemoList = await Promise.all(
         relationList
-          .filter((relation) => relation.memoId === memo.id && relation.relatedMemoId !== memo.id)
-          .map((relation) => memoStore.getOrFetchMemoById(relation.relatedMemoId, { skipStore: true })),
+          .filter((relation) => relation.memo === memo.name && relation.relatedMemo !== memo.name)
+          .map((relation) => memoStore.getOrFetchMemoByName(relation.relatedMemo, { skipStore: true })),
       );
       setReferencingMemoList(referencingMemoList);
       const referencedMemoList = await Promise.all(
         relationList
-          .filter((relation) => relation.memoId !== memo.id && relation.relatedMemoId === memo.id)
-          .map((relation) => memoStore.getOrFetchMemoById(relation.memoId, { skipStore: true })),
+          .filter((relation) => relation.memo !== memo.name && relation.relatedMemo === memo.name)
+          .map((relation) => memoStore.getOrFetchMemoByName(relation.memo, { skipStore: true })),
       );
       setReferencedMemoList(referencedMemoList);
     })();
@@ -37,13 +37,13 @@ const MemoRelationListView = (props: Props) => {
   return (
     <>
       {referencingMemoList.length > 0 && (
-        <div className="w-full mt-2 flex flex-row justify-start items-center flex-wrap gap-2">
+        <div className="w-full flex flex-row justify-start items-center flex-wrap gap-2">
           {referencingMemoList.map((memo) => {
             return (
               <div key={memo.name} className="block w-auto max-w-[50%]">
                 <Link
                   className="px-2 border rounded-md w-auto text-sm leading-6 flex flex-row justify-start items-center flex-nowrap text-gray-600 dark:text-gray-400 dark:border-zinc-700 dark:bg-zinc-900 hover:shadow hover:opacity-80"
-                  to={`/m/${memo.name}`}
+                  to={`/m/${memo.uid}`}
                   unstable_viewTransition
                 >
                   <Tooltip title="Reference" placement="top">
@@ -57,13 +57,13 @@ const MemoRelationListView = (props: Props) => {
         </div>
       )}
       {referencedMemoList.length > 0 && (
-        <div className="w-full mt-2 flex flex-row justify-start items-center flex-wrap gap-2">
+        <div className="w-full flex flex-row justify-start items-center flex-wrap gap-2">
           {referencedMemoList.map((memo) => {
             return (
               <div key={memo.name} className="block w-auto max-w-[50%]">
                 <Link
                   className="px-2 border rounded-md w-auto text-sm leading-6 flex flex-row justify-start items-center flex-nowrap text-gray-600 dark:text-gray-400 dark:border-zinc-700 dark:bg-zinc-900 hover:shadow hover:opacity-80"
-                  to={`/m/${memo.name}`}
+                  to={`/m/${memo.uid}`}
                   unstable_viewTransition
                 >
                   <Tooltip title="Backlink" placement="top">

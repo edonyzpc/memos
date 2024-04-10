@@ -32,6 +32,8 @@ type Profile struct {
 	Version string `json:"version"`
 	// Frontend indicate the frontend is enabled or not
 	Frontend bool `json:"-"`
+	// Origins is the list of allowed origins
+	Origins []string `json:"-"`
 }
 
 func (p *Profile) IsDev() bool {
@@ -51,11 +53,9 @@ func checkDataDir(dataDir string) (string, error) {
 
 	// Trim trailing \ or / in case user supplies
 	dataDir = strings.TrimRight(dataDir, "\\/")
-
 	if _, err := os.Stat(dataDir); err != nil {
 		return "", errors.Wrapf(err, "unable to access data folder %s", dataDir)
 	}
-
 	return dataDir, nil
 }
 

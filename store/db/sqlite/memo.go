@@ -10,9 +10,9 @@ import (
 )
 
 func (d *DB) CreateMemo(ctx context.Context, create *store.Memo) (*store.Memo, error) {
-	fields := []string{"`resource_name`", "`creator_id`", "`content`", "`visibility`"}
+	fields := []string{"`uid`", "`creator_id`", "`content`", "`visibility`"}
 	placeholder := []string{"?", "?", "?", "?"}
-	args := []any{create.ResourceName, create.CreatorID, create.Content, create.Visibility}
+	args := []any{create.UID, create.CreatorID, create.Content, create.Visibility}
 
 	stmt := "INSERT INTO `memo` (" + strings.Join(fields, ", ") + ") VALUES (" + strings.Join(placeholder, ", ") + ") RETURNING `id`, `created_ts`, `updated_ts`, `row_status`"
 	if err := d.db.QueryRowContext(ctx, stmt, args...).Scan(
@@ -33,8 +33,8 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 	if v := find.ID; v != nil {
 		where, args = append(where, "`memo`.`id` = ?"), append(args, *v)
 	}
-	if v := find.ResourceName; v != nil {
-		where, args = append(where, "`memo`.`resource_name` = ?"), append(args, *v)
+	if v := find.UID; v != nil {
+		where, args = append(where, "`memo`.`uid` = ?"), append(args, *v)
 	}
 	if v := find.CreatorID; v != nil {
 		where, args = append(where, "`memo`.`creator_id` = ?"), append(args, *v)
@@ -71,20 +71,23 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		where = append(where, "`parent_id` IS NULL")
 	}
 
-	orders := []string{}
+	orderBy := []string{}
 	if find.OrderByPinned {
-		orders = append(orders, "`pinned` DESC")
+		orderBy = append(orderBy, "`pinned` DESC")
 	}
 	if find.OrderByUpdatedTs {
-		orders = append(orders, "`updated_ts` DESC")
+		orderBy = append(orderBy, "`updated_ts` DESC")
 	} else {
-		orders = append(orders, "`created_ts` DESC")
+		orderBy = append(orderBy, "`created_ts` DESC")
 	}
-	orders = append(orders, "`id` DESC")
+	orderBy = append(orderBy, "`id` DESC")
+	if find.Random {
+		orderBy = []string{"RANDOM()"}
+	}
 
 	fields := []string{
 		"`memo`.`id` AS `id`",
-		"`memo`.`resource_name` AS `resource_name`",
+		"`memo`.`uid` AS `uid`",
 		"`memo`.`creator_id` AS `creator_id`",
 		"`memo`.`created_ts` AS `created_ts`",
 		"`memo`.`updated_ts` AS `updated_ts`",
@@ -101,7 +104,7 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		"LEFT JOIN `memo_organizer` ON `memo`.`id` = `memo_organizer`.`memo_id` AND `memo`.`creator_id` = `memo_organizer`.`user_id` " +
 		"LEFT JOIN `memo_relation` ON `memo`.`id` = `memo_relation`.`memo_id` AND `memo_relation`.`type` = \"COMMENT\" " +
 		"WHERE " + strings.Join(where, " AND ") + " " +
-		"ORDER BY " + strings.Join(orders, ", ")
+		"ORDER BY " + strings.Join(orderBy, ", ")
 	if find.Limit != nil {
 		query = fmt.Sprintf("%s LIMIT %d", query, *find.Limit)
 		if find.Offset != nil {
@@ -120,7 +123,7 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		var memo store.Memo
 		dests := []any{
 			&memo.ID,
-			&memo.ResourceName,
+			&memo.UID,
 			&memo.CreatorID,
 			&memo.CreatedTs,
 			&memo.UpdatedTs,
@@ -147,8 +150,8 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 
 func (d *DB) UpdateMemo(ctx context.Context, update *store.UpdateMemo) error {
 	set, args := []string{}, []any{}
-	if v := update.ResourceName; v != nil {
-		set, args = append(set, "`resource_name` = ?"), append(args, *v)
+	if v := update.UID; v != nil {
+		set, args = append(set, "`uid` = ?"), append(args, *v)
 	}
 	if v := update.CreatedTs; v != nil {
 		set, args = append(set, "`created_ts` = ?"), append(args, *v)

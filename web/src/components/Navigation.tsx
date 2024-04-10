@@ -3,6 +3,7 @@ import classNames from "classnames";
 import { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import useCurrentUser from "@/hooks/useCurrentUser";
+import { Routes } from "@/router";
 import { useInboxStore } from "@/store/v1";
 import { Inbox_Status } from "@/types/proto/api/v2/inbox_service";
 import { useTranslate } from "@/utils/i18n";
@@ -50,42 +51,42 @@ const Navigation = (props: Props) => {
 
   const homeNavLink: NavLinkItem = {
     id: "header-home",
-    path: "/",
+    path: Routes.HOME,
     title: t("common.home"),
-    icon: <Icon.Home className="w-6 h-auto opacity-70" />,
+    icon: <Icon.Home className="w-6 h-auto opacity-70 shrink-0" />,
   };
   const timelineNavLink: NavLinkItem = {
     id: "header-timeline",
-    path: "/timeline",
+    path: Routes.TIMELINE,
     title: t("timeline.title"),
-    icon: <Icon.GanttChartSquare className="w-6 h-auto opacity-70" />,
+    icon: <Icon.GanttChartSquare className="w-6 h-auto opacity-70 shrink-0" />,
   };
   const resourcesNavLink: NavLinkItem = {
     id: "header-resources",
-    path: "/resources",
+    path: Routes.RESOURCES,
     title: t("common.resources"),
-    icon: <Icon.Paperclip className="w-6 h-auto opacity-70" />,
+    icon: <Icon.Paperclip className="w-6 h-auto opacity-70 shrink-0" />,
   };
   const exploreNavLink: NavLinkItem = {
     id: "header-explore",
-    path: "/explore",
+    path: Routes.EXPLORE,
     title: t("common.explore"),
-    icon: <Icon.Globe2 className="w-6 h-auto opacity-70" />,
+    icon: <Icon.Globe2 className="w-6 h-auto opacity-70 shrink-0" />,
   };
   const profileNavLink: NavLinkItem = {
     id: "header-profile",
     path: user ? `/u/${encodeURIComponent(user.username)}` : "",
     title: t("common.profile"),
-    icon: <Icon.User2 className="w-6 h-auto opacity-70" />,
+    icon: <Icon.User2 className="w-6 h-auto opacity-70 shrink-0" />,
   };
   const inboxNavLink: NavLinkItem = {
     id: "header-inbox",
-    path: "/inbox",
+    path: Routes.INBOX,
     title: t("common.inbox"),
     icon: (
       <>
         <div className="relative">
-          <Icon.Bell className="w-6 h-auto opacity-70" />
+          <Icon.Bell className="w-6 h-auto opacity-70 shrink-0" />
           {hasUnreadInbox && <div className="absolute top-0 left-5 w-2 h-2 rounded-full bg-blue-500"></div>}
         </div>
       </>
@@ -93,27 +94,27 @@ const Navigation = (props: Props) => {
   };
   const archivedNavLink: NavLinkItem = {
     id: "header-archived",
-    path: "/archived",
+    path: Routes.ARCHIVED,
     title: t("common.archived"),
-    icon: <Icon.Archive className="w-6 h-auto opacity-70" />,
+    icon: <Icon.Archive className="w-6 h-auto opacity-70 shrink-0" />,
   };
   const settingNavLink: NavLinkItem = {
     id: "header-setting",
-    path: "/setting",
+    path: Routes.SETTING,
     title: t("common.settings"),
-    icon: <Icon.Settings className="w-6 h-auto opacity-70" />,
+    icon: <Icon.Settings className="w-6 h-auto opacity-70 shrink-0" />,
   };
   const signInNavLink: NavLinkItem = {
     id: "header-auth",
-    path: "/auth",
+    path: Routes.AUTH,
     title: t("common.sign-in"),
-    icon: <Icon.LogIn className="w-6 h-auto opacity-70" />,
+    icon: <Icon.LogIn className="w-6 h-auto opacity-70 shrink-0" />,
   };
   const aboutNavLink: NavLinkItem = {
     id: "header-about",
-    path: "/about",
+    path: Routes.ABOUT,
     title: t("common.about"),
-    icon: <Icon.Smile className="w-6 h-auto opacity-70" />,
+    icon: <Icon.Smile className="w-6 h-auto opacity-70 shrink-0" />,
   };
 
   const navLinks: NavLinkItem[] = user
@@ -133,7 +134,7 @@ const Navigation = (props: Props) => {
           <NavLink
             className={({ isActive }) =>
               classNames(
-                "px-2 py-2 rounded-2xl border flex flex-row items-center text-lg text-gray-800 dark:text-gray-300 hover:bg-white hover:border-gray-200 dark:hover:border-zinc-700 dark:hover:bg-zinc-800",
+                "px-2 py-2 rounded-2xl border flex flex-row items-center text-lg text-gray-800 dark:text-gray-400 hover:bg-white hover:border-gray-200 dark:hover:border-zinc-700 dark:hover:bg-zinc-800",
                 collapsed ? "" : "w-full px-4",
                 isActive ? "bg-white drop-shadow-sm dark:bg-zinc-800 border-gray-200 dark:border-zinc-700" : "border-transparent",
               )
@@ -150,7 +151,7 @@ const Navigation = (props: Props) => {
             ) : (
               navLink.icon
             )}
-            {!props.collapsed && <span className="ml-3">{navLink.title}</span>}
+            {!props.collapsed && <span className="ml-3 truncate">{navLink.title}</span>}
           </NavLink>
         ))}
       </div>

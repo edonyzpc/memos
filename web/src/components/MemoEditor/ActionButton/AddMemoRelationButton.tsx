@@ -4,7 +4,6 @@ import { useContext } from "react";
 import toast from "react-hot-toast";
 import showCreateMemoRelationDialog from "@/components/CreateMemoRelationDialog";
 import Icon from "@/components/Icon";
-import { UNKNOWN_ID } from "@/helpers/consts";
 import { MemoRelation_Type } from "@/types/proto/api/v2/memo_relation_service";
 import { EditorRefActions } from "../Editor";
 import { MemoEditorContext } from "../types";
@@ -33,7 +32,7 @@ const AddMemoRelationButton = (props: Props) => {
             editorRef.current.insertText("\n");
           }
           for (const memo of memos) {
-            editorRef.current.insertText(`![[memos/${memo.name}]]\n`);
+            editorRef.current.insertText(`![[memos/${memo.uid}]]\n`);
           }
           setTimeout(() => {
             editorRef.current?.scrollToCursor();
@@ -45,9 +44,13 @@ const AddMemoRelationButton = (props: Props) => {
         context.setRelationList(
           uniqBy(
             [
-              ...memos.map((memo) => ({ memoId: context.memoId || UNKNOWN_ID, relatedMemoId: memo.id, type: MemoRelation_Type.REFERENCE })),
+              ...memos.map((memo) => ({
+                memo: context.memoName || "",
+                relatedMemo: memo.name,
+                type: MemoRelation_Type.REFERENCE,
+              })),
               ...context.relationList,
-            ].filter((relation) => relation.relatedMemoId !== (context.memoId || UNKNOWN_ID)),
+            ].filter((relation) => relation.relatedMemo !== context.memoName),
             "relatedMemoId",
           ),
         );

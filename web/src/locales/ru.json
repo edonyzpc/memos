@@ -11,9 +11,12 @@
     "memo_one": "ЗАПИСЬ"
   },
   "auth": {
+    "create-your-account": "Создайте свою учетную запись",
     "host-tip": "Вы регистрируете владельца сайта.",
     "new-password": "Новый пароль",
-    "repeat-new-password": "Повторить новый пароль"
+    "repeat-new-password": "Повторить новый пароль",
+    "sign-in-tip": "У вас уже есть учетная запись?",
+    "sign-up-tip": "У вас еще нет учетной записи?"
   },
   "common": {
     "about": "О Memos",
@@ -31,12 +34,15 @@
     "create": "Создать",
     "database": "База данных",
     "delete": "Удалить",
+    "description": "Описание",
     "edit": "Редактировать",
     "email": "Email",
     "explore": "Обзор",
+    "file": "Файл",
     "filter": "Фильтр",
     "home": "Главная",
     "image": "Изображение",
+    "inbox": "Входящие",
     "language": "Язык",
     "learn-more": "Узнать больше",
     "link": "Ссылка",
@@ -49,11 +55,15 @@
     "password": "Пароль",
     "pin": "Закрепить",
     "preview": "Предпросмотр",
+    "profile": "Профиль",
+    "remember-me": "Remember me",
     "rename": "Переименовать",
     "reset": "Сбросить",
     "resources": "Ресурсы",
     "restore": "Восстановить",
+    "role": "Роль",
     "save": "Сохранить",
+    "search": "Поиск",
     "select": "Выбрать",
     "settings": "Настройки",
     "share": "Поделиться",
@@ -61,6 +71,7 @@
     "sign-in-with": "Войти через {{provider}}",
     "sign-out": "Выйти",
     "sign-up": "Зарегистрироваться",
+    "statistics": "Статистика",
     "tags": "Теги",
     "title": "Заголовок",
     "type": "Тип",
@@ -82,10 +93,7 @@
     "wed": "Ср."
   },
   "editor": {
-    "cancel-edit": "Отменить",
-    "editing": "Редактирование...",
-    "local": "На устройстве",
-    "placeholder": "Ваши мысли...",
+    "any-thoughts": "Ваши мысли...",
     "save": "Сохранить"
   },
   "embed-memo": {
@@ -94,17 +102,12 @@
     "text": "Скопируйте и вставьте код в Ваш блог или сайт",
     "title": "Встраивание записи"
   },
-  "heatmap": {
-    "day": "день",
-    "days": "дней",
-    "memo-in": "запись за {{period}}",
-    "memo-on": "{{amount}} запись за {{date}}",
-    "memos-in": "записей за {{period}}",
-    "memos-on": "{{amount}} записей за {{date}}"
-  },
   "memo": {
     "archived-at": "Архив",
     "archived-memos": "Заархивированные записи",
+    "comment": {
+      "self": "Комментарии"
+    },
     "copy-link": "Скопировать ссылку",
     "delete-confirm": "Вы уверены, что хотите удалить эту запись?\nЭТО ДЕЙСТВИЕ НЕВОЗМОЖНО ОТМЕНИТЬ❗",
     "delete-memo": "Удаление записи",
@@ -195,6 +198,10 @@
     "warning-text": "Вы уверены, что хотите выбранные ресурсы?\nЭТО ДЕЙСТВИЕ НЕВОЗМОЖНО ОТМЕНИТЬ❗",
     "warning-text-unused": "Вы уверены, что хотите удалить неиспользуемые ресурсы?\nЭТО ДЕЙСТВИЕ НЕВОЗМОЖНО ОТМЕНИТЬ❗"
   },
+  "router": {
+    "back-to-top": "В начало",
+    "go-to-home": "Домой"
+  },
   "setting": {
     "account-section": {
       "change-password": "Изменить пароль",
@@ -225,20 +232,11 @@
     "my-account": "Мой аккаунт",
     "preference": "Настройки",
     "preference-section": {
-      "auto-collapse": "Автоматическое свертывание",
-      "created_ts": "Время создания",
-      "daily-review-time-offset": "Смещение времени ежедневного просмотра",
       "default-memo-sort-option": "Отображаемое время записи",
       "default-memo-visibility": "Видимость записей по умолчанию",
-      "default-resource-visibility": "Видимость ресурсов по умолчанию",
-      "editor-font-style": "Стиль шрифта",
-      "enable-double-click": "Разрешить двойной клик для редактирования",
-      "enable-folding-memo": "Включить сворачивание записей",
-      "mobile-editor-style": "Стиль мобильного редактора",
       "telegram-user-id": "ID пользователя Telegram",
       "telegram-user-id-placeholder": "Отправьте любое сообщение своему Telegram-боту, чтобы узнать ID",
-      "theme": "Тема",
-      "updated_ts": "Время обновления"
+      "theme": "Тема"
     },
     "sso": "SSO",
     "sso-section": {
