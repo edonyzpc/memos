@@ -23,8 +23,8 @@ const MemosMutiplexAds = (props: any) => {
       <ins
         className="adsbygoogle"
         style={{ display: "flex" }}
-        data-matched-content-rows-num="2,2"
-        data-matched-content-columns-num="1,2"
+        data-matched-content-rows-num="3,3"
+        data-matched-content-columns-num="1,3"
         data-matched-content-ui-type="image_stacked,image_stacked"
         data-ad-format="autorelaxed"
         data-ad-client="ca-pub-1642118466411022"
