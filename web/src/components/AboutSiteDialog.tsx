@@ -10,7 +10,7 @@ type Props = DialogProps;
 const AboutSiteDialog: React.FC<Props> = ({ destroy }: Props) => {
   const t = useTranslate();
   const globalStore = useGlobalStore();
-  const profile = globalStore.state.systemStatus.profile;
+  const profile = globalStore.state.workspaceProfile;
   const customizedProfile = globalStore.state.systemStatus.customizedProfile;
   const customizedInfo = edonyVersion;
 
