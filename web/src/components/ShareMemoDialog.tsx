@@ -168,8 +168,9 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
                 </div>
               </div>
               <div className="flex flex-row justify-end items-center">
+                <span className="text-gray-500 dark:text-gray-400 mr-2 font-thin italic">via</span>
                 <img className="w-8 h-8" src="/logo.svg" alt="shadow walker logo" />
-                <span className="text-gray-500 dark:text-gray-400 ml-1">via 松烟阁</span>
+                <span className="text-gray-500 dark:text-gray-400 ml-1 font-mono font-medium">松烟阁</span>
               </div>
             </div>
           </div>

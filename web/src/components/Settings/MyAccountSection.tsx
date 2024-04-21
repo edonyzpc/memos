@@ -48,13 +48,9 @@ const MyAccountSection = () => {
           <Menu className="text-sm" size="sm" placement="bottom">
             <MenuItem onClick={showChangePasswordDialog}>{t("setting.account-section.change-password")}</MenuItem>
             <MenuItem onClick={() => downloadExportedMemos(user)}>{t("setting.account-section.export-memos")}</MenuItem>
+            <MenuItem onClick={showAboutSiteDialog}>Customize Info</MenuItem>
           </Menu>
         </Dropdown>
-      </div>
-      <div className="w-full flex flex-row flex-wrap justify-start items-center mt-2 space-x-2">
-        <Button variant="outlined" onClick={showAboutSiteDialog}>
-          Customize Info
-        </Button>
       </div>
 
       <AccessTokenSection />
