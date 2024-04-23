@@ -1,4 +1,5 @@
 import classNames from "classnames";
+import ClustrBar from "@/components/ClustrBar";
 import SearchBar from "@/components/SearchBar";
 import UserStatisticsView from "@/components/UserStatisticsView";
 import useCurrentUser from "@/hooks/useCurrentUser";
@@ -19,6 +20,7 @@ const HomeSidebar = (props: Props) => {
       )}
     >
       <SearchBar />
+      <ClustrBar user={currentUser} />
       <UserStatisticsView user={currentUser} />
       <TagsSection />
     </aside>
