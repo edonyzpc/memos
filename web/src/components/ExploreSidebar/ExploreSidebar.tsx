@@ -1,4 +1,5 @@
 import classNames from "classnames";
+import ClustrBar from "@/components/ClustrBar";
 import SearchBar from "@/components/SearchBar";
 import UsersSection from "./UsersSection";
 
@@ -15,6 +16,7 @@ const ExploreSidebar = (props: Props) => {
       )}
     >
       <SearchBar />
+      <ClustrBar user={"explore"} />
       <UsersSection />
     </aside>
   );

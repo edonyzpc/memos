@@ -1,4 +1,5 @@
 import classNames from "classnames";
+import ClustrBar from "../ClustrBar";
 import TagsSection from "../HomeSidebar/TagsSection";
 import SearchBar from "../SearchBar";
 
@@ -15,6 +16,7 @@ const TimelineSidebar = (props: Props) => {
       )}
     >
       <SearchBar />
+      <ClustrBar user={"timeline"} />
       <TagsSection />
     </aside>
   );
