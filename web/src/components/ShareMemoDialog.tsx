@@ -57,7 +57,7 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
       pixelRatio: window.devicePixelRatio * 2,
     })
       .then((url) => {
-        downloadFileFromUrl(url, `memos-${getDateTimeString(Date.now())}.png`);
+        downloadFileFromUrl(url, `memos-${getDateTimeString(Date.now(), "pt-BR")}.png`);
         downloadingImageState.setFinish();
         URL.revokeObjectURL(url);
       })
