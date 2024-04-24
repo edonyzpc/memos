@@ -5,7 +5,7 @@ const waitImageLoaded = (image: HTMLImageElement, url: string): Promise<void> =>
       // NOTE: There is image loading problem in Safari, fix it with some trick
       setTimeout(() => {
         resolve();
-      }, 200);
+      }, 1000);
     };
     image.onerror = () => {
       reject("Image load failed");
