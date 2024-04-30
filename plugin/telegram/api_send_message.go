@@ -31,11 +31,13 @@ func (b *Bot) SendMessage(ctx context.Context, chatID int64, text string) (*Mess
 	return b.SendReplyMessage(ctx, chatID, 0, text)
 }
 
-/* about telegram send message parse mode
-   Docs: https://stackoverflow.com/questions/38119481/send-bold-italic-text-on-telegram-bot-with-html
-         https://core.telegram.org/bots/api#sendmessage
-   mode: HTML, MarkdownV2
-*/
+// about telegram send message parse mode
+// Docs: https://stackoverflow.com/questions/38119481/send-bold-italic-text-on-telegram-bot-with-html
+//
+//	https://core.telegram.org/bots/api#sendmessage
+//
+// mode: HTML, MarkdownV2
+//
 // SendHTMLMessage make a sendMessage api request with parse_mod=HTML.
 func (b *Bot) SendHTMLMessage(ctx context.Context, chatID int64, text string) (*Message, error) {
 	const mod = "HTML"

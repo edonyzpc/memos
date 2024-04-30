@@ -3,7 +3,7 @@ import { memoServiceClient } from "@/grpcweb";
 import { downloadFileFromUrl } from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useTranslate } from "@/utils/i18n";
-import showAboutSiteDialog from "../AboutSiteDialog";
+//import showAboutSiteDialog from "../AboutSiteDialog";
 import showChangePasswordDialog from "../ChangePasswordDialog";
 import Icon from "../Icon";
 import showUpdateAccountDialog from "../UpdateAccountDialog";
@@ -48,7 +48,7 @@ const MyAccountSection = () => {
           <Menu className="text-sm" size="sm" placement="bottom">
             <MenuItem onClick={showChangePasswordDialog}>{t("setting.account-section.change-password")}</MenuItem>
             <MenuItem onClick={() => downloadExportedMemos(user)}>{t("setting.account-section.export-memos")}</MenuItem>
-            <MenuItem onClick={showAboutSiteDialog}>Customize Info</MenuItem>
+            {/*<MenuItem onClick={showAboutSiteDialog}>Customize Info</MenuItem>*/}
           </Menu>
         </Dropdown>
       </div>

@@ -7,12 +7,13 @@ import { memoServiceClient } from "@/grpcweb";
 import { TAB_SPACE_WIDTH } from "@/helpers/consts";
 import { isValidUrl } from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { useGlobalStore, useResourceStore, useTagStore } from "@/store/module";
-import { useMemoStore, useUserStore } from "@/store/v1";
-import { MemoRelation, MemoRelation_Type } from "@/types/proto/api/v2/memo_relation_service";
-import { Memo, Visibility } from "@/types/proto/api/v2/memo_service";
-import { Resource } from "@/types/proto/api/v2/resource_service";
-import { UserSetting } from "@/types/proto/api/v2/user_service";
+import { useMemoStore, useResourceStore, useUserStore, useWorkspaceSettingStore, useTagStore } from "@/store/v1";
+import { MemoRelation, MemoRelation_Type } from "@/types/proto/api/v1/memo_relation_service";
+import { Visibility } from "@/types/proto/api/v1/memo_service";
+import { Resource } from "@/types/proto/api/v1/resource_service";
+import { UserSetting } from "@/types/proto/api/v1/user_service";
+import { WorkspaceMemoRelatedSetting } from "@/types/proto/api/v1/workspace_setting_service";
+import { WorkspaceSettingKey } from "@/types/proto/store/workspace_setting";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityFromString, convertVisibilityToString } from "@/utils/memo";
 import { extractTagsFromContent } from "@/utils/tag";
@@ -51,11 +52,9 @@ interface State {
 
 const MemoEditor = (props: Props) => {
   const { className, cacheKey, memoName, parentMemoName, autoFocus, onConfirm } = props;
-  const { i18n } = useTranslation();
   const t = useTranslate();
-  const {
-    state: { systemStatus },
-  } = useGlobalStore();
+  const { i18n } = useTranslation();
+  const workspaceSettingStore = useWorkspaceSettingStore();
   const userStore = useUserStore();
   const memoStore = useMemoStore();
   const resourceStore = useResourceStore();
@@ -79,6 +78,9 @@ const MemoEditor = (props: Props) => {
         (relation) => relation.memo === memoName && relation.relatedMemo !== memoName && relation.type === MemoRelation_Type.REFERENCE,
       )
     : state.relationList.filter((relation) => relation.type === MemoRelation_Type.REFERENCE);
+  const workspaceMemoRelatedSetting =
+    workspaceSettingStore.getWorkspaceSettingByKey(WorkspaceSettingKey.WORKSPACE_SETTING_MEMO_RELATED)?.memoRelatedSetting ||
+    WorkspaceMemoRelatedSetting.fromPartial({});
 
   useEffect(() => {
     editorRef.current?.setContent(contentCache || "");
@@ -92,14 +94,14 @@ const MemoEditor = (props: Props) => {
 
   useEffect(() => {
     let visibility = userSetting.memoVisibility;
-    if (systemStatus.disablePublicMemos && visibility === "PUBLIC") {
+    if (workspaceMemoRelatedSetting.disallowPublicVisible && visibility === "PUBLIC") {
       visibility = "PRIVATE";
     }
     setState((prevState) => ({
       ...prevState,
       memoVisibility: convertVisibilityFromString(visibility),
     }));
-  }, [userSetting.memoVisibility, systemStatus.disablePublicMemos]);
+  }, [userSetting.memoVisibility, workspaceMemoRelatedSetting.disallowPublicVisible]);
 
   useEffect(() => {
     if (memoName) {
@@ -207,21 +209,29 @@ const MemoEditor = (props: Props) => {
       };
     });
 
-    let resource = undefined;
+    const { name: filename, size, type } = file;
+    const buffer = new Uint8Array(await file.arrayBuffer());
+
     try {
-      resource = await resourceStore.createResourceWithBlob(file);
+      const resource = await resourceStore.createResource({
+        resource: Resource.fromPartial({
+          filename,
+          size,
+          type,
+          content: buffer,
+        }),
+      });
+      setState((state) => {
+        return {
+          ...state,
+          isUploadingResource: false,
+        };
+      });
+      return resource;
     } catch (error: any) {
       console.error(error);
-      toast.error(typeof error === "string" ? error : error.response.data.message);
+      toast.error(error.details);
     }
-
-    setState((state) => {
-      return {
-        ...state,
-        isUploadingResource: false,
-      };
-    });
-    return resource;
   };
 
   const uploadMultiFiles = async (files: FileList) => {
@@ -332,7 +342,7 @@ const MemoEditor = (props: Props) => {
                   visibility: state.memoVisibility,
                 },
               })
-              .then(({ memo }) => memo as Memo);
+              .then((memo) => memo);
         const memo = await request;
         await memoServiceClient.setMemoResources({
           name: memo.name,
@@ -354,7 +364,7 @@ const MemoEditor = (props: Props) => {
     }
 
     // Batch upsert tags.
-    const tags = extractTagsFromContent(content);
+    const tags = await extractTagsFromContent(content);
     await tagStore.batchUpsertTag(tags);
 
     setState((state) => {

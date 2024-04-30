@@ -1,3 +1,4 @@
+/*
 import { Divider, IconButton } from "@mui/joy";
 import { useGlobalStore } from "@/store/module";
 import { useTranslate } from "@/utils/i18n";
@@ -61,3 +62,4 @@ export default function showAboutSiteDialog(): void {
     AboutSiteDialog,
   );
 }
+*/

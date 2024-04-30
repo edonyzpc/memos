@@ -6,7 +6,6 @@ tmp
 
 # Frontend asset
 web/dist
-server/frontend/dist
 
 # build folder
 build
@@ -24,3 +23,4 @@ bin/air
 dev-dist
 
 vendor
+dist/

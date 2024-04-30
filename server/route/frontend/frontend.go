@@ -2,9 +2,10 @@ package frontend
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -17,6 +18,9 @@ import (
 	"github.com/usememos/memos/server/profile"
 	"github.com/usememos/memos/store"
 )
+
+//go:embed dist
+var embeddedFiles embed.FS
 
 const (
 	// maxMetadataDescriptionLength is the maximum length of metadata description.
@@ -36,14 +40,35 @@ func NewFrontendService(profile *profile.Profile, store *store.Store) *FrontendS
 }
 
 func (s *FrontendService) Serve(ctx context.Context, e *echo.Echo) {
+	skipper := func(c echo.Context) bool {
+		return util.HasPrefixes(c.Path(), "/api", "/memos.api.v1", "/robots.txt", "/sitemap.xml", "/m/:name")
+	}
+
 	// Use echo static middleware to serve the built dist folder.
-	// refer: https://github.com/labstack/echo/blob/master/middleware/static.go
+	// Reference: https://github.com/labstack/echo/blob/master/middleware/static.go
 	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-		Root:  "dist",
-		HTML5: true,
+		HTML5:      true,
+		Filesystem: getFileSystem("dist"),
+		Skipper:    skipper,
+	}))
+	g := e.Group("assets")
+	// Use echo gzip middleware to compress the response.
+	// Reference: https://echo.labstack.com/docs/middleware/gzip
+	g.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
-			return util.HasPrefixes(c.Path(), "/api", "/memos.api.v2", "/robots.txt", "/sitemap.xml", "/m/:name")
+			return util.HasPrefixes(c.Path(), "/api", "/memos.api.v1", "/robots.txt", "/sitemap.xml", "/m/:name")
 		},
+		Level: 5,
+	}))
+	g.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Response().Header().Set(echo.HeaderCacheControl, "max-age=31536000, immutable")
+			return next(c)
+		}
+	})
+	g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		HTML5:      true,
+		Filesystem: getFileSystem("dist/assets"),
 	}))
 
 	s.registerRoutes(e)
@@ -115,6 +140,15 @@ Sitemap: %s/sitemap.xml`, instanceURL, instanceURL)
 	})
 }
 
+func getFileSystem(path string) http.FileSystem {
+	fs, err := fs.Sub(embeddedFiles, path)
+	if err != nil {
+		panic(err)
+	}
+
+	return http.FS(fs)
+}
+
 func generateMemoMetadata(memo *store.Memo, creator *store.User) *Metadata {
 	metadata := getDefaultMetadata()
 	metadata.Title = fmt.Sprintf("%s(@%s) on Memos", creator.Nickname, creator.Username)
@@ -135,7 +169,7 @@ func generateMemoMetadata(memo *store.Memo, creator *store.User) *Metadata {
 }
 
 func getRawIndexHTML() string {
-	bytes, _ := os.ReadFile("dist/index.html")
+	bytes, _ := embeddedFiles.ReadFile("dist/index.html")
 	return string(bytes)
 }
 

@@ -1,95 +1,127 @@
 package v1
 
 import (
-	"net/http"
-	"time"
+	"context"
+	"fmt"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 
-	"github.com/usememos/memos/plugin/telegram"
+	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 	"github.com/usememos/memos/server/profile"
-	"github.com/usememos/memos/server/route/resource"
-	"github.com/usememos/memos/server/route/rss"
 	"github.com/usememos/memos/store"
 )
 
 type APIV1Service struct {
-	Secret      string
-	Profile     *profile.Profile
-	Store       *store.Store
-	telegramBot *telegram.Bot
+	v1pb.UnimplementedWorkspaceServiceServer
+	v1pb.UnimplementedWorkspaceSettingServiceServer
+	v1pb.UnimplementedAuthServiceServer
+	v1pb.UnimplementedUserServiceServer
+	v1pb.UnimplementedMemoServiceServer
+	v1pb.UnimplementedResourceServiceServer
+	v1pb.UnimplementedTagServiceServer
+	v1pb.UnimplementedInboxServiceServer
+	v1pb.UnimplementedActivityServiceServer
+	v1pb.UnimplementedWebhookServiceServer
+	v1pb.UnimplementedMarkdownServiceServer
+	v1pb.UnimplementedIdentityProviderServiceServer
+
+	Secret  string
+	Profile *profile.Profile
+	Store   *store.Store
+
+	grpcServer *grpc.Server
 }
 
-// @title						memos API
-// @version					1.0
-// @description				A privacy-first, lightweight note-taking service.
-//
-// @contact.name				API Support
-// @contact.url				https://github.com/orgs/usememos/discussions
-//
-// @license.name				MIT License
-// @license.url				https://github.com/usememos/memos/blob/main/LICENSE
-//
-// @BasePath					/
-//
-// @externalDocs.url			https://usememos.com/
-// @externalDocs.description	Find out more about Memos.
-func NewAPIV1Service(secret string, profile *profile.Profile, store *store.Store, telegramBot *telegram.Bot) *APIV1Service {
-	return &APIV1Service{
-		Secret:      secret,
-		Profile:     profile,
-		Store:       store,
-		telegramBot: telegramBot,
+func NewAPIV1Service(secret string, profile *profile.Profile, store *store.Store, grpcServer *grpc.Server) *APIV1Service {
+	grpc.EnableTracing = true
+	apiv1Service := &APIV1Service{
+		Secret:     secret,
+		Profile:    profile,
+		Store:      store,
+		grpcServer: grpcServer,
 	}
+	v1pb.RegisterWorkspaceServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterWorkspaceSettingServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterAuthServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterUserServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterMemoServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterTagServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterResourceServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterInboxServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterActivityServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterWebhookServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterMarkdownServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterIdentityProviderServiceServer(grpcServer, apiv1Service)
+	reflection.Register(grpcServer)
+	return apiv1Service
 }
 
-func (s *APIV1Service) Register(rootGroup *echo.Group) {
-	// Register API v1 routes.
-	apiV1Group := rootGroup.Group("/api/v1")
-	apiV1Group.Use(middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{
-		Store: middleware.NewRateLimiterMemoryStoreWithConfig(
-			middleware.RateLimiterMemoryStoreConfig{Rate: 30, Burst: 100, ExpiresIn: 3 * time.Minute},
-		),
-		IdentifierExtractor: func(ctx echo.Context) (string, error) {
-			id := ctx.RealIP()
-			return id, nil
-		},
-		ErrorHandler: func(context echo.Context, err error) error {
-			return context.JSON(http.StatusForbidden, nil)
-		},
-		DenyHandler: func(context echo.Context, identifier string, err error) error {
-			return context.JSON(http.StatusTooManyRequests, nil)
-		},
-	}))
-	apiV1Group.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return JWTMiddleware(s, next, s.Secret)
-	})
-	s.registerSystemRoutes(apiV1Group)
-	s.registerSystemSettingRoutes(apiV1Group)
-	s.registerAuthRoutes(apiV1Group)
-	s.registerIdentityProviderRoutes(apiV1Group)
-	s.registerUserRoutes(apiV1Group)
-	s.registerTagRoutes(apiV1Group)
-	s.registerStorageRoutes(apiV1Group)
-	s.registerResourceRoutes(apiV1Group)
-	s.registerMemoRoutes(apiV1Group)
-	s.registerMemoOrganizerRoutes(apiV1Group)
-	s.registerMemoRelationRoutes(apiV1Group)
+// RegisterGateway registers the gRPC-Gateway with the given Echo instance.
+func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Echo) error {
+	// Create a client connection to the gRPC Server we just started.
+	// This is where the gRPC-Gateway proxies the requests.
+	conn, err := grpc.DialContext(
+		ctx,
+		fmt.Sprintf(":%d", s.Profile.Port),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return err
+	}
 
-	// Register public routes.
-	publicGroup := rootGroup.Group("/o")
-	publicGroup.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return JWTMiddleware(s, next, s.Secret)
-	})
-	s.registerGetterPublicRoutes(publicGroup)
+	gwMux := runtime.NewServeMux()
+	if err := v1pb.RegisterWorkspaceServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterWorkspaceSettingServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterAuthServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterUserServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterMemoServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterTagServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterResourceServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterInboxServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterActivityServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterWebhookServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterMarkdownServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterIdentityProviderServiceHandler(context.Background(), gwMux, conn); err != nil {
+		return err
+	}
+	echoServer.Any("/api/v1/*", echo.WrapHandler(gwMux))
 
-	// Create and register resource public routes.
-	resource.NewResourceService(s.Profile, s.Store).RegisterRoutes(publicGroup)
+	// GRPC web proxy.
+	options := []grpcweb.Option{
+		grpcweb.WithCorsForRegisteredEndpointsOnly(false),
+		grpcweb.WithOriginFunc(func(origin string) bool {
+			return true
+		}),
+	}
+	wrappedGrpc := grpcweb.WrapServer(s.grpcServer, options...)
+	echoServer.Any("/memos.api.v1.*", echo.WrapHandler(wrappedGrpc))
 
-	// Create and register rss public routes.
-	rss.NewRSSService(s.Profile, s.Store).RegisterRoutes(rootGroup)
-
-	// programmatically set API version same as the server version
-	SwaggerInfo.Version = s.Profile.Version
+	return nil
 }
