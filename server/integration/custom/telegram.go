@@ -74,30 +74,28 @@ func (t *TelegramHandler) MessageHandle(ctx context.Context, bot *telegram.Bot, 
 	}
 
 	// Dynamically upsert tags from memo content.
-
-	//	nodes, err := parser.Parse(tokenizer.Tokenize(create.Content))
-	//	if err != nil {
-	//		return errors.Wrap(err, "Failed to parse content")
-	//	}
-	//	tags := []string{}
-	//	apiv2.TraverseASTNodes(nodes, func(node ast.Node) {
-	//		if tagNode, ok := node.(*ast.Tag); ok {
-	//			tag := tagNode.Content
-	//			if !slices.Contains(tags, tag) {
-	//				tags = append(tags, tag)
-	//			}
-	//		}
-	//	})
-	//	for _, tag := range tags {
-	//		_, err := t.store.UpsertTag(ctx, &store.Tag{
-	//			Name:      tag,
-	//			CreatorID: creatorID,
-	//		})
-	//		if err != nil {
-	//			return errors.Wrap(err, "Failed to upsert tag")
-	//		}
-	//	}
-	//
+	// 	nodes, err := parser.Parse(tokenizer.Tokenize(create.Content))
+	// 	if err != nil {
+	// 		return errors.Wrap(err, "Failed to parse content")
+	// 	}
+	// 	tags := []string{}
+	// 	apiv2.TraverseASTNodes(nodes, func(node ast.Node) {
+	// 		if tagNode, ok := node.(*ast.Tag); ok {
+	// 			tag := tagNode.Content
+	// 			if !slices.Contains(tags, tag) {
+	// 				tags = append(tags, tag)
+	// 			}
+	// 		}
+	// 	})
+	// 	for _, tag := range tags {
+	// 		_, err := t.store.UpsertTag(ctx, &store.Tag{
+	// 			Name:      tag,
+	// 			CreatorID: creatorID,
+	// 		})
+	// 		if err != nil {
+	// 			return errors.Wrap(err, "Failed to upsert tag")
+	// 		}
+	// 	}
 
 	// Create memo related resources.
 	for _, attachment := range attachments {

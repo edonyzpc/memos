@@ -16,11 +16,9 @@ import (
 
 	storepb "github.com/usememos/memos/proto/gen/store"
 	"github.com/usememos/memos/server/profile"
-	"github.com/usememos/memos/server/route/api/auth"
-	apiv1 "github.com/usememos/memos/server/route/api/v1"
-	"github.com/usememos/memos/server/route/frontend"
-	"github.com/usememos/memos/server/route/resource"
-	"github.com/usememos/memos/server/route/rss"
+	apiv1 "github.com/usememos/memos/server/router/api/v1"
+	"github.com/usememos/memos/server/router/frontend"
+	"github.com/usememos/memos/server/router/rss"
 	versionchecker "github.com/usememos/memos/server/service/version_checker"
 	"github.com/usememos/memos/store"
 )
@@ -69,15 +67,6 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 	}
 
 	rootGroup := echoServer.Group("")
-
-	// Register public routes.
-	publicGroup := rootGroup.Group("/o")
-	publicGroup.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return auth.JWTMiddleware(s.Store, next, s.Secret)
-	})
-
-	// Create and register resource public routes.
-	resource.NewResourceService(s.Profile, s.Store).RegisterRoutes(publicGroup)
 
 	// Create and register RSS routes.
 	rss.NewRSSService(s.Profile, s.Store).RegisterRoutes(rootGroup)

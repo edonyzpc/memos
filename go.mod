@@ -10,7 +10,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.15
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1
-	github.com/disintegration/imaging v1.6.2
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/google/cel-go v0.20.1
 	github.com/google/uuid v1.6.0
@@ -26,9 +25,8 @@ require (
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
 	github.com/yourselfhosted/gomark v0.0.0-20240228170507-6a73bfad2eb6
-	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.22.0
-	golang.org/x/mod v0.16.0
+	golang.org/x/mod v0.17.0
 	golang.org/x/net v0.24.0
 	golang.org/x/oauth2 v0.17.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240213162025-012b6fc9bca9
@@ -52,9 +50,7 @@ require (
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a // indirect
-	golang.org/x/image v0.15.0 // indirect
+	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240205150955-31a09d347014 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240415180920-8c6c420018be // indirect
@@ -90,7 +86,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/labstack/gommon v0.4.2
+	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

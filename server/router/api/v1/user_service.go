@@ -25,7 +25,6 @@ import (
 	"github.com/usememos/memos/internal/util"
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 	storepb "github.com/usememos/memos/proto/gen/store"
-	"github.com/usememos/memos/server/route/api/auth"
 	"github.com/usememos/memos/store"
 )
 
@@ -103,7 +102,7 @@ func (s *APIV1Service) GetUser(ctx context.Context, request *v1pb.GetUserRequest
 	return convertUserFromStore(user), nil
 }
 
-func (s *APIV1Service) GetUserAvatar(ctx context.Context, request *v1pb.GetUserAvatarRequest) (*httpbody.HttpBody, error) {
+func (s *APIV1Service) GetUserAvatarBinary(ctx context.Context, request *v1pb.GetUserAvatarBinaryRequest) (*httpbody.HttpBody, error) {
 	userID, err := ExtractUserIDFromName(request.Name)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid user name: %v", err)
@@ -363,7 +362,7 @@ func (s *APIV1Service) ListUserAccessTokens(ctx context.Context, _ *v1pb.ListUse
 
 	accessTokens := []*v1pb.UserAccessToken{}
 	for _, userAccessToken := range userAccessTokens {
-		claims := &auth.ClaimsMessage{}
+		claims := &ClaimsMessage{}
 		_, err := jwt.ParseWithClaims(userAccessToken.AccessToken, claims, func(t *jwt.Token) (any, error) {
 			if t.Method.Alg() != jwt.SigningMethodHS256.Name {
 				return nil, errors.Errorf("unexpected access token signing method=%v, expect %v", t.Header["alg"], jwt.SigningMethodHS256)
@@ -412,12 +411,12 @@ func (s *APIV1Service) CreateUserAccessToken(ctx context.Context, request *v1pb.
 		expiresAt = request.ExpiresAt.AsTime()
 	}
 
-	accessToken, err := auth.GenerateAccessToken(user.Username, user.ID, expiresAt, []byte(s.Secret))
+	accessToken, err := GenerateAccessToken(user.Username, user.ID, expiresAt, []byte(s.Secret))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate access token: %v", err)
 	}
 
-	claims := &auth.ClaimsMessage{}
+	claims := &ClaimsMessage{}
 	_, err = jwt.ParseWithClaims(accessToken, claims, func(t *jwt.Token) (any, error) {
 		if t.Method.Alg() != jwt.SigningMethodHS256.Name {
 			return nil, errors.Errorf("unexpected access token signing method=%v, expect %v", t.Header["alg"], jwt.SigningMethodHS256)
@@ -506,7 +505,7 @@ func (s *APIV1Service) UpsertAccessTokenToStore(ctx context.Context, user *store
 }
 
 func convertUserFromStore(user *store.User) *v1pb.User {
-	return &v1pb.User{
+	userpb := &v1pb.User{
 		Name:        fmt.Sprintf("%s%d", UserNamePrefix, user.ID),
 		Id:          user.ID,
 		RowStatus:   convertRowStatusFromStore(user.RowStatus),
@@ -519,6 +518,11 @@ func convertUserFromStore(user *store.User) *v1pb.User {
 		AvatarUrl:   user.AvatarURL,
 		Description: user.Description,
 	}
+	// Use the avatar URL instead of raw base64 image data to reduce the response size.
+	if user.AvatarURL != "" {
+		userpb.AvatarUrl = fmt.Sprintf("/o/%s/avatar", userpb.Name)
+	}
+	return userpb
 }
 
 func convertUserRoleFromStore(role store.Role) v1pb.User_Role {

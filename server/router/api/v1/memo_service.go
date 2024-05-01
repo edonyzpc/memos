@@ -72,41 +72,40 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 		slog.Warn("Failed to dispatch memo created webhook", err)
 	}
 	// Send notification to telegram if memo is not private.
-	//if memoMessage.Visibility != v1pb.Visibility_PRIVATE {
-	//	// fetch all telegram UserID
-	//	userSettings, err := s.Store.ListUserSettings(ctx, &store.FindUserSetting{Key: storepb.UserSettingKey_USER_SETTING_TELEGRAM_USER_ID})
-	//	if err != nil {
-	//		log.Warn("Failed to ListUserSettings")
-	//	}
-	//	for _, userSetting := range userSettings {
-	//		tgUserID, err := strconv.ParseInt(userSetting.GetTelegramUserId(), 10, 64)
-	//		if err != nil {
-	//			log.Error("failed to parse Telegram UserID", zap.Error(err))
-	//			continue
-	//		}
+	// if memoMessage.Visibility != v1pb.Visibility_PRIVATE {
+	// 	// fetch all telegram UserID
+	// 	userSettings, err := s.Store.ListUserSettings(ctx, &store.FindUserSetting{Key: storepb.UserSettingKey_USER_SETTING_TELEGRAM_USER_ID})
+	// 	if err != nil {
+	// 		log.Warn("Failed to ListUserSettings")
+	// 	}
+	// 	for _, userSetting := range userSettings {
+	// 		tgUserID, err := strconv.ParseInt(userSetting.GetTelegramUserId(), 10, 64)
+	// 		if err != nil {
+	// 			log.Error("failed to parse Telegram UserID", zap.Error(err))
+	// 			continue
+	// 		}
 	//
-	//		// send notification to telegram
-	//		telegramBot := telegram.NewBotWithHandler(custom.NewTelegramHandler(s.Store))
-	//		content := memoMessage.Creator + " Says:\n\n" + memoMessage.Content
-	//		_, err = telegramBot.SendMessage(ctx, tgUserID, content)
-	//		if err != nil {
-	//			log.Error("Failed to send Telegram notification", zap.Error(err))
-	//			continue
-	//		}
-	//
+	// 		// send notification to telegram
+	// 		telegramBot := telegram.NewBotWithHandler(custom.NewTelegramHandler(s.Store))
+	// 		content := memoMessage.Creator + " Says:\n\n" + memoMessage.Content
+	// 		_, err = telegramBot.SendMessage(ctx, tgUserID, content)
+	// 		if err != nil {
+	// 			log.Error("Failed to send Telegram notification", zap.Error(err))
+	// 			continue
+	// 		}
 	//		// send HTML notification to telegram group
 	//		// According to https://core.telegram.org/bots/api#html-style,
 	//		// Telegram HTML has a lot wired condition. And I cannot do some formatting things for now
 	//		// API Test: https://api.telegram.org/bot{BOT-TOKEN}/sendMessage?chat_id={CHAT-ID}&parse_mode=HTML&text=%3Ca%20href=%22twitter.edony.ink%22%3E@memos%20says:%20%3C/a%3E%3Cpre%3E%20%3C/pre%3E%3Cpre%3Etest%20newline%3C/pre%3E
-	//		memoURL := "https://twitter.edony.ink/m/" + fmt.Sprint(memoMessage.Name)
-	//		contentGroup := `<a href="` + memoURL + `">@memos</a> says: <code class="language-markdown">` + "\n" + memoMessage.Content + `</code>`
-	//		_, err = telegramBot.SendHTMLMessage(ctx, -1001233204358, contentGroup)
-	//		if err != nil {
-	//			log.Error("Failed to send Telegram notification", zap.Error(err))
-	//			continue
-	//		}
-	//	}
-	//}
+	// 		memoURL := "https://twitter.edony.ink/m/" + fmt.Sprint(memoMessage.Name)
+	// 		contentGroup := `<a href="` + memoURL + `">@memos</a> says: <code class="language-markdown">` + "\n" + memoMessage.Content + `</code>`
+	// 		_, err = telegramBot.SendHTMLMessage(ctx, -1001233204358, contentGroup)
+	// 		if err != nil {
+	// 			log.Error("Failed to send Telegram notification", zap.Error(err))
+	// 			continue
+	// 		}
+	// 	}
+	// }
 
 	return memoMessage, nil
 }

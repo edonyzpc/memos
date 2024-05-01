@@ -23,4 +23,5 @@ bin/air
 dev-dist
 
 vendor
-dist/
+
+dist
