@@ -69,6 +69,9 @@ func (s *Store) ListWorkspaceSettings(ctx context.Context, find *FindWorkspaceSe
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to convert workspace setting")
 		}
+		if workspaceSetting == nil {
+			continue
+		}
 		s.workspaceSettingCache.Store(workspaceSetting.Key.String(), workspaceSetting)
 		workspaceSettings = append(workspaceSettings, workspaceSetting)
 	}
@@ -77,7 +80,10 @@ func (s *Store) ListWorkspaceSettings(ctx context.Context, find *FindWorkspaceSe
 
 func (s *Store) GetWorkspaceSetting(ctx context.Context, find *FindWorkspaceSetting) (*storepb.WorkspaceSetting, error) {
 	if cache, ok := s.workspaceSettingCache.Load(find.Name); ok {
-		return cache.(*storepb.WorkspaceSetting), nil
+		workspaceSetting, ok := cache.(*storepb.WorkspaceSetting)
+		if ok {
+			return workspaceSetting, nil
+		}
 	}
 
 	list, err := s.ListWorkspaceSettings(ctx, find)
@@ -88,7 +94,7 @@ func (s *Store) GetWorkspaceSetting(ctx context.Context, find *FindWorkspaceSett
 		return nil, nil
 	}
 	if len(list) > 1 {
-		return nil, errors.Errorf("Found multiple workspace settings with key %s", find.Name)
+		return nil, errors.Errorf("found multiple workspace settings with key %s", find.Name)
 	}
 	return list[0], nil
 }
@@ -105,6 +111,10 @@ func (s *Store) GetWorkspaceBasicSetting(ctx context.Context) (*storepb.Workspac
 	if workspaceSetting != nil {
 		workspaceBasicSetting = workspaceSetting.GetBasicSetting()
 	}
+	s.workspaceSettingCache.Store(storepb.WorkspaceSettingKey_WORKSPACE_SETTING_BASIC.String(), &storepb.WorkspaceSetting{
+		Key:   storepb.WorkspaceSettingKey_WORKSPACE_SETTING_BASIC,
+		Value: &storepb.WorkspaceSetting_BasicSetting{BasicSetting: workspaceBasicSetting},
+	})
 	return workspaceBasicSetting, nil
 }
 
@@ -120,8 +130,17 @@ func (s *Store) GetWorkspaceGeneralSetting(ctx context.Context) (*storepb.Worksp
 	if workspaceSetting != nil {
 		workspaceGeneralSetting = workspaceSetting.GetGeneralSetting()
 	}
+	s.workspaceSettingCache.Store(storepb.WorkspaceSettingKey_WORKSPACE_SETTING_GENERAL.String(), &storepb.WorkspaceSetting{
+		Key:   storepb.WorkspaceSettingKey_WORKSPACE_SETTING_GENERAL,
+		Value: &storepb.WorkspaceSetting_GeneralSetting{GeneralSetting: workspaceGeneralSetting},
+	})
 	return workspaceGeneralSetting, nil
 }
+
+const (
+	// DefaultContentLengthLimit is the default limit of content length in bytes. 8KB.
+	DefaultContentLengthLimit = 8 * 1024
+)
 
 func (s *Store) GetWorkspaceMemoRelatedSetting(ctx context.Context) (*storepb.WorkspaceMemoRelatedSetting, error) {
 	workspaceSetting, err := s.GetWorkspaceSetting(ctx, &FindWorkspaceSetting{
@@ -135,6 +154,13 @@ func (s *Store) GetWorkspaceMemoRelatedSetting(ctx context.Context) (*storepb.Wo
 	if workspaceSetting != nil {
 		workspaceMemoRelatedSetting = workspaceSetting.GetMemoRelatedSetting()
 	}
+	if workspaceMemoRelatedSetting.ContentLengthLimit < DefaultContentLengthLimit {
+		workspaceMemoRelatedSetting.ContentLengthLimit = DefaultContentLengthLimit
+	}
+	s.workspaceSettingCache.Store(storepb.WorkspaceSettingKey_WORKSPACE_SETTING_MEMO_RELATED.String(), &storepb.WorkspaceSetting{
+		Key:   storepb.WorkspaceSettingKey_WORKSPACE_SETTING_MEMO_RELATED,
+		Value: &storepb.WorkspaceSetting_MemoRelatedSetting{MemoRelatedSetting: workspaceMemoRelatedSetting},
+	})
 	return workspaceMemoRelatedSetting, nil
 }
 
@@ -165,6 +191,10 @@ func (s *Store) GetWorkspaceStorageSetting(ctx context.Context) (*storepb.Worksp
 	if workspaceStorageSetting.FilepathTemplate == "" {
 		workspaceStorageSetting.FilepathTemplate = defaultWorkspaceFilepathTemplate
 	}
+	s.workspaceSettingCache.Store(storepb.WorkspaceSettingKey_WORKSPACE_SETTING_STORAGE.String(), &storepb.WorkspaceSetting{
+		Key:   storepb.WorkspaceSettingKey_WORKSPACE_SETTING_STORAGE,
+		Value: &storepb.WorkspaceSetting_StorageSetting{StorageSetting: workspaceStorageSetting},
+	})
 	return workspaceStorageSetting, nil
 }
 
@@ -198,7 +228,8 @@ func convertWorkspaceSettingFromRaw(workspaceSettingRaw *WorkspaceSetting) (*sto
 		}
 		workspaceSetting.Value = &storepb.WorkspaceSetting_MemoRelatedSetting{MemoRelatedSetting: memoRelatedSetting}
 	default:
-		return nil, errors.Errorf("unsupported workspace setting key: %v", workspaceSettingRaw.Name)
+		// Skip unsupported workspace setting key.
+		return nil, nil
 	}
 	return workspaceSetting, nil
 }

@@ -34,6 +34,9 @@ func (s *Store) UpsertUserSetting(ctx context.Context, upsert *storepb.UserSetti
 	if err != nil {
 		return nil, err
 	}
+	if userSetting == nil {
+		return nil, errors.New("unexpected nil user setting")
+	}
 	s.userSettingCache.Store(getUserSettingCacheKey(userSetting.UserId, userSetting.Key.String()), userSetting)
 	return userSetting, nil
 }
@@ -50,6 +53,9 @@ func (s *Store) ListUserSettings(ctx context.Context, find *FindUserSetting) ([]
 		if err != nil {
 			return nil, err
 		}
+		if userSetting == nil {
+			continue
+		}
 		s.userSettingCache.Store(getUserSettingCacheKey(userSetting.UserId, userSetting.Key.String()), userSetting)
 		userSettings = append(userSettings, userSetting)
 	}
@@ -59,7 +65,10 @@ func (s *Store) ListUserSettings(ctx context.Context, find *FindUserSetting) ([]
 func (s *Store) GetUserSetting(ctx context.Context, find *FindUserSetting) (*storepb.UserSetting, error) {
 	if find.UserID != nil {
 		if cache, ok := s.userSettingCache.Load(getUserSettingCacheKey(*find.UserID, find.Key.String())); ok {
-			return cache.(*storepb.UserSetting), nil
+			userSetting, ok := cache.(*storepb.UserSetting)
+			if ok {
+				return userSetting, nil
+			}
 		}
 	}
 
@@ -143,7 +152,7 @@ func convertUserSettingFromRaw(raw *UserSetting) (*storepb.UserSetting, error) {
 	case storepb.UserSettingKey_USER_SETTING_MEMO_VISIBILITY:
 		userSetting.Value = &storepb.UserSetting_MemoVisibility{MemoVisibility: raw.Value}
 	default:
-		return nil, errors.Errorf("unsupported user setting key: %v", raw.Key)
+		return nil, nil
 	}
 	return userSetting, nil
 }

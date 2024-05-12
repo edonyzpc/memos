@@ -13,7 +13,7 @@ type Store struct {
 	driver                Driver
 	workspaceSettingCache sync.Map // map[string]*storepb.WorkspaceSetting
 	userCache             sync.Map // map[int]*User
-	userSettingCache      sync.Map // map[string]*UserSetting
+	userSettingCache      sync.Map // map[string]*storepb.UserSetting
 	idpCache              sync.Map // map[int]*storepb.IdentityProvider
 }
 
@@ -27,10 +27,6 @@ func New(driver Driver, profile *profile.Profile) *Store {
 
 func (*Store) MigrateManually(context.Context) error {
 	return nil
-}
-
-func (s *Store) Vacuum(ctx context.Context) error {
-	return s.driver.Vacuum(ctx)
 }
 
 func (s *Store) Close() error {
