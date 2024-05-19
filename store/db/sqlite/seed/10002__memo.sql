@@ -4,7 +4,7 @@ INSERT INTO
     `uid`,
     `content`,
     `creator_id`,
-    `tags`
+    `payload`
   )
 VALUES
   (
@@ -12,7 +12,7 @@ VALUES
     "FqaZcg5H6EdGB9ke8kYUcy",
     "#Hello 👋 Welcome to memos.",
     101,
-    '["Hello"]'
+    '{"property": {"tags": ["Hello"]}}'
   );
 
 INSERT INTO
@@ -22,7 +22,7 @@ INSERT INTO
     `content`,
     `creator_id`,
     `visibility`,
-    `tags`
+    `payload`
   )
 VALUES
   (
@@ -34,7 +34,7 @@ VALUES
 - [ ] Read *📖 The Little Prince*;',
     101,
     'PROTECTED',
-    '["TODO"]'
+    '{"property": {"tags": ["TODO"]}}'
   );
 
 INSERT INTO
@@ -49,7 +49,7 @@ VALUES
   (
     3,
     "ZvH7a6VWMuX5aArtECTj4N",
-    '**[Memos](https://github.com/usememos/memos)**: A lightweight, self-hosted memo hub. Open Source and Free forever. 
+    '**[Memos](https://github.com/usememos/memos)**: A lightweight, self-hosted memo hub. Open Source and Free to Use. 
 **[Slash](https://github.com/yourselfhosted/slash)**: An open source, self-hosted bookmarks and link sharing platform. Save and share your links very easily.',
     101,
     'PUBLIC'
@@ -62,7 +62,7 @@ INSERT INTO
     `content`,
     `creator_id`,
     `visibility`,
-    `tags`
+    `payload`
   )
 VALUES
   (
@@ -74,7 +74,7 @@ VALUES
 - [ ] Watch *👦 The Boys*;',
     102,
     'PROTECTED',
-    '["TODO"]'
+    '{"property": {"tags": ["TODO"]}}'
   );
 
 INSERT INTO

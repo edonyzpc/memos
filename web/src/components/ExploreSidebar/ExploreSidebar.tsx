@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import ClustrBar from "@/components/ClustrBar";
 import SearchBar from "@/components/SearchBar";
-import UsersSection from "./UsersSection";
+import TagsSection from "../HomeSidebar/TagsSection";
 
 interface Props {
   className?: string;
@@ -17,7 +17,7 @@ const ExploreSidebar = (props: Props) => {
     >
       <SearchBar />
       <ClustrBar user={"explore"} />
-      <UsersSection />
+      <TagsSection readonly={true} />
     </aside>
   );
 };
