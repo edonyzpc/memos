@@ -16,7 +16,7 @@ const ExploreSidebar = (props: Props) => {
       )}
     >
       <SearchBar />
-      <ClustrBar user={"explore"} />
+      <ClustrBar />
       <TagsSection readonly={true} />
     </aside>
   );
