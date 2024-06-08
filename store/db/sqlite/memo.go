@@ -85,6 +85,18 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		if v.Tag != nil {
 			where, args = append(where, "JSON_EXTRACT(`memo`.`payload`, '$.property.tags') LIKE ?"), append(args, fmt.Sprintf(`%%"%s"%%`, *v.Tag))
 		}
+		if v.HasLink {
+			where = append(where, "JSON_EXTRACT(`memo`.`payload`, '$.property.hasLink') IS TRUE")
+		}
+		if v.HasTaskList {
+			where = append(where, "JSON_EXTRACT(`memo`.`payload`, '$.property.hasTaskList') IS TRUE")
+		}
+		if v.HasCode {
+			where = append(where, "JSON_EXTRACT(`memo`.`payload`, '$.property.hasCode') IS TRUE")
+		}
+		if v.HasIncompleteTasks {
+			where = append(where, "JSON_EXTRACT(`memo`.`payload`, '$.property.hasIncompleteTasks') IS TRUE")
+		}
 	}
 	if find.ExcludeComments {
 		where = append(where, "`parent_id` IS NULL")

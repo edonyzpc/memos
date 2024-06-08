@@ -10,9 +10,9 @@ import (
 
 	"github.com/gorilla/feeds"
 	"github.com/labstack/echo/v4"
-	"github.com/yourselfhosted/gomark"
-	"github.com/yourselfhosted/gomark/ast"
-	"github.com/yourselfhosted/gomark/renderer"
+	"github.com/usememos/gomark"
+	"github.com/usememos/gomark/ast"
+	"github.com/usememos/gomark/renderer"
 
 	storepb "github.com/usememos/memos/proto/gen/store"
 	"github.com/usememos/memos/server/profile"
@@ -129,7 +129,7 @@ func (s *RSSService) generateRSSFromMemoList(ctx context.Context, memoList []*st
 			if resource.StorageType == storepb.ResourceStorageType_EXTERNAL || resource.StorageType == storepb.ResourceStorageType_S3 {
 				enclosure.Url = resource.Reference
 			} else {
-				enclosure.Url = fmt.Sprintf("%s/file/resources/%d", baseURL, resource.ID)
+				enclosure.Url = fmt.Sprintf("%s/file/resources/%d/%s", baseURL, resource.ID, resource.Filename)
 			}
 			enclosure.Length = strconv.Itoa(int(resource.Size))
 			enclosure.Type = resource.Type

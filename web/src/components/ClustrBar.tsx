@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
+import useCurrentUser from "@/hooks/useCurrentUser";
 
-const ClustrBar = (props: any) => {
-  const { name } = props;
+const ClustrBar = () => {
+  const { name } = useCurrentUser();
   useEffect(() => {
     console.log(name);
   }, []);

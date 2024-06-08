@@ -2,6 +2,7 @@ import clsx from "clsx";
 import ClustrBar from "../ClustrBar";
 import TagsSection from "../HomeSidebar/TagsSection";
 import SearchBar from "../SearchBar";
+import UserStatisticsView from "../UserStatisticsView";
 
 interface Props {
   className?: string;
@@ -16,7 +17,8 @@ const TimelineSidebar = (props: Props) => {
       )}
     >
       <SearchBar />
-      <ClustrBar user={"timeline"} />
+      <ClustrBar />
+      <UserStatisticsView />
       <TagsSection />
     </aside>
   );

@@ -6,7 +6,6 @@ import { showCommonDialog } from "@/components/Dialog/CommonDialog";
 import Empty from "@/components/Empty";
 import Icon from "@/components/Icon";
 import MemoContent from "@/components/MemoContent";
-import MemoFilter from "@/components/MemoFilter";
 import MobileHeader from "@/components/MobileHeader";
 import SearchBar from "@/components/SearchBar";
 import { DEFAULT_LIST_MEMOS_PAGE_SIZE } from "@/helpers/consts";
@@ -93,13 +92,12 @@ const Archived = () => {
           <div className="w-full flex flex-row justify-between items-center mb-2">
             <div className="flex flex-row justify-start items-center gap-1">
               <Icon.Archive className="w-5 h-auto opacity-70 shrink-0" />
-              <span className="font-medium">{t("common.archived")}</span>
+              <span>{t("common.archived")}</span>
             </div>
             <div className="w-44">
               <SearchBar />
             </div>
           </div>
-          <MemoFilter className="px-2 pb-2" />
           {sortedMemos.map((memo) => (
             <div
               key={memo.name}

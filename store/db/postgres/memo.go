@@ -84,6 +84,18 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		if v.Tag != nil {
 			where, args = append(where, "memo.payload->'property'->'tags' @> "+placeholder(len(args)+1)), append(args, fmt.Sprintf(`["%s"]`, *v.Tag))
 		}
+		if v.HasLink {
+			where = append(where, "(memo.payload->'property'->>'hasLink')::BOOLEAN IS TRUE")
+		}
+		if v.HasTaskList {
+			where = append(where, "(memo.payload->'property'->>'hasTaskList')::BOOLEAN IS TRUE")
+		}
+		if v.HasCode {
+			where = append(where, "(memo.payload->'property'->>'hasCode')::BOOLEAN IS TRUE")
+		}
+		if v.HasIncompleteTasks {
+			where = append(where, "(memo.payload->'property'->>'hasIncompleteTasks')::BOOLEAN IS TRUE")
+		}
 	}
 	if find.ExcludeComments {
 		where = append(where, "memo_relation.related_memo_id IS NULL")
