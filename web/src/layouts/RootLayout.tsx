@@ -56,10 +56,7 @@ const RootLayout = () => {
           >
             <Navigation className="!h-auto" collapsed={collapsed} />
             <div className={clsx("w-full grow h-auto flex flex-col justify-end", collapsed ? "items-center" : "items-start")}>
-              <div
-                className={clsx("hidden py-3 group-hover:flex flex-col justify-center items-center")}
-                onClick={() => setCollapsed(!collapsed)}
-              >
+              <div className={clsx("py-3 group-hover:flex flex-col justify-center items-center")} onClick={() => setCollapsed(!collapsed)}>
                 {!collapsed ? (
                   <Button variant="plain" color="neutral" startDecorator={<Icon.ChevronLeft className="w-5 h-auto opacity-70" />}>
                     Collapse
