@@ -28,6 +28,7 @@ jobs:
           input: "proto"
       - name: buf format
         run: |
+          buf format -w
           if [[ $(buf format -d) ]]; then
             echo "Run 'buf format -w'"
             exit 1
