@@ -4,7 +4,7 @@ memos:
 	MEMOS_PORT=5230 air -c scripts/.air.toml
 
 proto-gen:
-	cd proto && buf generate && cd -
+	cd proto && buf generate && buf format -w && cd -
 
 web-lint:
 	cd web && pnpm i && pnpm lint && cd -
