@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import ClustrBar from "../ClustrBar";
+import HitokotoBar from "../HitokotoBar";
 import TagsSection from "../HomeSidebar/TagsSection";
 import SearchBar from "../SearchBar";
 import UserStatisticsView from "../UserStatisticsView";
@@ -17,6 +18,7 @@ const TimelineSidebar = (props: Props) => {
       )}
     >
       <SearchBar />
+      <HitokotoBar />
       <ClustrBar />
       <UserStatisticsView />
       <TagsSection />

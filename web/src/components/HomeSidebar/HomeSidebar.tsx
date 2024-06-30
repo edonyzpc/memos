@@ -2,6 +2,7 @@ import clsx from "clsx";
 import ClustrBar from "@/components/ClustrBar";
 import SearchBar from "@/components/SearchBar";
 import UserStatisticsView from "@/components/UserStatisticsView";
+import HitokotoBar from "../HitokotoBar";
 import TagsSection from "./TagsSection";
 
 interface Props {
@@ -18,6 +19,7 @@ const HomeSidebar = (props: Props) => {
     >
       <SearchBar />
       <ClustrBar />
+      <HitokotoBar />
       <UserStatisticsView />
       <TagsSection />
     </aside>

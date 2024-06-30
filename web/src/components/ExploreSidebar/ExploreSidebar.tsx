@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import ClustrBar from "@/components/ClustrBar";
+import HitokotoBar from "@/components/HitokotoBar";
 import SearchBar from "@/components/SearchBar";
 import TagsSection from "../HomeSidebar/TagsSection";
 
@@ -16,6 +17,7 @@ const ExploreSidebar = (props: Props) => {
       )}
     >
       <SearchBar />
+      <HitokotoBar />
       <ClustrBar />
       <TagsSection readonly={true} />
     </aside>
