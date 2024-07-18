@@ -9,7 +9,6 @@ import { useMemoStore, extractMemoIdFromName } from "@/store/v1";
 import { RowStatus } from "@/types/proto/api/v1/common";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
-import { showCommonDialog } from "./Dialog/CommonDialog";
 import showMemoEditorDialog from "./MemoEditor/MemoEditorDialog";
 import showShareMemoDialog from "./ShareMemoDialog";
 
@@ -17,6 +16,7 @@ interface Props {
   memo: Memo;
   className?: string;
   hiddenActions?: ("edit" | "archive" | "delete" | "share" | "pin")[];
+  onEdit?: () => void;
 }
 
 const MemoActionMenu = (props: Props) => {
@@ -52,6 +52,12 @@ const MemoActionMenu = (props: Props) => {
   };
 
   const handleEditMemoClick = () => {
+    if (props.onEdit) {
+      props.onEdit();
+      return;
+    }
+
+    // TODO: remove me later.
     showMemoEditorDialog({
       memoName: memo.name,
       cacheKey: `${memo.name}-${memo.updateTime}`,
@@ -96,19 +102,14 @@ const MemoActionMenu = (props: Props) => {
   };
 
   const handleDeleteMemoClick = async () => {
-    showCommonDialog({
-      title: t("memo.delete-memo"),
-      content: t("memo.delete-confirm"),
-      style: "danger",
-      dialogName: "delete-memo-dialog",
-      onConfirm: async () => {
-        await memoStore.deleteMemo(memo.name);
-        toast.success(t("message.deleted-successfully"));
-        if (isInMemoDetailPage) {
-          navigateTo("/");
-        }
-      },
-    });
+    const confirmed = window.confirm(t("memo.delete-confirm"));
+    if (confirmed) {
+      await memoStore.deleteMemo(memo.name);
+      toast.success(t("message.deleted-successfully"));
+      if (isInMemoDetailPage) {
+        navigateTo("/");
+      }
+    }
   };
 
   return (
