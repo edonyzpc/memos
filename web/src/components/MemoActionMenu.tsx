@@ -9,7 +9,6 @@ import { useMemoStore, extractMemoIdFromName } from "@/store/v1";
 import { RowStatus } from "@/types/proto/api/v1/common";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
-import showMemoEditorDialog from "./MemoEditor/MemoEditorDialog";
 import showShareMemoDialog from "./ShareMemoDialog";
 
 interface Props {
@@ -56,12 +55,6 @@ const MemoActionMenu = (props: Props) => {
       props.onEdit();
       return;
     }
-
-    // TODO: remove me later.
-    showMemoEditorDialog({
-      memoName: memo.name,
-      cacheKey: `${memo.name}-${memo.updateTime}`,
-    });
   };
 
   const handleToggleMemoStatusClick = async () => {
@@ -126,7 +119,7 @@ const MemoActionMenu = (props: Props) => {
             {memo.pinned ? t("common.unpin") : t("common.pin")}
           </MenuItem>
         )}
-        {!hiddenActions?.includes("edit") && (
+        {!hiddenActions?.includes("edit") && props.onEdit && (
           <MenuItem onClick={handleEditMemoClick}>
             <Icon.Edit3 className="w-4 h-auto" />
             {t("common.edit")}
