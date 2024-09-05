@@ -1,5 +1,6 @@
 import { Button, IconButton, Select, Option } from "@mui/joy";
 import copy from "copy-to-clipboard";
+import * as Icon from "lucide-react";
 import React, { useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { getDateTimeString } from "@/helpers/datetime";
@@ -12,7 +13,6 @@ import { Visibility } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityToString } from "@/utils/memo";
 import { generateDialog } from "./Dialog";
-import Icon from "./Icon";
 import MemoContent from "./MemoContent";
 import MemoResourceListView from "./MemoResourceListView";
 import UserAvatar from "./UserAvatar";

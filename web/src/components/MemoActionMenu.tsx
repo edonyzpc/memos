@@ -10,6 +10,7 @@ import {
   Edit3Icon,
   MoreVerticalIcon,
   TrashIcon,
+  ImageDownIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
@@ -142,7 +143,7 @@ const MemoActionMenu = (props: Props) => {
         )}
         {!hiddenActions?.includes("share") && (
           <MenuItem onClick={() => showShareMemoDialog(extractMemoIdFromName(memo.name))}>
-            <Icon.ImageDownIcon className="w-4 h-auto" />
+            <ImageDownIcon className="w-4 h-auto" />
             {"Image"}
           </MenuItem>
         )}
