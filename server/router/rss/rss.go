@@ -99,8 +99,13 @@ func (s *RSSService) generateRSSFromMemoList(ctx context.Context, memoList []*st
 	feed := &feeds.Feed{
 		Title:       "Memos",
 		Link:        &feeds.Link{Href: baseURL},
-		Description: "An open source, lightweight note-taking service. Easily capture and share your great thoughts.",
+		Description: "山风微微，像月光下晃动的海浪，温和而柔软，停留在时光的背后，变成小时候听过的故事 feedId:79731455274977280+userId:79724508595875840",
 		Created:     time.Now(),
+		Image: &feeds.Image{
+			Url:   baseURL + "/logo.webp",
+			Title: "Memos",
+			Link:  baseURL,
+		},
 	}
 
 	var itemCountLimit = min(len(memoList), maxRSSItemCount)
