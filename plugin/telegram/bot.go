@@ -51,7 +51,7 @@ func (b *Bot) Start(ctx context.Context) {
 			if update.CallbackQuery != nil {
 				err := b.handler.CallbackQueryHandle(ctx, b, *update.CallbackQuery)
 				if err != nil {
-					slog.Error("fail to handle callback query", err)
+					slog.Error("fail to handle callback query", "error", err)
 				}
 
 				continue
@@ -65,7 +65,7 @@ func (b *Bot) Start(ctx context.Context) {
 				if !message.IsSupported() {
 					_, err := b.SendReplyMessage(ctx, message.Chat.ID, message.MessageID, "Supported messages: animation, audio, text, document, photo, video, video note, voice, other messages with caption")
 					if err != nil {
-						slog.Error("fail to send reply message", err)
+						slog.Error("fail to send reply message", "error", err)
 					}
 					continue
 				}
@@ -83,12 +83,12 @@ func (b *Bot) Start(ctx context.Context) {
 
 		err = b.handleSingleMessages(ctx, singleMessages)
 		if err != nil {
-			slog.Error("fail to handle plain text message", err)
+			slog.Error("fail to handle plain text message", "error", err)
 		}
 
 		err = b.handleGroupMessages(ctx, groupMessages)
 		if err != nil {
-			slog.Error("fail to handle media group message", err)
+			slog.Error("fail to handle media group message", "error", err)
 		}
 	}
 }
