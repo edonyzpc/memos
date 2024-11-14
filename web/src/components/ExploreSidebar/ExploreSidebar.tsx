@@ -1,7 +1,10 @@
 import clsx from "clsx";
+import { useLocation } from "react-router-dom";
+import useDebounce from "react-use/lib/useDebounce";
 import ClustrBar from "@/components/ClustrBar";
 import HitokotoBar from "@/components/HitokotoBar";
 import SearchBar from "@/components/SearchBar";
+import { useMemoList, useMemoMetadataStore } from "@/store/v1";
 import TagsSection from "../HomeSidebar/TagsSection";
 
 interface Props {
@@ -9,6 +12,19 @@ interface Props {
 }
 
 const ExploreSidebar = (props: Props) => {
+  const location = useLocation();
+  const memoList = useMemoList();
+  const memoMetadataStore = useMemoMetadataStore();
+
+  useDebounce(
+    async () => {
+      if (memoList.size() === 0) return;
+      await memoMetadataStore.fetchMemoMetadata({ location });
+    },
+    300,
+    [memoList.size(), location.pathname],
+  );
+
   return (
     <aside
       className={clsx(

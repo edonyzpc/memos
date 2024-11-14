@@ -6,7 +6,6 @@ on:
   pull_request:
     branches:
       - main
-      - "release/*.*.*"
     paths:
       - "proto/**"
 
@@ -30,6 +29,6 @@ jobs:
         run: |
           buf format -w
           if [[ $(buf format -d) ]]; then
-            echo "Run 'buf format -w'"
+            echo "Run 'buf format -d'"
             exit 1
           fi

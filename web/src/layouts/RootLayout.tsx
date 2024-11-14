@@ -1,4 +1,5 @@
-import { Button, IconButton, Tooltip } from "@mui/joy";
+import { Tooltip } from "@mui/joy";
+import { Button } from "@usememos/mui";
 import clsx from "clsx";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
@@ -52,14 +53,15 @@ const RootLayout = () => {
             <div className={clsx("w-full grow h-auto flex flex-col justify-end", collapsed ? "items-center" : "items-start")}>
               <div className={clsx("py-3 group-hover:flex flex-col justify-center items-center")} onClick={() => setCollapsed(!collapsed)}>
                 {!collapsed ? (
-                  <Button variant="plain" color="neutral" startDecorator={<ChevronLeftIcon className="w-5 h-auto opacity-70" />}>
+                  <Button className="rounded-xl" variant="plain">
+                    <ChevronLeftIcon className="w-5 h-auto opacity-70 mr-1" />
                     {t("common.collapse")}
                   </Button>
                 ) : (
                   <Tooltip title={t("common.expand")} placement="right" arrow>
-                    <IconButton>
+                    <Button className="rounded-xl" variant="plain">
                       <ChevronRightIcon className="w-5 h-auto opacity-70" />
-                    </IconButton>
+                    </Button>
                   </Tooltip>
                 )}
               </div>
