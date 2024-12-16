@@ -1,7 +1,9 @@
 import { Button } from "@usememos/mui";
 import { ArrowDownIcon, LoaderIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import PullToRefresh from "react-simple-pull-to-refresh";
 import { DEFAULT_LIST_MEMOS_PAGE_SIZE } from "@/helpers/consts";
+import useResponsiveWidth from "@/hooks/useResponsiveWidth";
 import { useMemoList, useMemoStore } from "@/store/v1";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
@@ -21,6 +23,7 @@ interface State {
 
 const PagedMemoList = (props: Props) => {
   const t = useTranslate();
+  const { md } = useResponsiveWidth();
   const memoStore = useMemoStore();
   const memoList = useMemoList();
   const [state, setState] = useState<State>({
@@ -29,12 +32,8 @@ const PagedMemoList = (props: Props) => {
   });
   const sortedMemoList = props.listSort ? props.listSort(memoList.value) : memoList.value;
 
-  const setIsRequesting = (isRequesting: boolean) => {
-    setState((state) => ({ ...state, isRequesting }));
-  };
-
   const fetchMoreMemos = async (nextPageToken: string) => {
-    setIsRequesting(true);
+    setState((state) => ({ ...state, isRequesting: true }));
     const response = await memoStore.fetchMemos({
       filter: props.filter || "",
       pageSize: props.pageSize || DEFAULT_LIST_MEMOS_PAGE_SIZE,
@@ -46,13 +45,17 @@ const PagedMemoList = (props: Props) => {
     }));
   };
 
-  useEffect(() => {
+  const refreshList = async () => {
     memoList.reset();
     setState((state) => ({ ...state, nextPageToken: "" }));
     fetchMoreMemos("");
+  };
+
+  useEffect(() => {
+    refreshList();
   }, [props.filter, props.pageSize]);
 
-  return (
+  const children = (
     <>
       {sortedMemoList.map((memo) => props.renderer(memo))}
       {state.isRequesting && (
@@ -75,6 +78,29 @@ const PagedMemoList = (props: Props) => {
         </div>
       )}
     </>
+  );
+
+  // In case of md screen, we don't need pull to refresh.
+  if (md) {
+    return children;
+  }
+
+  return (
+    <PullToRefresh
+      onRefresh={() => refreshList()}
+      pullingContent={
+        <div className="w-full flex flex-row justify-center items-center my-4">
+          <LoaderIcon className="opacity-60" />
+        </div>
+      }
+      refreshingContent={
+        <div className="w-full flex flex-row justify-center items-center my-4">
+          <LoaderIcon className="animate-spin" />
+        </div>
+      }
+    >
+      {children}
+    </PullToRefresh>
   );
 };
 
