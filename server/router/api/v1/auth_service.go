@@ -72,8 +72,8 @@ func (s *APIV1Service) SignIn(ctx context.Context, request *v1pb.SignInRequest) 
 
 	expireTime := time.Now().Add(AccessTokenDuration)
 	if request.NeverExpire {
-		// Set the expire time to 100 years.
-		expireTime = time.Now().Add(100 * 365 * 24 * time.Hour)
+		// Set the expire time to 1 years.
+		expireTime = time.Now().Add(1 * 365 * 24 * time.Hour)
 	}
 	if err := s.doSignIn(ctx, user, expireTime); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to sign in, error: %v", err)
