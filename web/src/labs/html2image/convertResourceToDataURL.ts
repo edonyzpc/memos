@@ -5,7 +5,15 @@ const convertResourceToDataURL = async (url: string, useCache = true): Promise<s
     return Promise.resolve(cachedResourceMap.get(url) as string);
   }
 
-  const res = await fetch(url);
+  let urlFetch = url;
+  if (url.startsWith("https://memos.3ab1964e0709f627a24b9531f2a15373.r2.cloudflarestorage.com/")) {
+    const urlWithoutCORS = new URL(url);
+    const path = urlWithoutCORS.pathname;
+    const fileName = path.substring(path.lastIndexOf("/") + 1);
+    urlFetch = "https://img.edony.ink/" + fileName;
+  }
+
+  const res = await fetch(urlFetch);
   const blob = await res.blob();
 
   return new Promise((resolve) => {
