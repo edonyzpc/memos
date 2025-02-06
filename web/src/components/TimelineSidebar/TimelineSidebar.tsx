@@ -3,7 +3,7 @@ import ClustrBar from "../ClustrBar";
 import HitokotoBar from "../HitokotoBar";
 import TagsSection from "../HomeSidebar/TagsSection";
 import SearchBar from "../SearchBar";
-import UserStatisticsView from "../UserStatisticsView";
+import StatisticsView from "../StatisticsView";
 
 interface Props {
   className?: string;
@@ -20,7 +20,7 @@ const TimelineSidebar = (props: Props) => {
       <SearchBar />
       <HitokotoBar />
       <ClustrBar />
-      <UserStatisticsView />
+      <StatisticsView />
       <TagsSection />
     </aside>
   );
