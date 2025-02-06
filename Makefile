@@ -1,7 +1,7 @@
 .PHONY: memos web proto-gen
 
 memos:
-	MEMOS_PORT=5230 air -c scripts/.air.toml
+	go mod tidy && go mod vendor && sh ./scripts/build.sh && ./build/memos --mode dev --port 5230
 
 proto-gen:
 	cd proto && buf generate && buf format -w && cd -
