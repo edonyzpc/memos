@@ -1,6 +1,3 @@
-# Air (hot reload) generated
-.air
-
 # temp folder
 tmp
 
@@ -18,16 +15,11 @@ build
 # Docker Compose Environment File
 .env
 
-bin/air
-
-dev-dist
-
-vendor
-
 dist
 
 # VSCode settings
-/.vscode
+.vscode
 
-# python env
-.venv/
+vendor
+
+.venv

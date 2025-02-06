@@ -1,33 +1,30 @@
-import clsx from "clsx";
-import { useLocation } from "react-router-dom";
 import useDebounce from "react-use/lib/useDebounce";
 import ClustrBar from "@/components/ClustrBar";
 import HitokotoBar from "@/components/HitokotoBar";
 import SearchBar from "@/components/SearchBar";
-import { useMemoList, useMemoMetadataStore } from "@/store/v1";
+import { useUserStatsStore } from "@/store/v1";
+import { cn } from "@/utils";
 import TagsSection from "../HomeSidebar/TagsSection";
+import StatisticsView from "../StatisticsView";
 
 interface Props {
   className?: string;
 }
 
 const ExploreSidebar = (props: Props) => {
-  const location = useLocation();
-  const memoList = useMemoList();
-  const memoMetadataStore = useMemoMetadataStore();
+  const userStatsStore = useUserStatsStore();
 
   useDebounce(
     async () => {
-      if (memoList.size() === 0) return;
-      await memoMetadataStore.fetchMemoMetadata({ location });
+      await userStatsStore.listUserStats();
     },
     300,
-    [memoList.size(), location.pathname],
+    [userStatsStore.stateId],
   );
 
   return (
     <aside
-      className={clsx(
+      className={cn(
         "relative w-full h-auto max-h-screen overflow-auto hide-scrollbar flex flex-col justify-start items-start",
         props.className,
       )}
@@ -35,6 +32,7 @@ const ExploreSidebar = (props: Props) => {
       <SearchBar />
       <HitokotoBar />
       <ClustrBar />
+      <StatisticsView />
       <TagsSection readonly={true} />
     </aside>
   );

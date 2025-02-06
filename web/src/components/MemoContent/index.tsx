@@ -1,8 +1,8 @@
-import clsx from "clsx";
 import { memo, useEffect, useRef, useState } from "react";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useMemoStore } from "@/store/v1";
 import { Node, NodeType } from "@/types/proto/api/v1/markdown_service";
+import { cn } from "@/utils";
 import { useTranslate } from "@/utils/i18n";
 import { isSuperUser } from "@/utils/user";
 import Renderer from "./Renderer";
@@ -24,6 +24,7 @@ interface Props {
   contentClassName?: string;
   onClick?: (e: React.MouseEvent) => void;
   onDoubleClick?: (e: React.MouseEvent) => void;
+  parentPage?: string;
 }
 
 type ContentCompactView = "ALL" | "SNIPPET";
@@ -52,13 +53,13 @@ const MemoContent: React.FC<Props> = (props: Props) => {
     }
   }, []);
 
-  const handleMemoContentClick = async (e: React.MouseEvent) => {
+  const onMemoContentClick = async (e: React.MouseEvent) => {
     if (onClick) {
       onClick(e);
     }
   };
 
-  const handleMemoContentDoubleClick = async (e: React.MouseEvent) => {
+  const onMemoContentDoubleClick = async (e: React.MouseEvent) => {
     if (onDoubleClick) {
       onDoubleClick(e);
     }
@@ -79,18 +80,19 @@ const MemoContent: React.FC<Props> = (props: Props) => {
         readonly: !allowEdit,
         disableFilter: props.disableFilter,
         embeddedMemos: embeddedMemos || new Set(),
+        parentPage: props.parentPage,
       }}
     >
       <div className={`w-full flex flex-col justify-start items-start text-gray-800 dark:text-gray-400 ${className || ""}`}>
         <div
           ref={memoContentContainerRef}
-          className={clsx(
+          className={cn(
             "relative w-full max-w-full word-break text-base leading-snug space-y-2 whitespace-pre-wrap",
             showCompactMode == "ALL" && "line-clamp-6 max-h-60",
             contentClassName,
           )}
-          onClick={handleMemoContentClick}
-          onDoubleClick={handleMemoContentDoubleClick}
+          onClick={onMemoContentClick}
+          onDoubleClick={onMemoContentDoubleClick}
         >
           {nodes.map((node, index) => {
             if (prevNode?.type !== NodeType.LINE_BREAK && node.type === NodeType.LINE_BREAK && skipNextLineBreakFlag) {

@@ -1,17 +1,18 @@
-import clsx from "clsx";
 import { LinkIcon, MilestoneIcon } from "lucide-react";
 import { memo, useState } from "react";
 import { Link } from "react-router-dom";
 import { MemoRelation } from "@/types/proto/api/v1/memo_relation_service";
 import { Memo } from "@/types/proto/api/v1/memo_service";
+import { cn } from "@/utils";
 
 interface Props {
   memo: Memo;
   relations: MemoRelation[];
+  parentPage?: string;
 }
 
 const MemoRelationListView = (props: Props) => {
-  const { memo, relations: relationList } = props;
+  const { memo, relations: relationList, parentPage } = props;
   const referencingMemoList = relationList
     .filter((relation) => relation.memo?.name === memo.name && relation.relatedMemo?.name !== memo.name)
     .map((relation) => relation.relatedMemo!);
@@ -31,7 +32,7 @@ const MemoRelationListView = (props: Props) => {
       <div className="w-full flex flex-row justify-start items-center mb-1 gap-3 opacity-60">
         {referencingMemoList.length > 0 && (
           <button
-            className={clsx(
+            className={cn(
               "w-auto flex flex-row justify-start items-center text-xs gap-0.5 text-gray-500",
               selectedTab === "referencing" && "text-gray-800 dark:text-gray-400",
             )}
@@ -44,7 +45,7 @@ const MemoRelationListView = (props: Props) => {
         )}
         {referencedMemoList.length > 0 && (
           <button
-            className={clsx(
+            className={cn(
               "w-auto flex flex-row justify-start items-center text-xs gap-0.5 text-gray-500",
               selectedTab === "referenced" && "text-gray-800 dark:text-gray-400",
             )}
@@ -65,6 +66,9 @@ const MemoRelationListView = (props: Props) => {
                 className="w-auto max-w-full flex flex-row justify-start items-center text-sm leading-5 text-gray-600 dark:text-gray-400 dark:border-zinc-700 dark:bg-zinc-900 hover:underline"
                 to={`/m/${memo.uid}`}
                 viewTransition
+                state={{
+                  from: parentPage,
+                }}
               >
                 <span className="text-xs opacity-60 leading-4 border font-mono px-1 rounded-full mr-1 dark:border-zinc-700">
                   {memo.uid.slice(0, 6)}
@@ -84,6 +88,9 @@ const MemoRelationListView = (props: Props) => {
                 className="w-auto max-w-full flex flex-row justify-start items-center text-sm leading-5 text-gray-600 dark:text-gray-400 dark:border-zinc-700 dark:bg-zinc-900 hover:underline"
                 to={`/m/${memo.uid}`}
                 viewTransition
+                state={{
+                  from: parentPage,
+                }}
               >
                 <span className="text-xs opacity-60 leading-4 border font-mono px-1 rounded-full mr-1 dark:border-zinc-700">
                   {memo.uid.slice(0, 6)}

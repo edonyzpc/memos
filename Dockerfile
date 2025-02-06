@@ -6,8 +6,8 @@ COPY . .
 
 WORKDIR /frontend-build/web
 
-RUN corepack enable && pnpm i --frozen-lockfile
-
+RUN npm install -g pnpm
+RUN pnpm i --frozen-lockfile
 RUN pnpm build
 
 # Build backend exec file.
@@ -17,7 +17,7 @@ WORKDIR /backend-build
 COPY . .
 COPY --from=frontend /frontend-build/web/dist /backend-build/server/router/frontend/dist
 
-RUN CGO_ENABLED=0 go build -o memos ./bin/memos/main.go
+RUN go build -o memos ./bin/memos/main.go
 
 # Make workspace with above generated files.
 FROM alpine:latest AS monolithic
@@ -27,6 +27,7 @@ RUN apk add --no-cache tzdata
 ENV TZ="UTC"
 
 COPY --from=backend /backend-build/memos /usr/local/memos/
+COPY entrypoint.sh /usr/local/memos/
 
 EXPOSE 5230
 
@@ -37,4 +38,4 @@ VOLUME /var/opt/memos
 ENV MEMOS_MODE="prod"
 ENV MEMOS_PORT="5230"
 
-ENTRYPOINT ["./memos"]
+ENTRYPOINT ["./entrypoint.sh", "./memos"]

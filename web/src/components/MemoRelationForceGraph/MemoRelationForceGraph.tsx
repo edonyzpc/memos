@@ -1,22 +1,24 @@
 import { useColorScheme } from "@mui/joy";
-import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
 import ForceGraph2D, { ForceGraphMethods, LinkObject, NodeObject } from "react-force-graph-2d";
 import useNavigateTo from "@/hooks/useNavigateTo";
 import { MemoRelation_Type } from "@/types/proto/api/v1/memo_relation_service";
 import { Memo } from "@/types/proto/api/v1/memo_service";
+import { cn } from "@/utils";
+import { memoLink } from "@/utils/memo";
 import { LinkType, NodeType } from "./types";
 import { convertMemoRelationsToGraphData } from "./utils";
 
 interface Props {
   memo: Memo;
   className?: string;
+  parentPage?: string;
 }
 
 const MAIN_NODE_COLOR = "#14b8a6";
 const DEFAULT_NODE_COLOR = "#a1a1aa";
 
-const MemoRelationForceGraph = ({ className, memo }: Props) => {
+const MemoRelationForceGraph = ({ className, memo, parentPage }: Props) => {
   const navigateTo = useNavigateTo();
   const { mode } = useColorScheme();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -29,12 +31,16 @@ const MemoRelationForceGraph = ({ className, memo }: Props) => {
   }, []);
 
   const onNodeClick = (node: NodeObject<NodeType>) => {
-    if (node.memo.uid === memo.uid) return;
-    navigateTo(`/m/${node.memo.uid}`);
+    if (node.memo.name === memo.name) return;
+    navigateTo(memoLink(memo.name), {
+      state: {
+        from: parentPage,
+      },
+    });
   };
 
   return (
-    <div ref={containerRef} className={clsx("dark:opacity-80", className)}>
+    <div ref={containerRef} className={cn("dark:opacity-80", className)}>
       <ForceGraph2D
         ref={graphRef}
         width={graphSize.width}

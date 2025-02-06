@@ -54,10 +54,8 @@ func TestMemoStore(t *testing.T) {
 	require.Equal(t, 0, len(memoList))
 
 	memoList, err = ts.ListMemos(ctx, &store.FindMemo{
-		CreatorID: &user.ID,
-		VisibilityList: []store.Visibility{
-			store.Public,
-		},
+		CreatorID:      &user.ID,
+		VisibilityList: []store.Visibility{store.Public},
 	})
 	require.NoError(t, err)
 	require.Equal(t, 0, len(memoList))
@@ -75,9 +73,7 @@ func TestMemoListByTags(t *testing.T) {
 		Content:    "test_content",
 		Visibility: store.Public,
 		Payload: &storepb.MemoPayload{
-			Property: &storepb.MemoPayload_Property{
-				Tags: []string{"test_tag"},
-			},
+			Tags: []string{"test_tag"},
 		},
 	}
 	memo, err := ts.CreateMemo(ctx, memoCreate)

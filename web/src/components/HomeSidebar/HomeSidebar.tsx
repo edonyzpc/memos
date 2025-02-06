@@ -1,12 +1,12 @@
-import clsx from "clsx";
-import { useLocation } from "react-router-dom";
 import useDebounce from "react-use/lib/useDebounce";
 import ClustrBar from "@/components/ClustrBar";
 import SearchBar from "@/components/SearchBar";
-import UserStatisticsView from "@/components/UserStatisticsView";
+import StatisticsView from "@/components/StatisticsView";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { useMemoList, useMemoMetadataStore } from "@/store/v1";
+import { useMemoList, useUserStatsStore } from "@/store/v1";
+import { cn } from "@/utils";
 import HitokotoBar from "../HitokotoBar";
+import ShortcutsSection from "./ShortcutsSection";
 import TagsSection from "./TagsSection";
 
 interface Props {
@@ -14,22 +14,21 @@ interface Props {
 }
 
 const HomeSidebar = (props: Props) => {
-  const location = useLocation();
-  const user = useCurrentUser();
+  const currentUser = useCurrentUser();
   const memoList = useMemoList();
-  const memoMetadataStore = useMemoMetadataStore();
+  const userStatsStore = useUserStatsStore();
 
   useDebounce(
     async () => {
-      await memoMetadataStore.fetchMemoMetadata({ user, location });
+      await userStatsStore.listUserStats(currentUser.name);
     },
     300,
-    [memoList.size(), user, location.pathname],
+    [memoList.size(), userStatsStore.stateId, currentUser],
   );
 
   return (
     <aside
-      className={clsx(
+      className={cn(
         "relative w-full h-auto max-h-screen overflow-auto hide-scrollbar flex flex-col justify-start items-start",
         props.className,
       )}
@@ -37,7 +36,8 @@ const HomeSidebar = (props: Props) => {
       <SearchBar />
       <ClustrBar />
       <HitokotoBar />
-      <UserStatisticsView />
+      <StatisticsView />
+      <ShortcutsSection />
       <TagsSection />
     </aside>
   );

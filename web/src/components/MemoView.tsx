@@ -1,19 +1,19 @@
 import { Tooltip } from "@mui/joy";
-import clsx from "clsx";
 import { BookmarkIcon, MessageCircleMoreIcon } from "lucide-react";
 import { memo, useCallback, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import useAsyncEffect from "@/hooks/useAsyncEffect";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useNavigateTo from "@/hooks/useNavigateTo";
-import { useUserStore, useWorkspaceSettingStore, useMemoStore } from "@/store/v1";
-import { NodeType } from "@/types/proto/api/v1/markdown_service";
+import { useUserStore, useWorkspaceSettingStore, useMemoStore, useUserStatsStore } from "@/store/v1";
+import { State } from "@/types/proto/api/v1/common";
 import { MemoRelation_Type } from "@/types/proto/api/v1/memo_relation_service";
 import { Memo, Visibility } from "@/types/proto/api/v1/memo_service";
 import { WorkspaceMemoRelatedSetting } from "@/types/proto/api/v1/workspace_setting_service";
 import { WorkspaceSettingKey } from "@/types/proto/store/workspace_setting";
+import { cn } from "@/utils";
 import { useTranslate } from "@/utils/i18n";
-import { convertVisibilityToString } from "@/utils/memo";
+import { convertVisibilityToString, memoLink } from "@/utils/memo";
 import { isSuperUser } from "@/utils/user";
 import MemoActionMenu from "./MemoActionMenu";
 import MemoContent from "./MemoContent";
@@ -29,12 +29,12 @@ import VisibilityIcon from "./VisibilityIcon";
 
 interface Props {
   memo: Memo;
-  displayTimeFormat?: "auto" | "time";
   compact?: boolean;
   showCreator?: boolean;
   showVisibility?: boolean;
   showPinned?: boolean;
   className?: string;
+  parentPage?: string;
 }
 
 const MemoView: React.FC<Props> = (props: Props) => {
@@ -47,6 +47,7 @@ const MemoView: React.FC<Props> = (props: Props) => {
   const user = useCurrentUser();
   const memoStore = useMemoStore();
   const workspaceSettingStore = useWorkspaceSettingStore();
+  const userStatsStore = useUserStatsStore();
   const [showEditor, setShowEditor] = useState<boolean>(false);
   const [creator, setCreator] = useState(userStore.getUserByName(memo.creator));
   const memoContainerRef = useRef<HTMLDivElement>(null);
@@ -58,8 +59,10 @@ const MemoView: React.FC<Props> = (props: Props) => {
     (relation) => relation.type === MemoRelation_Type.COMMENT && relation.relatedMemo?.name === memo.name,
   ).length;
   const relativeTimeFormat = Date.now() - memo.displayTime!.getTime() > 1000 * 60 * 60 * 24 ? "datetime" : "auto";
+  const isArchived = memo.state === State.ARCHIVED;
   const readonly = memo.creator !== user?.name && !isSuperUser(user);
-  const isInMemoDetailPage = location.pathname.startsWith(`/m/${memo.uid}`);
+  const isInMemoDetailPage = location.pathname.startsWith(memoLink(memo.name));
+  const parentPage = props.parentPage || location.pathname;
 
   // Initial related data: creator.
   useAsyncEffect(async () => {
@@ -68,8 +71,12 @@ const MemoView: React.FC<Props> = (props: Props) => {
   }, []);
 
   const handleGotoMemoDetailPage = useCallback(() => {
-    navigateTo(`/m/${memo.uid}`);
-  }, [memo.uid]);
+    navigateTo(memoLink(memo.name), {
+      state: {
+        from: parentPage,
+      },
+    });
+  }, [memo.name, parentPage]);
 
   const handleMemoContentClick = useCallback(async (e: React.MouseEvent) => {
     const targetEl = e.target as HTMLElement;
@@ -93,62 +100,32 @@ const MemoView: React.FC<Props> = (props: Props) => {
     }
   }, []);
 
+  const onEditorConfirm = () => {
+    setShowEditor(false);
+    userStatsStore.setStateId();
+  };
+
   const onPinIconClick = async () => {
-    try {
-      if (memo.pinned) {
-        await memoStore.updateMemo(
-          {
-            name: memo.name,
-            pinned: false,
-          },
-          ["pinned"],
-        );
-      }
-    } catch (error) {
-      // do nth
+    if (memo.pinned) {
+      await memoStore.updateMemo(
+        {
+          name: memo.name,
+          pinned: false,
+        },
+        ["pinned"],
+      );
     }
   };
 
-  const displayTime =
-    props.displayTimeFormat === "time" ? (
-      memo.displayTime?.toLocaleTimeString()
-    ) : (
-      <relative-time datetime={memo.displayTime?.toISOString()} format={relativeTimeFormat}></relative-time>
-    );
-
-  const handleHiddenActions = () => {
-    const hiddenActions: ("edit" | "archive" | "delete" | "share" | "pin" | "remove_completed_task_list")[] = [];
-    if (!props.showPinned) {
-      hiddenActions.push("pin");
-    }
-    // check if the content has done tasks
-    let hasCompletedTaskList = false;
-    const newNodes = JSON.parse(JSON.stringify(memo.nodes));
-    for (let i = 0; i < newNodes.length; i++) {
-      if (hasCompletedTaskList) {
-        break;
-      }
-      if (newNodes[i].type === NodeType.LIST && newNodes[i].listNode?.children?.length > 0) {
-        for (let j = 0; j < newNodes[i].listNode.children.length; j++) {
-          if (
-            newNodes[i].listNode.children[j].type === NodeType.TASK_LIST_ITEM &&
-            newNodes[i].listNode.children[j].taskListItemNode?.complete
-          ) {
-            hasCompletedTaskList = true;
-            break;
-          }
-        }
-      }
-    }
-    if (!hasCompletedTaskList) {
-      hiddenActions.push("remove_completed_task_list");
-    }
-    return hiddenActions;
-  };
+  const displayTime = isArchived ? (
+    memo.displayTime?.toLocaleString()
+  ) : (
+    <relative-time datetime={memo.displayTime?.toISOString()} format={relativeTimeFormat}></relative-time>
+  );
 
   return (
     <div
-      className={clsx(
+      className={cn(
         "group relative flex flex-col justify-start items-start w-full px-4 py-3 mb-2 gap-2 bg-white dark:bg-zinc-800 rounded-lg border border-white dark:border-zinc-800 hover:border-gray-200 dark:hover:border-zinc-700",
         props.showPinned && memo.pinned && "border-gray-200 border dark:border-zinc-700",
         className,
@@ -161,7 +138,7 @@ const MemoView: React.FC<Props> = (props: Props) => {
           className="border-none !p-0 -mb-2"
           cacheKey={`inline-memo-editor-${memo.name}`}
           memoName={memo.name}
-          onConfirm={() => setShowEditor(false)}
+          onConfirm={onEditorConfirm}
           onCancel={() => setShowEditor(false)}
         />
       ) : (
@@ -207,16 +184,19 @@ const MemoView: React.FC<Props> = (props: Props) => {
                     </span>
                   </Tooltip>
                 )}
-                {currentUser && <ReactionSelector className="border-none w-auto h-auto" memo={memo} />}
+                {currentUser && !isArchived && <ReactionSelector className="border-none w-auto h-auto" memo={memo} />}
               </div>
               {!isInMemoDetailPage && (workspaceMemoRelatedSetting.enableComment || commentAmount > 0) && (
                 <Link
-                  className={clsx(
+                  className={cn(
                     "flex flex-row justify-start items-center hover:opacity-70",
                     commentAmount === 0 && "invisible group-hover:visible",
                   )}
-                  to={`/m/${memo.uid}#comments`}
+                  to={`${memoLink(memo.name)}#comments`}
                   viewTransition
+                  state={{
+                    from: parentPage,
+                  }}
                 >
                   <MessageCircleMoreIcon className="w-4 h-4 mx-auto text-gray-500 dark:text-gray-400" />
                   {commentAmount > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">{commentAmount}</span>}
@@ -229,9 +209,7 @@ const MemoView: React.FC<Props> = (props: Props) => {
                   </span>
                 </Tooltip>
               )}
-              {!readonly && (
-                <MemoActionMenu className="-ml-1" memo={memo} hiddenActions={handleHiddenActions()} onEdit={() => setShowEditor(true)} />
-              )}
+              <MemoActionMenu className="-ml-1" memo={memo} readonly={readonly} onEdit={() => setShowEditor(true)} />
             </div>
           </div>
           <MemoContent
@@ -242,10 +220,11 @@ const MemoView: React.FC<Props> = (props: Props) => {
             onClick={handleMemoContentClick}
             onDoubleClick={handleMemoContentDoubleClick}
             compact={props.compact && workspaceMemoRelatedSetting.enableAutoCompact}
+            parentPage={parentPage}
           />
           {memo.location && <MemoLocationView location={memo.location} />}
           <MemoResourceListView resources={memo.resources} />
-          <MemoRelationListView memo={memo} relations={referencedMemos} />
+          <MemoRelationListView memo={memo} relations={referencedMemos} parentPage={parentPage} />
           <MemoReactionistView memo={memo} reactions={memo.reactions} />
         </>
       )}

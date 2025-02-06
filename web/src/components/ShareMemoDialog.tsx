@@ -3,6 +3,7 @@ import copy from "copy-to-clipboard";
 import * as Icon from "lucide-react";
 import React, { useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
+import { BrowserRouter as Router } from "react-router-dom";
 import { getDateTimeString } from "@/helpers/datetime";
 import { downloadFileFromUrl } from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
@@ -20,7 +21,7 @@ import VisibilityIcon from "./VisibilityIcon";
 import "@/less/share-memo-dialog.less";
 
 interface Props extends DialogProps {
-  memoId: number;
+  memoId: string;
 }
 
 const ShareMemoDialog: React.FC<Props> = (props: Props) => {
@@ -74,7 +75,7 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
   };
 
   const handleCopyLinkBtnClick = () => {
-    copy(`${window.location.origin}/m/${memo.uid}`);
+    copy(`${window.location.origin}/m/${memo.name}`);
     toast.success(t("message.succeed-copy-link"));
   };
 
@@ -97,7 +98,7 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
   }
 
   return (
-    <>
+    <Router>
       <div className="dialog-header-container py-3 px-4 !mb-0 rounded-t-lg">
         <p className="">{t("common.share")} Memo</p>
         <IconButton size="sm" onClick={handleCloseBtnClick}>
@@ -172,11 +173,11 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
           </div>
         </div>
       </div>
-    </>
+    </Router>
   );
 };
 
-export default function showShareMemoDialog(memoId: number): void {
+export default function showShareMemoDialog(memoId: string): void {
   generateDialog(
     {
       className: "share-memo-dialog",
