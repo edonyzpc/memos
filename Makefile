@@ -7,7 +7,7 @@ proto-gen:
 	cd proto && buf generate && buf format -w && cd -
 
 web-lint:
-	cd web && pnpm i && pnpm lint && cd -
+	cd web && pnpm i --frozen-lockfile && pnpm lint && cd -
 
 web: proto-gen web-lint
 	cd web && DEV_PROXY_SERVER='http://localhost:5230' pnpm dev && cd -
