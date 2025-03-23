@@ -9,7 +9,9 @@ import { downloadFileFromUrl } from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useLoading from "@/hooks/useLoading";
 import toImage from "@/labs/html2image";
-import { useUserStore, useMemoStore, memoNamePrefix } from "@/store/v1";
+import "@/less/share-memo-dialog.less";
+import { useMemoStore, memoNamePrefix } from "@/store/v1";
+import { userStore } from "@/store/v2";
 import { Visibility } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityToString } from "@/utils/memo";
@@ -18,7 +20,6 @@ import MemoContent from "./MemoContent";
 import MemoResourceListView from "./MemoResourceListView";
 import UserAvatar from "./UserAvatar";
 import VisibilityIcon from "./VisibilityIcon";
-import "@/less/share-memo-dialog.less";
 
 interface Props extends DialogProps {
   memoId: string;
@@ -28,7 +29,6 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
   const { memoId, destroy } = props;
   const t = useTranslate();
   const currentUser = useCurrentUser();
-  const userStore = useUserStore();
   const memoStore = useMemoStore();
   const downloadingImageState = useLoading(false);
   const loadingState = useLoading();
