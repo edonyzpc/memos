@@ -1,8 +1,6 @@
-import useDebounce from "react-use/lib/useDebounce";
 import ClustrBar from "@/components/ClustrBar";
 import HitokotoBar from "@/components/HitokotoBar";
 import SearchBar from "@/components/SearchBar";
-import { useUserStatsStore } from "@/store/v1";
 import { cn } from "@/utils";
 import TagsSection from "../HomeSidebar/TagsSection";
 import StatisticsView from "../StatisticsView";
@@ -12,16 +10,6 @@ interface Props {
 }
 
 const ExploreSidebar = (props: Props) => {
-  const userStatsStore = useUserStatsStore();
-
-  useDebounce(
-    async () => {
-      await userStatsStore.listUserStats();
-    },
-    300,
-    [userStatsStore.stateId],
-  );
-
   return (
     <aside
       className={cn(
