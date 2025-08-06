@@ -43,7 +43,7 @@ const CodeBlock: React.FC<Props> = ({ language, content }: Props) => {
           language: formatedLanguage,
         }).value;
       }
-    } catch (error) {
+    } catch {
       // Skip error and use default highlighted code.
     }
 

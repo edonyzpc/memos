@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import i18n from "@/i18n";
 
 export function getTimeStampByDate(t: Date | number | string | any): number {

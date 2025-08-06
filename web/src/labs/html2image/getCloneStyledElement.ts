@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import convertResourceToDataURL from "./convertResourceToDataURL";
 
 const applyStyles = async (sourceElement: HTMLElement, clonedElement: HTMLElement) => {
