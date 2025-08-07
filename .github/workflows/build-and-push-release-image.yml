@@ -4,7 +4,7 @@ on:
   push:
     branches:
       # Run on pushing branches like 'release/1.0.0'.
-      - "release/*"
+      - "old-release/*"
 
 jobs:
   build-and-push-release-image:
