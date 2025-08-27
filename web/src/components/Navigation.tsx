@@ -9,7 +9,7 @@ import { userStore } from "@/store/v2";
 import { cn } from "@/utils";
 import { useTranslate } from "@/utils/i18n";
 import BrandBanner from "./BrandBanner";
-import MemosAds from "./MemosAds";
+//import MemosAds from "./MemosAds";
 import UserBanner from "./UserBanner";
 
 interface NavLinkItem {
@@ -100,9 +100,9 @@ const Navigation = observer((props: Props) => {
           </NavLink>
         ))}
       </div>
-      <div className="w-full h-24 py-3">
+      {/* <div className="w-full h-24 py-3">
         <MemosAds dataAdSlot="3633276605" />
-      </div>
+      </div> */}
       {currentUser && <UserBanner collapsed={collapsed} />}
     </header>
   );
