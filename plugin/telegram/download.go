@@ -35,6 +35,8 @@ func (b *Bot) downloadAttachment(ctx context.Context, message *Message) (*Attach
 	case message.Voice != nil:
 		fileID = message.Voice.FileID
 		mimeType = message.Voice.MimeType
+	default:
+		return nil, nil
 	}
 
 	if fileID == "" {
