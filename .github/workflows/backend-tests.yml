@@ -1,4 +1,4 @@
-name: Backend Test
+name: Backend Tests
 
 on:
   push:
@@ -15,30 +15,30 @@ jobs:
   go-static-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.24
+          go-version: 1.25
           check-latest: true
           cache: true
       - name: Verify go.mod is tidy
         run: |
-          go mod tidy -go=1.24
-          git diff
+          go mod tidy -go=1.25
+          git diff --exit-code
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.1.6
+          version: v2.4.0
           args: --verbose --timeout=3m
           skip-cache: true
 
   go-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.24
+          go-version: 1.25
           check-latest: true
           cache: true
       - name: Run all tests

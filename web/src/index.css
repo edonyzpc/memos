@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./themes/default.css";
+
+@theme {
+  --default-transition-duration: 150ms;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-none ring-0;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

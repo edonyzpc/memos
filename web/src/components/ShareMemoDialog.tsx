@@ -1,17 +1,18 @@
+/*
 import { Button, IconButton, Select, Option } from "@mui/joy";
 import copy from "copy-to-clipboard";
 import * as Icon from "lucide-react";
 import React, { useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { BrowserRouter as Router } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { getDateTimeString } from "@/helpers/datetime";
 import { downloadFileFromUrl } from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useLoading from "@/hooks/useLoading";
 import toImage from "@/labs/html2image";
 import "@/less/share-memo-dialog.less";
-import { memoNamePrefix } from "@/store/common";
-import { memoStore, userStore } from "@/store/v2";
+import { memoStore, userStore } from "@/store";
 import { Visibility } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityToString } from "@/utils/memo";
@@ -186,3 +187,4 @@ export default function showShareMemoDialog(memoId: string): void {
     { memoId },
   );
 }
+*/

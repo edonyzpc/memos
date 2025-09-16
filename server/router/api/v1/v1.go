@@ -23,15 +23,13 @@ type APIV1Service struct {
 	grpc_health_v1.UnimplementedHealthServer
 
 	v1pb.UnimplementedWorkspaceServiceServer
-	v1pb.UnimplementedWorkspaceSettingServiceServer
 	v1pb.UnimplementedAuthServiceServer
 	v1pb.UnimplementedUserServiceServer
 	v1pb.UnimplementedMemoServiceServer
-	v1pb.UnimplementedResourceServiceServer
+	v1pb.UnimplementedAttachmentServiceServer
 	v1pb.UnimplementedShortcutServiceServer
 	v1pb.UnimplementedInboxServiceServer
 	v1pb.UnimplementedActivityServiceServer
-	v1pb.UnimplementedWebhookServiceServer
 	v1pb.UnimplementedMarkdownServiceServer
 	v1pb.UnimplementedIdentityProviderServiceServer
 
@@ -52,15 +50,13 @@ func NewAPIV1Service(secret string, profile *profile.Profile, store *store.Store
 	}
 	grpc_health_v1.RegisterHealthServer(grpcServer, apiv1Service)
 	v1pb.RegisterWorkspaceServiceServer(grpcServer, apiv1Service)
-	v1pb.RegisterWorkspaceSettingServiceServer(grpcServer, apiv1Service)
 	v1pb.RegisterAuthServiceServer(grpcServer, apiv1Service)
 	v1pb.RegisterUserServiceServer(grpcServer, apiv1Service)
 	v1pb.RegisterMemoServiceServer(grpcServer, apiv1Service)
-	v1pb.RegisterResourceServiceServer(grpcServer, apiv1Service)
+	v1pb.RegisterAttachmentServiceServer(grpcServer, apiv1Service)
 	v1pb.RegisterShortcutServiceServer(grpcServer, apiv1Service)
 	v1pb.RegisterInboxServiceServer(grpcServer, apiv1Service)
 	v1pb.RegisterActivityServiceServer(grpcServer, apiv1Service)
-	v1pb.RegisterWebhookServiceServer(grpcServer, apiv1Service)
 	v1pb.RegisterMarkdownServiceServer(grpcServer, apiv1Service)
 	v1pb.RegisterIdentityProviderServiceServer(grpcServer, apiv1Service)
 	reflection.Register(grpcServer)
@@ -71,7 +67,11 @@ func NewAPIV1Service(secret string, profile *profile.Profile, store *store.Store
 func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Echo) error {
 	var target string
 	if len(s.Profile.UNIXSock) == 0 {
-		target = fmt.Sprintf("%s:%d", s.Profile.Addr, s.Profile.Port)
+		addr := s.Profile.Addr
+		if addr == "" {
+			addr = "localhost"
+		}
+		target = fmt.Sprintf("%s:%d", addr, s.Profile.Port)
 	} else {
 		target = fmt.Sprintf("unix:%s", s.Profile.UNIXSock)
 	}
@@ -88,9 +88,6 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 	if err := v1pb.RegisterWorkspaceServiceHandler(ctx, gwMux, conn); err != nil {
 		return err
 	}
-	if err := v1pb.RegisterWorkspaceSettingServiceHandler(ctx, gwMux, conn); err != nil {
-		return err
-	}
 	if err := v1pb.RegisterAuthServiceHandler(ctx, gwMux, conn); err != nil {
 		return err
 	}
@@ -100,7 +97,7 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 	if err := v1pb.RegisterMemoServiceHandler(ctx, gwMux, conn); err != nil {
 		return err
 	}
-	if err := v1pb.RegisterResourceServiceHandler(ctx, gwMux, conn); err != nil {
+	if err := v1pb.RegisterAttachmentServiceHandler(ctx, gwMux, conn); err != nil {
 		return err
 	}
 	if err := v1pb.RegisterShortcutServiceHandler(ctx, gwMux, conn); err != nil {
@@ -110,9 +107,6 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 		return err
 	}
 	if err := v1pb.RegisterActivityServiceHandler(ctx, gwMux, conn); err != nil {
-		return err
-	}
-	if err := v1pb.RegisterWebhookServiceHandler(ctx, gwMux, conn); err != nil {
 		return err
 	}
 	if err := v1pb.RegisterMarkdownServiceHandler(ctx, gwMux, conn); err != nil {

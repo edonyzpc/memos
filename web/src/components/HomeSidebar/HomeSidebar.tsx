@@ -1,14 +1,9 @@
-import { last } from "lodash-es";
 import { observer } from "mobx-react-lite";
-import { matchPath, useLocation } from "react-router-dom";
-import useDebounce from "react-use/lib/useDebounce";
 import ClustrBar from "@/components/ClustrBar";
+import HitokotoBar from "@/components/HitokotoBar";
 import SearchBar from "@/components/SearchBar";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { Routes } from "@/router";
-import { memoStore, userStore } from "@/store/v2";
-import { cn } from "@/utils";
-import HitokotoBar from "../HitokotoBar";
+import { cn } from "@/lib/utils";
 import MemoFilters from "../MemoFilters";
 import StatisticsView from "../StatisticsView";
 import ShortcutsSection from "./ShortcutsSection";
@@ -19,34 +14,21 @@ interface Props {
 }
 
 const HomeSidebar = observer((props: Props) => {
-  const location = useLocation();
   const currentUser = useCurrentUser();
 
-  useDebounce(
-    async () => {
-      let parent: string | undefined = undefined;
-      if (location.pathname === Routes.ROOT && currentUser) {
-        parent = currentUser.name;
-      }
-      if (matchPath("/u/:username", location.pathname) !== null) {
-        const username = last(location.pathname.split("/"));
-        const user = await userStore.getOrFetchUserByUsername(username || "");
-        parent = user.name;
-      }
-      await userStore.fetchUserStats(parent);
-    },
-    300,
-    [memoStore.state.memos.length, userStore.state.statsStateId, location.pathname],
-  );
-
   return (
-    <aside className={cn("relative w-full h-full overflow-auto flex flex-col justify-start items-start", props.className)}>
+    <aside
+      className={cn(
+        "relative w-full h-full overflow-auto flex flex-col justify-start items-start bg-background text-sidebar-foreground",
+        props.className,
+      )}
+    >
       <SearchBar />
+      <MemoFilters />
+      <ClustrBar />
+      <HitokotoBar />
       <div className="mt-1 px-1 w-full">
         <StatisticsView />
-        <MemoFilters />
-        <ClustrBar />
-        <HitokotoBar />
         {currentUser && <ShortcutsSection />}
         <TagsSection />
       </div>

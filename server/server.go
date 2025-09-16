@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"runtime"
+	"runtime/debug"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,7 +25,6 @@ import (
 	apiv1 "github.com/usememos/memos/server/router/api/v1"
 	"github.com/usememos/memos/server/router/frontend"
 	"github.com/usememos/memos/server/router/rss"
-	"github.com/usememos/memos/server/runner/memopayload"
 	"github.com/usememos/memos/server/runner/s3presign"
 	"github.com/usememos/memos/store"
 )
@@ -53,10 +53,12 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 	echoServer.Use(middleware.Recover())
 	s.echoServer = echoServer
 
-	// Initialize profiler
-	s.profiler = profiler.NewProfiler()
-	s.profiler.RegisterRoutes(echoServer)
-	s.profiler.StartMemoryMonitor(ctx)
+	if profile.Mode != "prod" {
+		// Initialize profiler
+		s.profiler = profiler.NewProfiler()
+		s.profiler.RegisterRoutes(echoServer)
+		s.profiler.StartMemoryMonitor(ctx)
+	}
 
 	workspaceBasicSetting, err := s.getOrUpsertWorkspaceBasicSetting(ctx)
 	if err != nil {
@@ -74,7 +76,7 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 		return c.String(http.StatusOK, "Service ready.")
 	})
 
-	// Serve frontend resources.
+	// Serve frontend static files.
 	frontend.NewFrontendService(profile, store).Serve(ctx, echoServer)
 
 	rootGroup := echoServer.Group("")
@@ -82,12 +84,15 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 	// Create and register RSS routes.
 	rss.NewRSSService(s.Profile, s.Store).RegisterRoutes(rootGroup)
 
+	// Log full stacktraces if we're in dev
+	logStacktraces := profile.IsDev()
+
 	grpcServer := grpc.NewServer(
-		// Override the maximum receiving message size to math.MaxInt32 for uploading large resources.
+		// Override the maximum receiving message size to math.MaxInt32 for uploading large attachments.
 		grpc.MaxRecvMsgSize(math.MaxInt32),
 		grpc.ChainUnaryInterceptor(
-			apiv1.NewLoggerInterceptor().LoggerInterceptor,
-			grpcrecovery.UnaryServerInterceptor(),
+			apiv1.NewLoggerInterceptor(logStacktraces).LoggerInterceptor,
+			newRecoveryInterceptor(logStacktraces),
 			apiv1.NewGRPCAuthInterceptor(store, secret).AuthenticationInterceptor,
 		))
 	s.grpcServer = grpcServer
@@ -99,6 +104,26 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 	}
 
 	return s, nil
+}
+
+func newRecoveryInterceptor(logStacktraces bool) grpc.UnaryServerInterceptor {
+	var recoveryOptions []grpcrecovery.Option
+	if logStacktraces {
+		recoveryOptions = append(recoveryOptions, grpcrecovery.WithRecoveryHandler(func(p any) error {
+			if p == nil {
+				return nil
+			}
+
+			switch val := p.(type) {
+			case runtime.Error:
+				return &stacktraceError{err: val, stacktrace: debug.Stack()}
+			default:
+				return nil
+			}
+		}))
+	}
+
+	return grpcrecovery.UnaryServerInterceptor(recoveryOptions...)
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -194,11 +219,6 @@ func (s *Server) StartBackgroundRunners(ctx context.Context) {
 	s3presignRunner := s3presign.NewRunner(s.Store)
 	s3presignRunner.RunOnce(ctx)
 
-	// Create and start memo payload runner just once
-	memopayloadRunner := memopayload.NewRunner(s.Store)
-	// Rebuild all memos' payload after server starts.
-	memopayloadRunner.RunOnce(ctx)
-
 	// Start continuous S3 presign runner
 	go func() {
 		s3presignRunner.Run(s3Context)
@@ -230,4 +250,24 @@ func (s *Server) getOrUpsertWorkspaceBasicSetting(ctx context.Context) (*storepb
 		workspaceBasicSetting = workspaceSetting.GetBasicSetting()
 	}
 	return workspaceBasicSetting, nil
+}
+
+// stacktraceError wraps an underlying error and captures the stacktrace. It
+// implements fmt.Formatter, so it'll be rendered when invoked by something like
+// `fmt.Sprint("%v", err)`.
+type stacktraceError struct {
+	err        error
+	stacktrace []byte
+}
+
+func (e *stacktraceError) Error() string {
+	return e.err.Error()
+}
+
+func (e *stacktraceError) Unwrap() error {
+	return e.err
+}
+
+func (e *stacktraceError) Format(f fmt.State, _ rune) {
+	f.Write(e.stacktrace)
 }

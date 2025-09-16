@@ -9,7 +9,6 @@ type Reaction struct {
 	CreatedTs int64
 	CreatorID int32
 	// ContentID is the id of the content that the reaction is for.
-	// This can be a memo. e.g. memos/101
 	ContentID    string
 	ReactionType string
 }
@@ -18,6 +17,7 @@ type FindReaction struct {
 	ID        *int32
 	CreatorID *int32
 	ContentID *string
+	Filters   []string
 }
 
 type DeleteReaction struct {

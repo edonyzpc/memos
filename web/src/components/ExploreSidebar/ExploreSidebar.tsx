@@ -1,7 +1,7 @@
 import ClustrBar from "@/components/ClustrBar";
 import HitokotoBar from "@/components/HitokotoBar";
 import SearchBar from "@/components/SearchBar";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import TagsSection from "../HomeSidebar/TagsSection";
 import StatisticsView from "../StatisticsView";
 

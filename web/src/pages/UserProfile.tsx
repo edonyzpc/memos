@@ -1,4 +1,3 @@
-import { Button } from "@usememos/mui";
 import copy from "copy-to-clipboard";
 import dayjs from "dayjs";
 import { ExternalLinkIcon } from "lucide-react";
@@ -9,10 +8,12 @@ import { useParams } from "react-router-dom";
 import MemoView from "@/components/MemoView";
 import PagedMemoList from "@/components/PagedMemoList";
 import UserAvatar from "@/components/UserAvatar";
+import { Button } from "@/components/ui/button";
 import useLoading from "@/hooks/useLoading";
-import { viewStore, userStore } from "@/store/v2";
-import memoFilterStore from "@/store/v2/memoFilter";
-import { Direction, State } from "@/types/proto/api/v1/common";
+import { viewStore, userStore } from "@/store";
+import { extractUserIdFromName } from "@/store/common";
+import memoFilterStore from "@/store/memoFilter";
+import { State } from "@/types/proto/api/v1/common";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { User } from "@/types/proto/api/v1/user_service";
 import { useTranslate } from "@/utils/i18n";
@@ -41,28 +42,20 @@ const UserProfile = observer(() => {
       });
   }, [params.username]);
 
-  const memoListFilter = useMemo(() => {
+  const memoFilter = useMemo(() => {
     if (!user) {
-      return "";
+      return undefined;
     }
 
-    const conditions = [];
-    const contentSearch: string[] = [];
-    const tagSearch: string[] = [];
+    const conditions = [`creator_id == ${extractUserIdFromName(user.name)}`];
     for (const filter of memoFilterStore.filters) {
       if (filter.factor === "contentSearch") {
-        contentSearch.push(`"${filter.value}"`);
+        conditions.push(`content.contains("${filter.value}")`);
       } else if (filter.factor === "tagSearch") {
-        tagSearch.push(`"${filter.value}"`);
+        conditions.push(`tag in ["${filter.value}"]`);
       }
     }
-    if (contentSearch.length > 0) {
-      conditions.push(`content_search == [${contentSearch.join(", ")}]`);
-    }
-    if (tagSearch.length > 0) {
-      conditions.push(`tag_search == [${tagSearch.join(", ")}]`);
-    }
-    return conditions.join(" && ");
+    return conditions.length > 0 ? conditions.join(" && ") : undefined;
   }, [user, memoFilterStore.filters]);
 
   const handleCopyProfileLink = () => {
@@ -81,20 +74,18 @@ const UserProfile = observer(() => {
           (user ? (
             <>
               <div className="my-4 w-full flex justify-end items-center gap-2">
-                <Button variant="outlined" onClick={handleCopyProfileLink}>
+                <Button variant="outline" onClick={handleCopyProfileLink}>
                   {t("common.share")}
                   <ExternalLinkIcon className="ml-1 w-4 h-auto opacity-60" />
                 </Button>
               </div>
               <div className="w-full flex flex-col justify-start items-start pt-4 pb-8 px-3">
-                <UserAvatar className="!w-16 !h-16 drop-shadow rounded-3xl" avatarUrl={user?.avatarUrl} />
+                <UserAvatar className="w-16! h-16! drop-shadow rounded-3xl" avatarUrl={user?.avatarUrl} />
                 <div className="mt-2 w-auto max-w-[calc(100%-6rem)] flex flex-col justify-center items-start">
-                  <p className="w-full text-3xl text-black leading-tight font-medium opacity-80 dark:text-gray-200 truncate">
-                    {user.nickname || user.username}
+                  <p className="w-full text-3xl text-foreground leading-tight font-medium opacity-80 truncate">
+                    {user.displayName || user.username}
                   </p>
-                  <p className="w-full text-gray-500 leading-snug dark:text-gray-400 whitespace-pre-wrap truncate line-clamp-6">
-                    {user.description}
-                  </p>
+                  <p className="w-full text-muted-foreground leading-snug whitespace-pre-wrap truncate line-clamp-6">{user.description}</p>
                 </div>
               </div>
               <PagedMemoList
@@ -109,11 +100,9 @@ const UserProfile = observer(() => {
                         ? dayjs(a.displayTime).unix() - dayjs(b.displayTime).unix()
                         : dayjs(b.displayTime).unix() - dayjs(a.displayTime).unix(),
                     )
-                    .sort((a, b) => Number(b.pinned) - Number(a.pinned))
                 }
-                owner={user.name}
-                direction={viewStore.state.orderByTimeAsc ? Direction.ASC : Direction.DESC}
-                oldFilter={memoListFilter}
+                orderBy={viewStore.state.orderByTimeAsc ? "display_time asc" : "display_time desc"}
+                filter={memoFilter}
               />
             </>
           ) : (

@@ -23,18 +23,24 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	UserService_ListUsers_FullMethodName             = "/memos.api.v1.UserService/ListUsers"
 	UserService_GetUser_FullMethodName               = "/memos.api.v1.UserService/GetUser"
-	UserService_GetUserByUsername_FullMethodName     = "/memos.api.v1.UserService/GetUserByUsername"
-	UserService_GetUserAvatarBinary_FullMethodName   = "/memos.api.v1.UserService/GetUserAvatarBinary"
 	UserService_CreateUser_FullMethodName            = "/memos.api.v1.UserService/CreateUser"
 	UserService_UpdateUser_FullMethodName            = "/memos.api.v1.UserService/UpdateUser"
 	UserService_DeleteUser_FullMethodName            = "/memos.api.v1.UserService/DeleteUser"
+	UserService_GetUserAvatar_FullMethodName         = "/memos.api.v1.UserService/GetUserAvatar"
 	UserService_ListAllUserStats_FullMethodName      = "/memos.api.v1.UserService/ListAllUserStats"
 	UserService_GetUserStats_FullMethodName          = "/memos.api.v1.UserService/GetUserStats"
 	UserService_GetUserSetting_FullMethodName        = "/memos.api.v1.UserService/GetUserSetting"
 	UserService_UpdateUserSetting_FullMethodName     = "/memos.api.v1.UserService/UpdateUserSetting"
+	UserService_ListUserSettings_FullMethodName      = "/memos.api.v1.UserService/ListUserSettings"
 	UserService_ListUserAccessTokens_FullMethodName  = "/memos.api.v1.UserService/ListUserAccessTokens"
 	UserService_CreateUserAccessToken_FullMethodName = "/memos.api.v1.UserService/CreateUserAccessToken"
 	UserService_DeleteUserAccessToken_FullMethodName = "/memos.api.v1.UserService/DeleteUserAccessToken"
+	UserService_ListUserSessions_FullMethodName      = "/memos.api.v1.UserService/ListUserSessions"
+	UserService_RevokeUserSession_FullMethodName     = "/memos.api.v1.UserService/RevokeUserSession"
+	UserService_ListUserWebhooks_FullMethodName      = "/memos.api.v1.UserService/ListUserWebhooks"
+	UserService_CreateUserWebhook_FullMethodName     = "/memos.api.v1.UserService/CreateUserWebhook"
+	UserService_UpdateUserWebhook_FullMethodName     = "/memos.api.v1.UserService/UpdateUserWebhook"
+	UserService_DeleteUserWebhook_FullMethodName     = "/memos.api.v1.UserService/DeleteUserWebhook"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -45,30 +51,42 @@ type UserServiceClient interface {
 	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
 	// GetUser gets a user by name.
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*User, error)
-	// GetUserByUsername gets a user by username.
-	GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*User, error)
-	// GetUserAvatarBinary gets the avatar of a user.
-	GetUserAvatarBinary(ctx context.Context, in *GetUserAvatarBinaryRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 	// CreateUser creates a new user.
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*User, error)
 	// UpdateUser updates a user.
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*User, error)
 	// DeleteUser deletes a user.
 	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// ListAllUserStats returns all user stats.
+	// GetUserAvatar gets the avatar of a user.
+	GetUserAvatar(ctx context.Context, in *GetUserAvatarRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
+	// ListAllUserStats returns statistics for all users.
 	ListAllUserStats(ctx context.Context, in *ListAllUserStatsRequest, opts ...grpc.CallOption) (*ListAllUserStatsResponse, error)
-	// GetUserStats returns the stats of a user.
+	// GetUserStats returns statistics for a specific user.
 	GetUserStats(ctx context.Context, in *GetUserStatsRequest, opts ...grpc.CallOption) (*UserStats, error)
-	// GetUserSetting gets the setting of a user.
+	// GetUserSetting returns the user setting.
 	GetUserSetting(ctx context.Context, in *GetUserSettingRequest, opts ...grpc.CallOption) (*UserSetting, error)
-	// UpdateUserSetting updates the setting of a user.
+	// UpdateUserSetting updates the user setting.
 	UpdateUserSetting(ctx context.Context, in *UpdateUserSettingRequest, opts ...grpc.CallOption) (*UserSetting, error)
+	// ListUserSettings returns a list of user settings.
+	ListUserSettings(ctx context.Context, in *ListUserSettingsRequest, opts ...grpc.CallOption) (*ListUserSettingsResponse, error)
 	// ListUserAccessTokens returns a list of access tokens for a user.
 	ListUserAccessTokens(ctx context.Context, in *ListUserAccessTokensRequest, opts ...grpc.CallOption) (*ListUserAccessTokensResponse, error)
 	// CreateUserAccessToken creates a new access token for a user.
 	CreateUserAccessToken(ctx context.Context, in *CreateUserAccessTokenRequest, opts ...grpc.CallOption) (*UserAccessToken, error)
-	// DeleteUserAccessToken deletes an access token for a user.
+	// DeleteUserAccessToken deletes an access token.
 	DeleteUserAccessToken(ctx context.Context, in *DeleteUserAccessTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ListUserSessions returns a list of active sessions for a user.
+	ListUserSessions(ctx context.Context, in *ListUserSessionsRequest, opts ...grpc.CallOption) (*ListUserSessionsResponse, error)
+	// RevokeUserSession revokes a specific session for a user.
+	RevokeUserSession(ctx context.Context, in *RevokeUserSessionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ListUserWebhooks returns a list of webhooks for a user.
+	ListUserWebhooks(ctx context.Context, in *ListUserWebhooksRequest, opts ...grpc.CallOption) (*ListUserWebhooksResponse, error)
+	// CreateUserWebhook creates a new webhook for a user.
+	CreateUserWebhook(ctx context.Context, in *CreateUserWebhookRequest, opts ...grpc.CallOption) (*UserWebhook, error)
+	// UpdateUserWebhook updates an existing webhook for a user.
+	UpdateUserWebhook(ctx context.Context, in *UpdateUserWebhookRequest, opts ...grpc.CallOption) (*UserWebhook, error)
+	// DeleteUserWebhook deletes a webhook for a user.
+	DeleteUserWebhook(ctx context.Context, in *DeleteUserWebhookRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type userServiceClient struct {
@@ -99,26 +117,6 @@ func (c *userServiceClient) GetUser(ctx context.Context, in *GetUserRequest, opt
 	return out, nil
 }
 
-func (c *userServiceClient) GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*User, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(User)
-	err := c.cc.Invoke(ctx, UserService_GetUserByUsername_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) GetUserAvatarBinary(ctx context.Context, in *GetUserAvatarBinaryRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(httpbody.HttpBody)
-	err := c.cc.Invoke(ctx, UserService_GetUserAvatarBinary_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *userServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*User, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(User)
@@ -143,6 +141,16 @@ func (c *userServiceClient) DeleteUser(ctx context.Context, in *DeleteUserReques
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, UserService_DeleteUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetUserAvatar(ctx context.Context, in *GetUserAvatarRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(httpbody.HttpBody)
+	err := c.cc.Invoke(ctx, UserService_GetUserAvatar_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -189,6 +197,16 @@ func (c *userServiceClient) UpdateUserSetting(ctx context.Context, in *UpdateUse
 	return out, nil
 }
 
+func (c *userServiceClient) ListUserSettings(ctx context.Context, in *ListUserSettingsRequest, opts ...grpc.CallOption) (*ListUserSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListUserSettingsResponse)
+	err := c.cc.Invoke(ctx, UserService_ListUserSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) ListUserAccessTokens(ctx context.Context, in *ListUserAccessTokensRequest, opts ...grpc.CallOption) (*ListUserAccessTokensResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListUserAccessTokensResponse)
@@ -219,6 +237,66 @@ func (c *userServiceClient) DeleteUserAccessToken(ctx context.Context, in *Delet
 	return out, nil
 }
 
+func (c *userServiceClient) ListUserSessions(ctx context.Context, in *ListUserSessionsRequest, opts ...grpc.CallOption) (*ListUserSessionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListUserSessionsResponse)
+	err := c.cc.Invoke(ctx, UserService_ListUserSessions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) RevokeUserSession(ctx context.Context, in *RevokeUserSessionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UserService_RevokeUserSession_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ListUserWebhooks(ctx context.Context, in *ListUserWebhooksRequest, opts ...grpc.CallOption) (*ListUserWebhooksResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListUserWebhooksResponse)
+	err := c.cc.Invoke(ctx, UserService_ListUserWebhooks_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CreateUserWebhook(ctx context.Context, in *CreateUserWebhookRequest, opts ...grpc.CallOption) (*UserWebhook, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UserWebhook)
+	err := c.cc.Invoke(ctx, UserService_CreateUserWebhook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) UpdateUserWebhook(ctx context.Context, in *UpdateUserWebhookRequest, opts ...grpc.CallOption) (*UserWebhook, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UserWebhook)
+	err := c.cc.Invoke(ctx, UserService_UpdateUserWebhook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) DeleteUserWebhook(ctx context.Context, in *DeleteUserWebhookRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UserService_DeleteUserWebhook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -227,30 +305,42 @@ type UserServiceServer interface {
 	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
 	// GetUser gets a user by name.
 	GetUser(context.Context, *GetUserRequest) (*User, error)
-	// GetUserByUsername gets a user by username.
-	GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*User, error)
-	// GetUserAvatarBinary gets the avatar of a user.
-	GetUserAvatarBinary(context.Context, *GetUserAvatarBinaryRequest) (*httpbody.HttpBody, error)
 	// CreateUser creates a new user.
 	CreateUser(context.Context, *CreateUserRequest) (*User, error)
 	// UpdateUser updates a user.
 	UpdateUser(context.Context, *UpdateUserRequest) (*User, error)
 	// DeleteUser deletes a user.
 	DeleteUser(context.Context, *DeleteUserRequest) (*emptypb.Empty, error)
-	// ListAllUserStats returns all user stats.
+	// GetUserAvatar gets the avatar of a user.
+	GetUserAvatar(context.Context, *GetUserAvatarRequest) (*httpbody.HttpBody, error)
+	// ListAllUserStats returns statistics for all users.
 	ListAllUserStats(context.Context, *ListAllUserStatsRequest) (*ListAllUserStatsResponse, error)
-	// GetUserStats returns the stats of a user.
+	// GetUserStats returns statistics for a specific user.
 	GetUserStats(context.Context, *GetUserStatsRequest) (*UserStats, error)
-	// GetUserSetting gets the setting of a user.
+	// GetUserSetting returns the user setting.
 	GetUserSetting(context.Context, *GetUserSettingRequest) (*UserSetting, error)
-	// UpdateUserSetting updates the setting of a user.
+	// UpdateUserSetting updates the user setting.
 	UpdateUserSetting(context.Context, *UpdateUserSettingRequest) (*UserSetting, error)
+	// ListUserSettings returns a list of user settings.
+	ListUserSettings(context.Context, *ListUserSettingsRequest) (*ListUserSettingsResponse, error)
 	// ListUserAccessTokens returns a list of access tokens for a user.
 	ListUserAccessTokens(context.Context, *ListUserAccessTokensRequest) (*ListUserAccessTokensResponse, error)
 	// CreateUserAccessToken creates a new access token for a user.
 	CreateUserAccessToken(context.Context, *CreateUserAccessTokenRequest) (*UserAccessToken, error)
-	// DeleteUserAccessToken deletes an access token for a user.
+	// DeleteUserAccessToken deletes an access token.
 	DeleteUserAccessToken(context.Context, *DeleteUserAccessTokenRequest) (*emptypb.Empty, error)
+	// ListUserSessions returns a list of active sessions for a user.
+	ListUserSessions(context.Context, *ListUserSessionsRequest) (*ListUserSessionsResponse, error)
+	// RevokeUserSession revokes a specific session for a user.
+	RevokeUserSession(context.Context, *RevokeUserSessionRequest) (*emptypb.Empty, error)
+	// ListUserWebhooks returns a list of webhooks for a user.
+	ListUserWebhooks(context.Context, *ListUserWebhooksRequest) (*ListUserWebhooksResponse, error)
+	// CreateUserWebhook creates a new webhook for a user.
+	CreateUserWebhook(context.Context, *CreateUserWebhookRequest) (*UserWebhook, error)
+	// UpdateUserWebhook updates an existing webhook for a user.
+	UpdateUserWebhook(context.Context, *UpdateUserWebhookRequest) (*UserWebhook, error)
+	// DeleteUserWebhook deletes a webhook for a user.
+	DeleteUserWebhook(context.Context, *DeleteUserWebhookRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -267,12 +357,6 @@ func (UnimplementedUserServiceServer) ListUsers(context.Context, *ListUsersReque
 func (UnimplementedUserServiceServer) GetUser(context.Context, *GetUserRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
-func (UnimplementedUserServiceServer) GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*User, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserByUsername not implemented")
-}
-func (UnimplementedUserServiceServer) GetUserAvatarBinary(context.Context, *GetUserAvatarBinaryRequest) (*httpbody.HttpBody, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserAvatarBinary not implemented")
-}
 func (UnimplementedUserServiceServer) CreateUser(context.Context, *CreateUserRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
@@ -281,6 +365,9 @@ func (UnimplementedUserServiceServer) UpdateUser(context.Context, *UpdateUserReq
 }
 func (UnimplementedUserServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserAvatar(context.Context, *GetUserAvatarRequest) (*httpbody.HttpBody, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserAvatar not implemented")
 }
 func (UnimplementedUserServiceServer) ListAllUserStats(context.Context, *ListAllUserStatsRequest) (*ListAllUserStatsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAllUserStats not implemented")
@@ -294,6 +381,9 @@ func (UnimplementedUserServiceServer) GetUserSetting(context.Context, *GetUserSe
 func (UnimplementedUserServiceServer) UpdateUserSetting(context.Context, *UpdateUserSettingRequest) (*UserSetting, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserSetting not implemented")
 }
+func (UnimplementedUserServiceServer) ListUserSettings(context.Context, *ListUserSettingsRequest) (*ListUserSettingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUserSettings not implemented")
+}
 func (UnimplementedUserServiceServer) ListUserAccessTokens(context.Context, *ListUserAccessTokensRequest) (*ListUserAccessTokensResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListUserAccessTokens not implemented")
 }
@@ -302,6 +392,24 @@ func (UnimplementedUserServiceServer) CreateUserAccessToken(context.Context, *Cr
 }
 func (UnimplementedUserServiceServer) DeleteUserAccessToken(context.Context, *DeleteUserAccessTokenRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserAccessToken not implemented")
+}
+func (UnimplementedUserServiceServer) ListUserSessions(context.Context, *ListUserSessionsRequest) (*ListUserSessionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUserSessions not implemented")
+}
+func (UnimplementedUserServiceServer) RevokeUserSession(context.Context, *RevokeUserSessionRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RevokeUserSession not implemented")
+}
+func (UnimplementedUserServiceServer) ListUserWebhooks(context.Context, *ListUserWebhooksRequest) (*ListUserWebhooksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUserWebhooks not implemented")
+}
+func (UnimplementedUserServiceServer) CreateUserWebhook(context.Context, *CreateUserWebhookRequest) (*UserWebhook, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateUserWebhook not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateUserWebhook(context.Context, *UpdateUserWebhookRequest) (*UserWebhook, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserWebhook not implemented")
+}
+func (UnimplementedUserServiceServer) DeleteUserWebhook(context.Context, *DeleteUserWebhookRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserWebhook not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -360,42 +468,6 @@ func _UserService_GetUser_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_GetUserByUsername_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserByUsernameRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserByUsername(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_GetUserByUsername_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserByUsername(ctx, req.(*GetUserByUsernameRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_GetUserAvatarBinary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserAvatarBinaryRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserAvatarBinary(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_GetUserAvatarBinary_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserAvatarBinary(ctx, req.(*GetUserAvatarBinaryRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _UserService_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateUserRequest)
 	if err := dec(in); err != nil {
@@ -446,6 +518,24 @@ func _UserService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).DeleteUser(ctx, req.(*DeleteUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetUserAvatar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserAvatarRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUserAvatar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUserAvatar_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUserAvatar(ctx, req.(*GetUserAvatarRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -522,6 +612,24 @@ func _UserService_UpdateUserSetting_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_ListUserSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUserSettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ListUserSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ListUserSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ListUserSettings(ctx, req.(*ListUserSettingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_ListUserAccessTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListUserAccessTokensRequest)
 	if err := dec(in); err != nil {
@@ -576,6 +684,114 @@ func _UserService_DeleteUserAccessToken_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_ListUserSessions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUserSessionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ListUserSessions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ListUserSessions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ListUserSessions(ctx, req.(*ListUserSessionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_RevokeUserSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeUserSessionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).RevokeUserSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_RevokeUserSession_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).RevokeUserSession(ctx, req.(*RevokeUserSessionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ListUserWebhooks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUserWebhooksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ListUserWebhooks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ListUserWebhooks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ListUserWebhooks(ctx, req.(*ListUserWebhooksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CreateUserWebhook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateUserWebhookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateUserWebhook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CreateUserWebhook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateUserWebhook(ctx, req.(*CreateUserWebhookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_UpdateUserWebhook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserWebhookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateUserWebhook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UpdateUserWebhook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateUserWebhook(ctx, req.(*UpdateUserWebhookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_DeleteUserWebhook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserWebhookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DeleteUserWebhook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_DeleteUserWebhook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DeleteUserWebhook(ctx, req.(*DeleteUserWebhookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -592,14 +808,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_GetUser_Handler,
 		},
 		{
-			MethodName: "GetUserByUsername",
-			Handler:    _UserService_GetUserByUsername_Handler,
-		},
-		{
-			MethodName: "GetUserAvatarBinary",
-			Handler:    _UserService_GetUserAvatarBinary_Handler,
-		},
-		{
 			MethodName: "CreateUser",
 			Handler:    _UserService_CreateUser_Handler,
 		},
@@ -610,6 +818,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteUser",
 			Handler:    _UserService_DeleteUser_Handler,
+		},
+		{
+			MethodName: "GetUserAvatar",
+			Handler:    _UserService_GetUserAvatar_Handler,
 		},
 		{
 			MethodName: "ListAllUserStats",
@@ -628,6 +840,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_UpdateUserSetting_Handler,
 		},
 		{
+			MethodName: "ListUserSettings",
+			Handler:    _UserService_ListUserSettings_Handler,
+		},
+		{
 			MethodName: "ListUserAccessTokens",
 			Handler:    _UserService_ListUserAccessTokens_Handler,
 		},
@@ -638,6 +854,30 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteUserAccessToken",
 			Handler:    _UserService_DeleteUserAccessToken_Handler,
+		},
+		{
+			MethodName: "ListUserSessions",
+			Handler:    _UserService_ListUserSessions_Handler,
+		},
+		{
+			MethodName: "RevokeUserSession",
+			Handler:    _UserService_RevokeUserSession_Handler,
+		},
+		{
+			MethodName: "ListUserWebhooks",
+			Handler:    _UserService_ListUserWebhooks_Handler,
+		},
+		{
+			MethodName: "CreateUserWebhook",
+			Handler:    _UserService_CreateUserWebhook_Handler,
+		},
+		{
+			MethodName: "UpdateUserWebhook",
+			Handler:    _UserService_UpdateUserWebhook_Handler,
+		},
+		{
+			MethodName: "DeleteUserWebhook",
+			Handler:    _UserService_DeleteUserWebhook_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

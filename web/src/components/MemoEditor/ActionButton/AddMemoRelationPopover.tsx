@@ -1,41 +1,31 @@
-import { Autocomplete, AutocompleteOption, Chip } from "@mui/joy";
-import { Button, Checkbox } from "@usememos/mui";
 import { uniqBy } from "lodash-es";
 import { LinkIcon } from "lucide-react";
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { toast } from "react-hot-toast";
 import useDebounce from "react-use/lib/useDebounce";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { memoServiceClient } from "@/grpcweb";
 import { DEFAULT_LIST_MEMOS_PAGE_SIZE } from "@/helpers/consts";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { extractMemoIdFromName } from "@/store/common";
+import { extractUserIdFromName } from "@/store/common";
 import { Memo, MemoRelation_Memo, MemoRelation_Type } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
-import { EditorRefActions } from "../Editor";
 import { MemoEditorContext } from "../types";
 
-interface Props {
-  editorRef: React.RefObject<EditorRefActions>;
-}
-
-const AddMemoRelationPopover = (props: Props) => {
-  const { editorRef } = props;
+const AddMemoRelationPopover = () => {
   const t = useTranslate();
   const context = useContext(MemoEditorContext);
   const user = useCurrentUser();
   const [searchText, setSearchText] = useState<string>("");
   const [isFetching, setIsFetching] = useState<boolean>(true);
   const [fetchedMemos, setFetchedMemos] = useState<Memo[]>([]);
-  const [selectedMemos, setSelectedMemos] = useState<Memo[]>([]);
-  const [embedded, setEmbedded] = useState<boolean>(false);
   const [popoverOpen, setPopoverOpen] = useState<boolean>(false);
 
   const filteredMemos = fetchedMemos.filter(
-    (memo) =>
-      !selectedMemos.includes(memo) &&
-      memo.name !== context.memoName &&
-      !context.relationList.some((relation) => relation.relatedMemo?.name === memo.name),
+    (memo) => memo.name !== context.memoName && !context.relationList.some((relation) => relation.relatedMemo?.name === memo.name),
   );
 
   useDebounce(
@@ -44,14 +34,13 @@ const AddMemoRelationPopover = (props: Props) => {
 
       setIsFetching(true);
       try {
-        const conditions = [];
+        const conditions = [`creator_id == ${extractUserIdFromName(user.name)}`];
         if (searchText) {
-          conditions.push(`content_search == [${JSON.stringify(searchText)}]`);
+          conditions.push(`content.contains("${searchText}")`);
         }
         const { memos } = await memoServiceClient.listMemos({
-          parent: user.name,
+          filter: conditions.join(" && "),
           pageSize: DEFAULT_LIST_MEMOS_PAGE_SIZE,
-          oldFilter: conditions.length > 0 ? conditions.join(" && ") : undefined,
         });
         setFetchedMemos(memos);
       } catch (error: any) {
@@ -88,95 +77,73 @@ const AddMemoRelationPopover = (props: Props) => {
     );
   };
 
-  const addMemoRelations = async () => {
-    // If embedded mode is enabled, embed the memo instead of creating a relation.
-    if (embedded) {
-      if (!editorRef.current) {
-        toast.error(t("message.failed-to-embed-memo"));
-        return;
-      }
-
-      const cursorPosition = editorRef.current.getCursorPosition();
-      const prevValue = editorRef.current.getContent().slice(0, cursorPosition);
-      if (prevValue !== "" && !prevValue.endsWith("\n")) {
-        editorRef.current.insertText("\n");
-      }
-      for (const memo of selectedMemos) {
-        editorRef.current.insertText(`![[memos/${extractMemoIdFromName(memo.name)}]]\n`);
-      }
-      setTimeout(() => {
-        editorRef.current?.scrollToCursor();
-        editorRef.current?.focus();
-      });
-    } else {
-      context.setRelationList(
-        uniqBy(
-          [
-            ...selectedMemos.map((memo) => ({
-              memo: MemoRelation_Memo.fromPartial({ name: memo.name }),
-              relatedMemo: MemoRelation_Memo.fromPartial({ name: memo.name }),
-              type: MemoRelation_Type.REFERENCE,
-            })),
-            ...context.relationList,
-          ].filter((relation) => relation.relatedMemo !== context.memoName),
-          "relatedMemo",
-        ),
-      );
-    }
-    setSelectedMemos([]);
+  const addMemoRelations = async (memo: Memo) => {
+    context.setRelationList(
+      uniqBy(
+        [
+          {
+            memo: MemoRelation_Memo.fromPartial({ name: memo.name }),
+            relatedMemo: MemoRelation_Memo.fromPartial({ name: memo.name }),
+            type: MemoRelation_Type.REFERENCE,
+          },
+          ...context.relationList,
+        ].filter((relation) => relation.relatedMemo !== context.memoName),
+        "relatedMemo",
+      ),
+    );
     setPopoverOpen(false);
   };
 
   return (
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-      <PopoverTrigger className="relative">
-        <Button className="flex items-center justify-center p-0" variant="plain" asChild>
-          <LinkIcon className="w-5 h-5 mx-auto p-0" />
-        </Button>
-      </PopoverTrigger>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <LinkIcon className="size-5" />
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>{t("tooltip.link-memo")}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent align="center">
-        <div className="w-[16rem] flex flex-col justify-start items-start">
-          <Autocomplete
-            className="w-full"
-            size="md"
-            clearOnBlur
-            disableClearable
-            placeholder={t("reference.search-placeholder")}
-            noOptionsText={t("reference.no-memos-found")}
-            options={filteredMemos}
-            loading={isFetching}
-            inputValue={searchText}
-            value={selectedMemos}
-            multiple
-            onInputChange={(_, value) => setSearchText(value.trim())}
-            getOptionKey={(memo) => memo.name}
-            getOptionLabel={(memo) => memo.content}
-            isOptionEqualToValue={(memo, value) => memo.name === value.name}
-            renderOption={(props, memo) => (
-              <AutocompleteOption {...props} key={memo.name}>
-                <div className="w-full flex flex-col justify-start items-start">
-                  <p className="text-xs text-gray-400 select-none">{memo.displayTime?.toLocaleString()}</p>
-                  <p className="mt-0.5 text-sm leading-5 line-clamp-2">{searchText ? getHighlightedContent(memo.content) : memo.snippet}</p>
+        <div className="w-[16rem] p-1 flex flex-col justify-start items-start">
+          {/* Search and selection interface */}
+          <div className="w-full">
+            <Input
+              placeholder={t("reference.search-placeholder")}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="mb-2"
+            />
+            <div className="max-h-[200px] overflow-y-auto">
+              {filteredMemos.length === 0 ? (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  {isFetching ? "Loading..." : t("reference.no-memos-found")}
                 </div>
-              </AutocompleteOption>
-            )}
-            renderTags={(memos) =>
-              memos.map((memo) => (
-                <Chip key={memo.name} className="!max-w-full !rounded" variant="outlined" color="neutral">
-                  <div className="w-full flex flex-col justify-start items-start">
-                    <p className="text-xs text-gray-400 select-none">{memo.displayTime?.toLocaleString()}</p>
-                    <span className="w-full text-sm leading-5 truncate">{memo.content}</span>
+              ) : (
+                filteredMemos.map((memo) => (
+                  <div
+                    key={memo.name}
+                    className="relative flex cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+                    onClick={() => {
+                      addMemoRelations(memo);
+                    }}
+                  >
+                    <div className="w-full flex flex-col justify-start items-start">
+                      <p className="text-xs text-muted-foreground select-none">{memo.displayTime?.toLocaleString()}</p>
+                      <p className="mt-0.5 text-sm leading-5 line-clamp-2">
+                        {searchText ? getHighlightedContent(memo.content) : memo.snippet}
+                      </p>
+                    </div>
                   </div>
-                </Chip>
-              ))
-            }
-            onChange={(_, value) => setSelectedMemos(value)}
-          />
-          <div className="mt-2 w-full flex flex-row justify-end items-center gap-2">
-            <Checkbox size="sm" label={"Embed"} checked={embedded} onChange={(e) => setEmbedded(e.target.checked)} />
-            <Button color="primary" onClick={addMemoRelations} disabled={selectedMemos.length === 0}>
-              {t("common.add")}
-            </Button>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </PopoverContent>

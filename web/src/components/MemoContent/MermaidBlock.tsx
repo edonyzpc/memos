@@ -1,4 +1,3 @@
-import { useColorScheme } from "@mui/joy";
 import { useEffect, useRef } from "react";
 
 interface Props {
@@ -6,14 +5,12 @@ interface Props {
 }
 
 const MermaidBlock: React.FC<Props> = ({ content }: Props) => {
-  const { mode: colorMode } = useColorScheme();
   const mermaidDockBlock = useRef<null>(null);
 
   useEffect(() => {
-    // Dynamically import mermaid to ensure compatibility with Vite
     const initializeMermaid = async () => {
       const mermaid = (await import("mermaid")).default;
-      mermaid.initialize({ startOnLoad: false, theme: colorMode == "dark" ? "dark" : "default" });
+      mermaid.initialize({ startOnLoad: false, theme: "default" });
       if (mermaidDockBlock.current) {
         mermaid.run({
           nodes: [mermaidDockBlock.current],
@@ -25,7 +22,10 @@ const MermaidBlock: React.FC<Props> = ({ content }: Props) => {
   }, [content]);
 
   return (
-    <pre ref={mermaidDockBlock} className="w-full p-2 whitespace-pre-wrap relative">
+    <pre
+      ref={mermaidDockBlock}
+      className="w-full p-2 whitespace-pre-wrap relative bg-card border border-border rounded text-card-foreground"
+    >
       {content}
     </pre>
   );

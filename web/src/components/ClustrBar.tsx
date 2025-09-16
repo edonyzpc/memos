@@ -8,7 +8,7 @@ const ClustrBar = () => {
   }, []);
 
   return (
-    <div className="flex flex-col w-full border mt-2 py-2 px-3 rounded-md space-y-0.5 text-gray-500 dark:text-gray-400 bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-800">
+    <div className="flex flex-col w-full border mt-2 py-2 px-3 rounded-md space-y-0.5 text-gray-500">
       {/*
       <script
         type="text/javascript"

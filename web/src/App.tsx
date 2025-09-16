@@ -1,18 +1,16 @@
-import { useColorScheme } from "@mui/joy";
 import { observer } from "mobx-react-lite";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router-dom";
-import { getSystemColorScheme } from "./helpers/utils";
 import useNavigateTo from "./hooks/useNavigateTo";
-import { userStore, workspaceStore } from "./store/v2";
+import { userStore, workspaceStore } from "./store";
+import { loadTheme } from "./utils/theme";
 
 const App = observer(() => {
   const { i18n } = useTranslation();
   const navigateTo = useNavigateTo();
-  const { mode, setMode } = useColorScheme();
   const workspaceProfile = workspaceStore.state.profile;
-  const userSetting = userStore.state.userSetting;
+  const userGeneralSetting = userStore.state.userGeneralSetting;
   const workspaceGeneralSetting = workspaceStore.state.generalSetting;
 
   // Redirect to sign up page if no instance owner.
@@ -21,20 +19,6 @@ const App = observer(() => {
       navigateTo("/auth/signup");
     }
   }, [workspaceProfile.owner]);
-
-  useEffect(() => {
-    const darkMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleColorSchemeChange = (e: MediaQueryListEvent) => {
-      const mode = e.matches ? "dark" : "light";
-      setMode(mode);
-    };
-
-    try {
-      darkMediaQuery.addEventListener("change", handleColorSchemeChange);
-    } catch (error) {
-      console.error("failed to initial color scheme listener", error);
-    }
-  }, []);
 
   useEffect(() => {
     if (workspaceGeneralSetting.additionalStyle) {
@@ -77,32 +61,23 @@ const App = observer(() => {
   }, [workspaceStore.state.locale]);
 
   useEffect(() => {
-    let currentAppearance = workspaceStore.state.appearance as Appearance;
-    if (currentAppearance === "system") {
-      currentAppearance = getSystemColorScheme();
-    }
-    setMode(currentAppearance);
-  }, [workspaceStore.state.appearance]);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (mode === "light") {
-      root.classList.remove("dark");
-    } else if (mode === "dark") {
-      root.classList.add("dark");
-    }
-  }, [mode]);
-
-  useEffect(() => {
-    if (!userSetting) {
+    if (!userGeneralSetting) {
       return;
     }
 
     workspaceStore.state.setPartial({
-      locale: userSetting.locale || workspaceStore.state.locale,
-      appearance: userSetting.appearance || workspaceStore.state.appearance,
+      locale: userGeneralSetting.locale || workspaceStore.state.locale,
+      theme: userGeneralSetting.theme || workspaceStore.state.theme,
     });
-  }, [userSetting?.locale, userSetting?.appearance]);
+  }, [userGeneralSetting?.locale, userGeneralSetting?.theme]);
+
+  // Load theme when workspace theme changes or user setting changes
+  useEffect(() => {
+    const currentTheme = userGeneralSetting?.theme || workspaceStore.state.theme;
+    if (currentTheme) {
+      loadTheme(currentTheme);
+    }
+  }, [userGeneralSetting?.theme, workspaceStore.state.theme]);
 
   return <Outlet />;
 });
