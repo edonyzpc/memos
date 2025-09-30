@@ -40,6 +40,21 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
       (async () => {
         await userStore.getOrFetchUserByName(memo.creator);
         loadingState.setFinish();
+
+        // Safari-specific fix: Force reflow to ensure proper rendering
+        if (memoContainerRef.current) {
+          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+          if (isSafari) {
+            // Force a reflow to ensure Safari renders the content properly
+            void memoContainerRef.current.offsetHeight;
+            // Small delay to ensure all content is rendered
+            setTimeout(() => {
+              if (memoContainerRef.current) {
+                memoContainerRef.current.style.transform = "translateZ(0)";
+              }
+            }, 100);
+          }
+        }
       })();
     } else {
       loadingState.setFinish();
@@ -198,11 +213,26 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
                 <div
                   className="w-full h-auto select-none relative flex flex-col justify-start items-start bg-white dark:bg-zinc-800"
                   ref={memoContainerRef}
+                  style={{
+                    WebkitFontSmoothing: "antialiased",
+                    MozOsxFontSmoothing: "grayscale",
+                    textRendering: "optimizeLegibility",
+                  }}
                 >
-                  <span className="w-full px-6 pt-5 pb-2 text-sm text-gray-500">{getDateTimeString(memo.displayTime)}</span>
+                  <span className="w-full px-6 pt-5 pb-2 text-sm text-gray-500 dark:text-gray-400">
+                    {getDateTimeString(memo.displayTime)}
+                  </span>
                   <div className="w-full px-6 text-base pb-4 space-y-2">
-                    <MemoContent memoName={memo.name} nodes={memo.nodes} readonly={true} className="text-white" disableFilter />
-                    <MemoResourceListView attachments={memo.attachments} />
+                    <MemoContent
+                      memoName={memo.name}
+                      nodes={memo.nodes}
+                      readonly={true}
+                      className="text-gray-900 dark:text-gray-100"
+                      disableFilter
+                    />
+                    <div className="w-full">
+                      <MemoResourceListView attachments={memo.attachments} />
+                    </div>
                   </div>
                   <div className="flex flex-row justify-between items-center w-full bg-gray-100 dark:bg-zinc-900 py-4 px-6">
                     <div className="flex flex-row justify-start items-center">
