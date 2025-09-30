@@ -11,6 +11,7 @@ declare global {
 const MemosMutiplexAds = (props: any) => {
   const { dataAdSlot } = props;
   const [, setAdLoaded] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { sm } = useResponsiveWidth();
 
   useEffect(() => {
