@@ -33,9 +33,9 @@ const MemosMutiplexAds = (props: any) => {
   }, []);
 
   // 在小屏幕上不显示广告，避免宽度不足的问题
-  if (!sm) {
-    return null;
-  }
+  //if (!sm) {
+  //  return null;
+  //}
 
   return (
     <div className="w-full min-w-[320px] min-h-[100px] flex justify-center items-center">

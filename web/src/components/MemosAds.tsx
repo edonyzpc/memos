@@ -33,9 +33,9 @@ const MemosAds = (props: any) => {
   }, []);
 
   // 在小屏幕上不显示广告，避免宽度不足的问题
-  if (!sm) {
-    return null;
-  }
+  //if (!sm) {
+  //  return null;
+  //}
 
   return (
     <>
