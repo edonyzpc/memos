@@ -98,7 +98,14 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
   if (!memo) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent size="2xl" showCloseButton={false}>
+        <DialogContent
+          size="2xl"
+          showCloseButton={false}
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            document.body.style.pointerEvents = "auto";
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>{t("common.share")} Memo</span>
@@ -117,7 +124,14 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="2xl" showCloseButton={false}>
+      <DialogContent
+        size="2xl"
+        showCloseButton={false}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          document.body.style.pointerEvents = "auto";
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>{t("common.share")} Memo</span>
