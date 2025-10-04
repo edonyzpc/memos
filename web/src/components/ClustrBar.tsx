@@ -8,7 +8,7 @@ const ClustrBar = () => {
   }, []);
 
   return (
-    <div className="flex flex-col w-full border mt-2 py-2 px-3 rounded-md space-y-0.5 text-gray-500">
+    <div className="flex flex-col w-full border items-center mt-2 py-2 px-3 rounded-md space-y-0.5 text-gray-500">
       {/*
       <script
         type="text/javascript"
@@ -24,7 +24,7 @@ const ClustrBar = () => {
       <a
         href="https://clustrmaps.com/site/1bzf3"
         title="Visit tracker"
-        className="left-1/2 translate-x-2 content-center items-center flex flex-wrap-reverse"
+        className="left-1/2 content-center items-center flex flex-wrap-reverse"
       >
         <img
           className="content-center items-center flex flex-wrap-reverse"
