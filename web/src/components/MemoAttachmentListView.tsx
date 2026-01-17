@@ -38,34 +38,35 @@ const MemoAttachmentListView = ({ attachments = [] }: { attachments: Attachment[
 
     if (type === "image/*") {
       return (
-        <img
-          className={cn("cursor-pointer h-full w-auto rounded-lg border border-border/60 object-contain transition-colors", className)}
-          src={attachment.externalLink ? attachmentUrl : attachmentUrl + "?thumbnail=true"}
-          onError={(e) => {
-            // Fallback to original image if thumbnail fails
-            const target = e.target as HTMLImageElement;
-            if (target.src.includes("?thumbnail=true")) {
-              console.warn("Thumbnail failed, falling back to original image:", attachmentUrl);
-              target.src = attachmentUrl;
-            }
-          }}
-          onClick={() => handleImageClick(attachmentUrl)}
-          decoding="async"
-          loading="lazy"
-        />
+        <div className={cn("h-64 flex items-center", className)}>
+          <img
+            className="cursor-pointer max-h-full w-auto rounded-lg border border-border/60 object-contain transition-colors"
+            src={attachment.externalLink ? attachmentUrl : attachmentUrl + "?thumbnail=true"}
+            onError={(e) => {
+              // Fallback to original image if thumbnail fails
+              const target = e.target as HTMLImageElement;
+              if (target.src.includes("?thumbnail=true")) {
+                console.warn("Thumbnail failed, falling back to original image:", attachmentUrl);
+                target.src = attachmentUrl;
+              }
+            }}
+            onClick={() => handleImageClick(attachmentUrl)}
+            decoding="async"
+            loading="lazy"
+          />
+        </div>
       );
     } else if (type === "video/*") {
       return (
-        <video
-          className={cn(
-            "cursor-pointer h-full w-auto rounded-lg border border-border/60 object-contain bg-popover transition-colors",
-            className,
-          )}
-          preload="metadata"
-          crossOrigin="anonymous"
-          src={attachmentUrl}
-          controls
-        />
+        <div className={cn("h-64 flex items-center", className)}>
+          <video
+            className="cursor-pointer max-h-full w-auto rounded-lg border border-border/60 object-contain bg-popover transition-colors"
+            preload="metadata"
+            crossOrigin="anonymous"
+            src={attachmentUrl}
+            controls
+          />
+        </div>
       );
     } else {
       return <></>;
@@ -75,7 +76,7 @@ const MemoAttachmentListView = ({ attachments = [] }: { attachments: Attachment[
   const MediaList = ({ attachments = [] }: { attachments: Attachment[] }) => {
     const cards = attachments.map((attachment) => (
       <div key={attachment.name} className="max-w-[60%] w-fit flex flex-col justify-start items-start shrink-0">
-        <MediaCard className="max-h-64 grow" attachment={attachment} />
+        <MediaCard attachment={attachment} />
       </div>
     ));
 
