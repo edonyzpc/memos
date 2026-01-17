@@ -3,6 +3,7 @@ import { MapPinIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import ReactDOMServer from "react-dom/server";
 import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 const markerIcon = new DivIcon({
   className: "relative border-none",

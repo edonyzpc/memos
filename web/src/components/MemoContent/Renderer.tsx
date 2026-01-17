@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import {
   AutoLinkNode,
   BlockquoteNode,
@@ -36,7 +37,6 @@ import Blockquote from "./Blockquote";
 import Bold from "./Bold";
 import BoldItalic from "./BoldItalic";
 import Code from "./Code";
-import CodeBlock from "./CodeBlock";
 import EmbeddedContent from "./EmbeddedContent";
 import EscapingCharacter from "./EscapingCharacter";
 import HTMLElement from "./HTMLElement";
@@ -48,7 +48,6 @@ import Italic from "./Italic";
 import LineBreak from "./LineBreak";
 import Link from "./Link";
 import List from "./List";
-import Math from "./Math";
 import OrderedListItem from "./OrderedListItem";
 import Paragraph from "./Paragraph";
 import ReferencedContent from "./ReferencedContent";
@@ -62,10 +61,33 @@ import TaskListItem from "./TaskListItem";
 import Text from "./Text";
 import UnorderedListItem from "./UnorderedListItem";
 
+const LazyCodeBlock = lazy(() => import("./CodeBlock"));
+const LazyMath = lazy(() => import("./Math"));
+
 interface Props {
   index: string;
   node: Node;
 }
+
+const CodeBlockFallback = ({ content, language }: { content: string; language: string }) => (
+  <div className="w-full my-1 bg-card border border-border rounded-md">
+    <div className="w-full px-2 py-0.5 text-muted-foreground text-xs font-mono">{(language || "text").toLowerCase()}</div>
+    <pre className="w-full p-2 bg-muted/50 text-sm leading-5 overflow-auto">
+      <code>{content}</code>
+    </pre>
+  </div>
+);
+
+const MathFallback = ({ content, block }: { content: string; block?: boolean }) => {
+  if (block) {
+    return (
+      <div className="w-full my-1">
+        <code className="text-sm text-muted-foreground">{content}</code>
+      </div>
+    );
+  }
+  return <code className="text-sm text-muted-foreground">{content}</code>;
+};
 
 const Renderer: React.FC<Props> = ({ index, node }: Props) => {
   switch (node.type) {
@@ -73,8 +95,14 @@ const Renderer: React.FC<Props> = ({ index, node }: Props) => {
       return <LineBreak />;
     case NodeType.PARAGRAPH:
       return <Paragraph index={index} {...(node.paragraphNode as ParagraphNode)} />;
-    case NodeType.CODE_BLOCK:
-      return <CodeBlock index={index} {...(node.codeBlockNode as CodeBlockNode)} />;
+    case NodeType.CODE_BLOCK: {
+      const codeBlockNode = node.codeBlockNode as CodeBlockNode;
+      return (
+        <Suspense fallback={<CodeBlockFallback content={codeBlockNode.content} language={codeBlockNode.language} />}>
+          <LazyCodeBlock index={index} {...codeBlockNode} />
+        </Suspense>
+      );
+    }
     case NodeType.HEADING:
       return <Heading index={index} {...(node.headingNode as HeadingNode)} />;
     case NodeType.HORIZONTAL_RULE:
@@ -89,8 +117,14 @@ const Renderer: React.FC<Props> = ({ index, node }: Props) => {
       return <UnorderedListItem {...(node.unorderedListItemNode as UnorderedListItemNode)} />;
     case NodeType.TASK_LIST_ITEM:
       return <TaskListItem index={index} node={node} {...(node.taskListItemNode as TaskListItemNode)} />;
-    case NodeType.MATH_BLOCK:
-      return <Math {...(node.mathBlockNode as MathBlockNode)} block={true} />;
+    case NodeType.MATH_BLOCK: {
+      const mathBlockNode = node.mathBlockNode as MathBlockNode;
+      return (
+        <Suspense fallback={<MathFallback content={mathBlockNode.content} block={true} />}>
+          <LazyMath {...mathBlockNode} block={true} />
+        </Suspense>
+      );
+    }
     case NodeType.TABLE:
       return <Table index={index} {...(node.tableNode as TableNode)} />;
     case NodeType.EMBEDDED_CONTENT:
@@ -115,8 +149,14 @@ const Renderer: React.FC<Props> = ({ index, node }: Props) => {
       return <Tag {...(node.tagNode as TagNode)} />;
     case NodeType.STRIKETHROUGH:
       return <Strikethrough {...(node.strikethroughNode as StrikethroughNode)} />;
-    case NodeType.MATH:
-      return <Math {...(node.mathNode as MathNode)} />;
+    case NodeType.MATH: {
+      const mathNode = node.mathNode as MathNode;
+      return (
+        <Suspense fallback={<MathFallback content={mathNode.content} />}>
+          <LazyMath {...mathNode} />
+        </Suspense>
+      );
+    }
     case NodeType.HIGHLIGHT:
       return <Highlight {...(node.highlightNode as HighlightNode)} />;
     case NodeType.ESCAPING_CHARACTER:

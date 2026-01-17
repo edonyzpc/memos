@@ -1,6 +1,6 @@
 import { BookmarkIcon, EyeOffIcon, MessageCircleMoreIcon } from "lucide-react";
 import { observer } from "mobx-react-lite";
-import { memo, useCallback, useState } from "react";
+import { Suspense, lazy, memo, useCallback, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import useAsyncEffect from "@/hooks/useAsyncEffect";
@@ -17,13 +17,14 @@ import MemoActionMenu from "./MemoActionMenu";
 import MemoAttachmentListView from "./MemoAttachmentListView";
 import MemoContent from "./MemoContent";
 import MemoEditor from "./MemoEditor";
-import MemoLocationView from "./MemoLocationView";
 import MemoReactionistView from "./MemoReactionListView";
 import MemoRelationListView from "./MemoRelationListView";
 import PreviewImageDialog from "./PreviewImageDialog";
 import ReactionSelector from "./ReactionSelector";
 import UserAvatar from "./UserAvatar";
 import VisibilityIcon from "./VisibilityIcon";
+
+const LazyMemoLocationView = lazy(() => import("./MemoLocationView"));
 
 interface Props {
   memo: Memo;
@@ -241,7 +242,11 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
           compact={memo.pinned ? false : props.compact} // Always show full content when pinned.
           parentPage={parentPage}
         />
-        {memo.location && <MemoLocationView location={memo.location} />}
+        {memo.location && (
+          <Suspense fallback={<div className="w-full h-5 rounded bg-muted/30" />}>
+            <LazyMemoLocationView location={memo.location} />
+          </Suspense>
+        )}
         <MemoAttachmentListView attachments={memo.attachments} />
         <MemoRelationListView memo={memo} relations={referencedMemos} parentPage={parentPage} />
         <MemoReactionistView memo={memo} reactions={memo.reactions} />

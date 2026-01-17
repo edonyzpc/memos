@@ -8,7 +8,6 @@ import "./index.css";
 import router from "./router";
 import { initialUserStore } from "./store/user";
 import { initialWorkspaceStore } from "./store/workspace";
-import "leaflet/dist/leaflet.css";
 
 const Main = observer(() => (
   <>

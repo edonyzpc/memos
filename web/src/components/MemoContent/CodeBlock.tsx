@@ -1,8 +1,7 @@
 import copy from "copy-to-clipboard";
 import DOMPurify from "dompurify";
-import hljs from "highlight.js";
 import { CopyIcon } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import MermaidBlock from "./MermaidBlock";
@@ -14,6 +13,8 @@ enum SpecialLanguage {
   MERMAID = "mermaid",
 }
 
+let hljsStyleInjected = false;
+
 interface Props extends BaseProps {
   language: string;
   content: string;
@@ -21,6 +22,7 @@ interface Props extends BaseProps {
 
 const CodeBlock: React.FC<Props> = ({ language, content }: Props) => {
   const formatedLanguage = useMemo(() => (language || "").toLowerCase() || "text", [language]);
+  const [hljs, setHljs] = useState<any>(null);
 
   // Users can set Markdown code blocks as `__html` to render HTML directly.
   // Content is sanitized to prevent XSS attacks while preserving safe HTML.
@@ -88,18 +90,27 @@ const CodeBlock: React.FC<Props> = ({ language, content }: Props) => {
   }
 
   useEffect(() => {
-    const dynamicImportStyle = async () => {
-      // Remove any existing highlight.js style
-      const existingStyle = document.querySelector("style[data-hljs-theme]");
-      if (existingStyle) {
-        existingStyle.remove();
-      }
+    let mounted = true;
 
+    const loadHighlight = async () => {
+      try {
+        const module = await import("highlight.js");
+        if (mounted) {
+          setHljs(module.default ?? module);
+        }
+      } catch (error) {
+        console.warn("Failed to load highlight.js:", error);
+      }
+    };
+
+    const injectStyle = async () => {
+      if (hljsStyleInjected) {
+        return;
+      }
+      hljsStyleInjected = true;
       try {
         // Always use the github light theme
         const cssModule = await import("highlight.js/styles/github.css?inline");
-
-        // Create and inject the style
         const style = document.createElement("style");
         style.textContent = cssModule.default;
         style.setAttribute("data-hljs-theme", "light");
@@ -109,16 +120,23 @@ const CodeBlock: React.FC<Props> = ({ language, content }: Props) => {
       }
     };
 
-    dynamicImportStyle();
+    loadHighlight();
+    injectStyle();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const highlightedCode = useMemo(() => {
     try {
-      const lang = hljs.getLanguage(formatedLanguage);
-      if (lang) {
-        return hljs.highlight(content, {
-          language: formatedLanguage,
-        }).value;
+      if (hljs) {
+        const lang = hljs.getLanguage(formatedLanguage);
+        if (lang) {
+          return hljs.highlight(content, {
+            language: formatedLanguage,
+          }).value;
+        }
       }
     } catch {
       // Skip error and use default highlighted code.
@@ -128,7 +146,7 @@ const CodeBlock: React.FC<Props> = ({ language, content }: Props) => {
     return Object.assign(document.createElement("span"), {
       textContent: content,
     }).innerHTML;
-  }, [formatedLanguage, content]);
+  }, [formatedLanguage, content, hljs]);
 
   const copyContent = () => {
     copy(content);
