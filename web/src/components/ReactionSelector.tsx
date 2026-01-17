@@ -5,25 +5,32 @@ import useClickAway from "react-use/lib/useClickAway";
 import { memoServiceClient } from "@/grpcweb";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
-import { memoStore, workspaceStore } from "@/store";
+import { instanceStore, memoStore } from "@/store";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 interface Props {
   memo: Memo;
   className?: string;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const ReactionSelector = observer((props: Props) => {
-  const { memo, className } = props;
+  const { memo, className, onOpenChange } = props;
   const currentUser = useCurrentUser();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const workspaceMemoRelatedSetting = workspaceStore.state.memoRelatedSetting;
+  const instanceMemoRelatedSetting = instanceStore.state.memoRelatedSetting;
 
   useClickAway(containerRef, () => {
     setOpen(false);
+    onOpenChange?.(false);
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    onOpenChange?.(newOpen);
+  };
 
   const hasReacted = (reactionType: string) => {
     return memo.reactions.some((r) => r.reactionType === reactionType && r.creator === currentUser?.name);
@@ -51,25 +58,25 @@ const ReactionSelector = observer((props: Props) => {
     } catch {
       // skip error.
     }
-    setOpen(false);
+    handleOpenChange(false);
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <span
           className={cn(
-            "h-7 w-7 flex justify-center items-center rounded-full border cursor-pointer transition-colors hover:opacity-80",
+            "h-7 w-7 flex justify-center items-center rounded-full border cursor-pointer transition-all hover:opacity-80",
             className,
           )}
         >
           <SmilePlusIcon className="w-4 h-4 mx-auto text-muted-foreground" />
         </span>
       </PopoverTrigger>
-      <PopoverContent align="center">
+      <PopoverContent align="center" className="max-w-[90vw] sm:max-w-md">
         <div ref={containerRef}>
-          <div className="grid grid-cols-4 sm:grid-cols-6 h-auto gap-1 max-w-56">
-            {workspaceMemoRelatedSetting.reactions.map((reactionType) => {
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1 max-h-64 overflow-y-auto">
+            {instanceMemoRelatedSetting.reactions.map((reactionType) => {
               return (
                 <span
                   key={reactionType}

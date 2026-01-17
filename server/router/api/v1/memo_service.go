@@ -6,19 +6,14 @@ import (
 	"log/slog"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/lithammer/shortuuid/v4"
 	"github.com/pkg/errors"
-	"github.com/usememos/gomark/ast"
-	"github.com/usememos/gomark/parser"
-	"github.com/usememos/gomark/parser/tokenizer"
-	"github.com/usememos/gomark/renderer"
-	"github.com/usememos/gomark/restore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/usememos/memos/internal/base"
 	"github.com/usememos/memos/plugin/webhook"
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 	storepb "github.com/usememos/memos/proto/gen/store"
@@ -31,18 +26,30 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get user")
 	}
+	if user == nil {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
+
+	// Use custom memo_id if provided, otherwise generate a new UUID
+	memoUID := strings.TrimSpace(request.MemoId)
+	if memoUID == "" {
+		memoUID = shortuuid.New()
+	} else if !base.UIDMatcher.MatchString(memoUID) {
+		// Validate custom memo ID format
+		return nil, status.Errorf(codes.InvalidArgument, "invalid memo_id format: must be 1-32 characters, alphanumeric and hyphens only, cannot start or end with hyphen")
+	}
 
 	create := &store.Memo{
-		UID:        shortuuid.New(),
+		UID:        memoUID,
 		CreatorID:  user.ID,
 		Content:    request.Memo.Content,
 		Visibility: convertVisibilityToStore(request.Memo.Visibility),
 	}
-	workspaceMemoRelatedSetting, err := s.Store.GetWorkspaceMemoRelatedSetting(ctx)
+	instanceMemoRelatedSetting, err := s.Store.GetInstanceMemoRelatedSetting(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get workspace memo related setting")
+		return nil, status.Errorf(codes.Internal, "failed to get instance memo related setting")
 	}
-	if workspaceMemoRelatedSetting.DisallowPublicVisibility && create.Visibility == store.Public {
+	if instanceMemoRelatedSetting.DisallowPublicVisibility && create.Visibility == store.Public {
 		return nil, status.Errorf(codes.PermissionDenied, "disable public memos system setting is enabled")
 	}
 	contentLengthLimit, err := s.getContentLengthLimit(ctx)
@@ -52,7 +59,7 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	if len(create.Content) > contentLengthLimit {
 		return nil, status.Errorf(codes.InvalidArgument, "content too long (max %d characters)", contentLengthLimit)
 	}
-	if err := memopayload.RebuildMemoPayload(create); err != nil {
+	if err := memopayload.RebuildMemoPayload(create, s.MarkdownService); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to rebuild memo payload: %v", err)
 	}
 	if request.Memo.Location != nil {
@@ -61,6 +68,13 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 
 	memo, err := s.Store.CreateMemo(ctx, create)
 	if err != nil {
+		// Check for unique constraint violation (AIP-133 compliance)
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "UNIQUE constraint failed") ||
+			strings.Contains(errMsg, "duplicate key") ||
+			strings.Contains(errMsg, "Duplicate entry") {
+			return nil, status.Errorf(codes.AlreadyExists, "memo with ID %q already exists", memoUID)
+		}
 		return nil, err
 	}
 
@@ -185,11 +199,11 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 		}
 	}
 
-	workspaceMemoRelatedSetting, err := s.Store.GetWorkspaceMemoRelatedSetting(ctx)
+	instanceMemoRelatedSetting, err := s.Store.GetInstanceMemoRelatedSetting(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get workspace memo related setting")
+		return nil, status.Errorf(codes.Internal, "failed to get instance memo related setting")
 	}
-	if workspaceMemoRelatedSetting.DisplayWithUpdateTime {
+	if instanceMemoRelatedSetting.DisplayWithUpdateTime {
 		memoFind.OrderByUpdatedTs = true
 	}
 
@@ -234,20 +248,18 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 	}
 
 	reactionMap := make(map[string][]*store.Reaction)
-	memoNames := make([]string, 0, len(memos))
+	contentIDs := make([]string, 0, len(memos))
 
 	attachmentMap := make(map[int32][]*store.Attachment)
-	memoIDs := make([]string, 0, len(memos))
+	memoIDs := make([]int32, 0, len(memos))
 
 	for _, m := range memos {
-		memoNames = append(memoNames, fmt.Sprintf("'%s%s'", MemoNamePrefix, m.UID))
-		memoIDs = append(memoIDs, fmt.Sprintf("'%d'", m.ID))
+		contentIDs = append(contentIDs, fmt.Sprintf("%s%s", MemoNamePrefix, m.UID))
+		memoIDs = append(memoIDs, m.ID)
 	}
 
 	// REACTIONS
-	reactions, err := s.Store.ListReactions(ctx, &store.FindReaction{
-		Filters: []string{fmt.Sprintf("content_id in [%s]", strings.Join(memoNames, ", "))},
-	})
+	reactions, err := s.Store.ListReactions(ctx, &store.FindReaction{ContentIDList: contentIDs})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list reactions")
 	}
@@ -256,9 +268,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 	}
 
 	// ATTACHMENTS
-	attachments, err := s.Store.ListAttachments(ctx, &store.FindAttachment{
-		Filters: []string{fmt.Sprintf("memo_id in [%s]", strings.Join(memoIDs, ", "))},
-	})
+	attachments, err := s.Store.ListAttachments(ctx, &store.FindAttachment{MemoIDList: memoIDs})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list attachments")
 	}
@@ -355,6 +365,9 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get current user")
 	}
+	if user == nil {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
 	// Only the creator or admin can update the memo.
 	if memo.CreatorID != user.ID && !isSuperUser(user) {
 		return nil, status.Errorf(codes.PermissionDenied, "permission denied")
@@ -373,18 +386,18 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 				return nil, status.Errorf(codes.InvalidArgument, "content too long (max %d characters)", contentLengthLimit)
 			}
 			memo.Content = request.Memo.Content
-			if err := memopayload.RebuildMemoPayload(memo); err != nil {
+			if err := memopayload.RebuildMemoPayload(memo, s.MarkdownService); err != nil {
 				return nil, status.Errorf(codes.Internal, "failed to rebuild memo payload: %v", err)
 			}
 			update.Content = &memo.Content
 			update.Payload = memo.Payload
 		} else if path == "visibility" {
-			workspaceMemoRelatedSetting, err := s.Store.GetWorkspaceMemoRelatedSetting(ctx)
+			instanceMemoRelatedSetting, err := s.Store.GetInstanceMemoRelatedSetting(ctx)
 			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to get workspace memo related setting")
+				return nil, status.Errorf(codes.Internal, "failed to get instance memo related setting")
 			}
 			visibility := convertVisibilityToStore(request.Memo.Visibility)
-			if workspaceMemoRelatedSetting.DisallowPublicVisibility && visibility == store.Public {
+			if instanceMemoRelatedSetting.DisallowPublicVisibility && visibility == store.Public {
 				return nil, status.Errorf(codes.PermissionDenied, "disable public memos system setting is enabled")
 			}
 			update.Visibility = &visibility
@@ -404,9 +417,9 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 			update.UpdatedTs = &updatedTs
 		} else if path == "display_time" {
 			displayTs := request.Memo.DisplayTime.AsTime().Unix()
-			memoRelatedSetting, err := s.Store.GetWorkspaceMemoRelatedSetting(ctx)
+			memoRelatedSetting, err := s.Store.GetInstanceMemoRelatedSetting(ctx)
 			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to get workspace memo related setting")
+				return nil, status.Errorf(codes.Internal, "failed to get instance memo related setting")
 			}
 			if memoRelatedSetting.DisplayWithUpdateTime {
 				update.UpdatedTs = &displayTs
@@ -490,6 +503,9 @@ func (s *APIV1Service) DeleteMemo(ctx context.Context, request *v1pb.DeleteMemoR
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get current user")
 	}
+	if user == nil {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
 	// Only the creator or admin can update the memo.
 	if memo.CreatorID != user.ID && !isSuperUser(user) {
 		return nil, status.Errorf(codes.PermissionDenied, "permission denied")
@@ -564,7 +580,10 @@ func (s *APIV1Service) CreateMemoComment(ctx context.Context, request *v1pb.Crea
 	}
 
 	// Create the memo comment first.
-	memoComment, err := s.CreateMemo(ctx, &v1pb.CreateMemoRequest{Memo: request.Comment})
+	memoComment, err := s.CreateMemo(ctx, &v1pb.CreateMemoRequest{
+		Memo:   request.Comment,
+		MemoId: request.CommentId,
+	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create memo")
 	}
@@ -658,30 +677,26 @@ func (s *APIV1Service) ListMemoComments(ctx context.Context, request *v1pb.ListM
 		return response, nil
 	}
 
-	memoRelationIDs := make([]string, 0, len(memoRelations))
+	memoRelationIDs := make([]int32, 0, len(memoRelations))
 	for _, m := range memoRelations {
-		memoRelationIDs = append(memoRelationIDs, fmt.Sprintf("%d", m.MemoID))
+		memoRelationIDs = append(memoRelationIDs, m.MemoID)
 	}
-	memos, err := s.Store.ListMemos(ctx, &store.FindMemo{
-		Filters: []string{fmt.Sprintf("id in [%s]", strings.Join(memoRelationIDs, ", "))},
-	})
+	memos, err := s.Store.ListMemos(ctx, &store.FindMemo{IDList: memoRelationIDs})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list memos")
 	}
 
 	memoIDToNameMap := make(map[int32]string)
-	memoNamesForQuery := make([]string, 0, len(memos))
-	memoIDsForQuery := make([]string, 0, len(memos))
+	contentIDs := make([]string, 0, len(memos))
+	memoIDsForAttachments := make([]int32, 0, len(memos))
 
 	for _, memo := range memos {
 		memoName := fmt.Sprintf("%s%s", MemoNamePrefix, memo.UID)
 		memoIDToNameMap[memo.ID] = memoName
-		memoNamesForQuery = append(memoNamesForQuery, fmt.Sprintf("'%s'", memoName))
-		memoIDsForQuery = append(memoIDsForQuery, fmt.Sprintf("'%d'", memo.ID))
+		contentIDs = append(contentIDs, memoName)
+		memoIDsForAttachments = append(memoIDsForAttachments, memo.ID)
 	}
-	reactions, err := s.Store.ListReactions(ctx, &store.FindReaction{
-		Filters: []string{fmt.Sprintf("content_id in [%s]", strings.Join(memoNamesForQuery, ", "))},
-	})
+	reactions, err := s.Store.ListReactions(ctx, &store.FindReaction{ContentIDList: contentIDs})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list reactions")
 	}
@@ -691,9 +706,7 @@ func (s *APIV1Service) ListMemoComments(ctx context.Context, request *v1pb.ListM
 		memoReactionsMap[reaction.ContentID] = append(memoReactionsMap[reaction.ContentID], reaction)
 	}
 
-	attachments, err := s.Store.ListAttachments(ctx, &store.FindAttachment{
-		Filters: []string{fmt.Sprintf("memo_id in [%s]", strings.Join(memoIDsForQuery, ", "))},
-	})
+	attachments, err := s.Store.ListAttachments(ctx, &store.FindAttachment{MemoIDList: memoIDsForAttachments})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list attachments")
 	}
@@ -721,108 +734,12 @@ func (s *APIV1Service) ListMemoComments(ctx context.Context, request *v1pb.ListM
 	return response, nil
 }
 
-func (s *APIV1Service) RenameMemoTag(ctx context.Context, request *v1pb.RenameMemoTagRequest) (*emptypb.Empty, error) {
-	user, err := s.GetCurrentUser(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get current user")
-	}
-
-	memoFind := &store.FindMemo{
-		CreatorID:       &user.ID,
-		Filters:         []string{fmt.Sprintf("tag in [\"%s\"]", request.OldTag)},
-		ExcludeComments: true,
-	}
-	if (request.Parent) != "memos/-" {
-		memoUID, err := ExtractMemoUIDFromName(request.Parent)
-		if err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "invalid memo name: %v", err)
-		}
-		memoFind.UID = &memoUID
-	}
-
-	memos, err := s.Store.ListMemos(ctx, memoFind)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to list memos")
-	}
-
-	for _, memo := range memos {
-		nodes, err := parser.Parse(tokenizer.Tokenize(memo.Content))
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to parse memo: %v", err)
-		}
-		memopayload.TraverseASTNodes(nodes, func(node ast.Node) {
-			if tag, ok := node.(*ast.Tag); ok && tag.Content == request.OldTag {
-				tag.Content = request.NewTag
-			}
-		})
-		memo.Content = restore.Restore(nodes)
-		if err := memopayload.RebuildMemoPayload(memo); err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to rebuild memo payload: %v", err)
-		}
-		if err := s.Store.UpdateMemo(ctx, &store.UpdateMemo{
-			ID:      memo.ID,
-			Content: &memo.Content,
-			Payload: memo.Payload,
-		}); err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to update memo: %v", err)
-		}
-	}
-
-	return &emptypb.Empty{}, nil
-}
-
-func (s *APIV1Service) DeleteMemoTag(ctx context.Context, request *v1pb.DeleteMemoTagRequest) (*emptypb.Empty, error) {
-	user, err := s.GetCurrentUser(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get current user")
-	}
-
-	memoFind := &store.FindMemo{
-		CreatorID:       &user.ID,
-		Filters:         []string{fmt.Sprintf("tag in [\"%s\"]", request.Tag)},
-		ExcludeContent:  true,
-		ExcludeComments: true,
-	}
-	if request.Parent != "memos/-" {
-		memoUID, err := ExtractMemoUIDFromName(request.Parent)
-		if err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "invalid memo name: %v", err)
-		}
-		memoFind.UID = &memoUID
-	}
-
-	memos, err := s.Store.ListMemos(ctx, memoFind)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to list memos")
-	}
-
-	for _, memo := range memos {
-		if request.DeleteRelatedMemos {
-			err := s.Store.DeleteMemo(ctx, &store.DeleteMemo{ID: memo.ID})
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to delete memo")
-			}
-		} else {
-			archived := store.Archived
-			err := s.Store.UpdateMemo(ctx, &store.UpdateMemo{
-				ID:        memo.ID,
-				RowStatus: &archived,
-			})
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to update memo")
-			}
-		}
-	}
-
-	return &emptypb.Empty{}, nil
-}
-
 func (s *APIV1Service) getContentLengthLimit(ctx context.Context) (int, error) {
-	workspaceMemoRelatedSetting, err := s.Store.GetWorkspaceMemoRelatedSetting(ctx)
+	instanceMemoRelatedSetting, err := s.Store.GetInstanceMemoRelatedSetting(ctx)
 	if err != nil {
-		return 0, status.Errorf(codes.Internal, "failed to get workspace memo related setting")
+		return 0, status.Errorf(codes.Internal, "failed to get instance memo related setting")
 	}
-	return int(workspaceMemoRelatedSetting.ContentLengthLimit), nil
+	return int(instanceMemoRelatedSetting.ContentLengthLimit), nil
 }
 
 // DispatchMemoCreatedWebhook dispatches webhook when memo is created.
@@ -874,68 +791,65 @@ func convertMemoToWebhookPayload(memo *v1pb.Memo) (*webhook.WebhookRequestPayloa
 	}, nil
 }
 
-func getMemoContentSnippet(content string) (string, error) {
-	nodes, err := parser.Parse(tokenizer.Tokenize(content))
+func (s *APIV1Service) getMemoContentSnippet(content string) (string, error) {
+	// Use goldmark service for snippet generation
+	snippet, err := s.MarkdownService.GenerateSnippet([]byte(content), 64)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to parse content")
+		return "", errors.Wrap(err, "failed to generate snippet")
 	}
-
-	plainText := renderer.NewStringRenderer().Render(nodes)
-	if len(plainText) > 64 {
-		return substring(plainText, 64) + "...", nil
-	}
-	return plainText, nil
-}
-
-func substring(s string, length int) string {
-	if length <= 0 {
-		return ""
-	}
-
-	runeCount := 0
-	byteIndex := 0
-	for byteIndex < len(s) {
-		_, size := utf8.DecodeRuneInString(s[byteIndex:])
-		byteIndex += size
-		runeCount++
-		if runeCount == length {
-			break
-		}
-	}
-
-	return s[:byteIndex]
+	return snippet, nil
 }
 
 // parseMemoOrderBy parses the order_by field and sets the appropriate ordering in memoFind.
+// Follows AIP-132: supports comma-separated list of fields with optional "desc" suffix.
+// Example: "pinned desc, display_time desc" or "create_time asc".
 func (*APIV1Service) parseMemoOrderBy(orderBy string, memoFind *store.FindMemo) error {
-	// Parse order_by field like "display_time desc" or "create_time asc"
-	parts := strings.Fields(strings.TrimSpace(orderBy))
-	if len(parts) == 0 {
+	if strings.TrimSpace(orderBy) == "" {
 		return errors.New("empty order_by")
 	}
 
-	field := parts[0]
-	direction := "desc" // default
-	if len(parts) > 1 {
-		direction = strings.ToLower(parts[1])
-		if direction != "asc" && direction != "desc" {
-			return errors.Errorf("invalid order direction: %s, must be 'asc' or 'desc'", parts[1])
+	// Split by comma to support multiple sort fields per AIP-132.
+	fields := strings.Split(orderBy, ",")
+
+	// Track if we've seen pinned field.
+	hasPinned := false
+
+	for _, field := range fields {
+		parts := strings.Fields(strings.TrimSpace(field))
+		if len(parts) == 0 {
+			continue
+		}
+
+		fieldName := parts[0]
+		fieldDirection := "desc" // default per AIP-132 (we use desc as default for time fields)
+		if len(parts) > 1 {
+			fieldDirection = strings.ToLower(parts[1])
+			if fieldDirection != "asc" && fieldDirection != "desc" {
+				return errors.Errorf("invalid order direction: %s, must be 'asc' or 'desc'", parts[1])
+			}
+		}
+
+		switch fieldName {
+		case "pinned":
+			hasPinned = true
+			memoFind.OrderByPinned = true
+			// Note: pinned is always DESC (true first) regardless of direction specified.
+		case "display_time", "create_time", "name":
+			// Only set if this is the first time field we encounter.
+			if !memoFind.OrderByUpdatedTs {
+				memoFind.OrderByTimeAsc = fieldDirection == "asc"
+			}
+		case "update_time":
+			memoFind.OrderByUpdatedTs = true
+			memoFind.OrderByTimeAsc = fieldDirection == "asc"
+		default:
+			return errors.Errorf("unsupported order field: %s, supported fields are: pinned, display_time, create_time, update_time, name", fieldName)
 		}
 	}
 
-	switch field {
-	case "display_time":
-		memoFind.OrderByTimeAsc = direction == "asc"
-	case "create_time":
-		memoFind.OrderByTimeAsc = direction == "asc"
-	case "update_time":
-		memoFind.OrderByUpdatedTs = true
-		memoFind.OrderByTimeAsc = direction == "asc"
-	case "name":
-		// For ordering by memo name/id - not commonly used but supported
-		memoFind.OrderByTimeAsc = direction == "asc"
-	default:
-		return errors.Errorf("unsupported order field: %s, supported fields are: display_time, create_time, update_time, name", field)
+	// If only pinned was specified, still need to set a default time ordering.
+	if hasPinned && !memoFind.OrderByUpdatedTs && len(fields) == 1 {
+		memoFind.OrderByTimeAsc = false // default to desc
 	}
 
 	return nil

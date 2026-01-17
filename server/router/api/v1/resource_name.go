@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	WorkspaceSettingNamePrefix = "workspace/settings/"
+	InstanceSettingNamePrefix  = "instance/settings/"
 	UserNamePrefix             = "users/"
 	MemoNamePrefix             = "memos/"
 	AttachmentNamePrefix       = "attachments/"
 	ReactionNamePrefix         = "reactions/"
 	InboxNamePrefix            = "inboxes/"
-	IdentityProviderNamePrefix = "identityProviders/"
+	IdentityProviderNamePrefix = "identity-providers/"
 	ActivityNamePrefix         = "activities/"
 	WebhookNamePrefix          = "webhooks/"
 )
@@ -41,20 +41,20 @@ func GetNameParentTokens(name string, tokenPrefixes ...string) ([]string, error)
 	return tokens, nil
 }
 
-func ExtractWorkspaceSettingKeyFromName(name string) (string, error) {
-	const prefix = "workspace/settings/"
+func ExtractInstanceSettingKeyFromName(name string) (string, error) {
+	const prefix = "instance/settings/"
 	if !strings.HasPrefix(name, prefix) {
-		return "", errors.Errorf("invalid workspace setting name: expected prefix %q, got %q", prefix, name)
+		return "", errors.Errorf("invalid instance setting name: expected prefix %q, got %q", prefix, name)
 	}
 
 	settingKey := strings.TrimPrefix(name, prefix)
 	if settingKey == "" {
-		return "", errors.Errorf("invalid workspace setting name: empty setting key in %q", name)
+		return "", errors.Errorf("invalid instance setting name: empty setting key in %q", name)
 	}
 
 	// Ensure there are no additional path segments
 	if strings.Contains(settingKey, "/") {
-		return "", errors.Errorf("invalid workspace setting name: setting key cannot contain '/' in %q", name)
+		return "", errors.Errorf("invalid instance setting name: setting key cannot contain '/' in %q", name)
 	}
 
 	return settingKey, nil
@@ -71,6 +71,17 @@ func ExtractUserIDFromName(name string) (int32, error) {
 		return 0, errors.Errorf("invalid user ID %q", tokens[0])
 	}
 	return id, nil
+}
+
+// extractUserIdentifierFromName extracts the identifier (ID or username) from a user resource name.
+// Supports: "users/101" or "users/steven"
+// Returns the identifier string (e.g., "101" or "steven").
+func extractUserIdentifierFromName(name string) string {
+	tokens, err := GetNameParentTokens(name, UserNamePrefix)
+	if err != nil || len(tokens) == 0 {
+		return ""
+	}
+	return tokens[0]
 }
 
 // ExtractMemoUIDFromName returns the memo UID from a resource name.

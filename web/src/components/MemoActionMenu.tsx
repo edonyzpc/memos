@@ -6,25 +6,36 @@ import {
   BookmarkPlusIcon,
   CopyIcon,
   Edit3Icon,
-  MoreVerticalIcon,
-  TrashIcon,
-  SquareCheckIcon,
+  FileTextIcon,
   ImageIcon,
+  LinkIcon,
+  MoreVerticalIcon,
+  SquareCheckIcon,
+  TrashIcon,
 } from "lucide-react";
 import { observer } from "mobx-react-lite";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
-import { markdownServiceClient } from "@/grpcweb";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { useDialog } from "@/hooks/useDialog";
 import useNavigateTo from "@/hooks/useNavigateTo";
-import { memoStore, userStore, workspaceStore } from "@/store";
+import { instanceStore, memoStore, userStore } from "@/store";
 import { State } from "@/types/proto/api/v1/common";
-import { NodeType } from "@/types/proto/api/v1/markdown_service";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
+import { hasCompletedTasks, removeCompletedTasks } from "@/utils/markdown-manipulation";
 import ShareMemoDialog from "./ShareMemoDialog";
 import { Button } from "./ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface Props {
   memo: Memo;
@@ -34,16 +45,7 @@ interface Props {
 }
 
 const checkHasCompletedTaskList = (memo: Memo) => {
-  for (const node of memo.nodes) {
-    if (node.type === NodeType.LIST && node.listNode?.children && node.listNode?.children?.length > 0) {
-      for (let j = 0; j < node.listNode.children.length; j++) {
-        if (node.listNode.children[j].type === NodeType.TASK_LIST_ITEM && node.listNode.children[j].taskListItemNode?.complete) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
+  return hasCompletedTasks(memo.content);
 };
 
 const MemoActionMenu = observer((props: Props) => {
@@ -52,6 +54,8 @@ const MemoActionMenu = observer((props: Props) => {
   const location = useLocation();
   const navigateTo = useNavigateTo();
   const shareDialog = useDialog();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [removeTasksDialogOpen, setRemoveTasksDialogOpen] = useState(false);
   const hasCompletedTaskList = checkHasCompletedTaskList(memo);
   const isInMemoDetailPage = location.pathname.startsWith(`/${memo.name}`);
   const isComment = Boolean(memo.parent);
@@ -104,7 +108,7 @@ const MemoActionMenu = observer((props: Props) => {
         },
         ["state"],
       );
-      toast(message);
+      toast.success(message);
     } catch (error: any) {
       toast.error(error.details);
       console.error(error);
@@ -118,7 +122,7 @@ const MemoActionMenu = observer((props: Props) => {
   };
 
   const handleCopyLink = () => {
-    let host = workspaceStore.state.profile.instanceUrl;
+    let host = instanceStore.state.profile.instanceUrl;
     if (host === "") {
       host = window.location.origin;
     }
@@ -126,48 +130,39 @@ const MemoActionMenu = observer((props: Props) => {
     toast.success(t("message.succeed-copy-link"));
   };
 
-  const handleDeleteMemoClick = async () => {
-    const confirmed = window.confirm(t("memo.delete-confirm"));
-    if (confirmed) {
-      await memoStore.deleteMemo(memo.name);
-      toast.success(t("message.deleted-successfully"));
-      if (isInMemoDetailPage) {
-        navigateTo("/");
-      }
-      memoUpdatedCallback();
-    }
+  const handleCopyContent = () => {
+    copy(memo.content);
+    toast.success(t("message.succeed-copy-content"));
   };
 
-  const handleRemoveCompletedTaskListItemsClick = async () => {
-    const confirmed = window.confirm(t("memo.remove-completed-task-list-items-confirm"));
-    if (confirmed) {
-      const newNodes = JSON.parse(JSON.stringify(memo.nodes));
-      for (const node of newNodes) {
-        if (node.type === NodeType.LIST && node.listNode?.children?.length > 0) {
-          const children = node.listNode.children;
-          for (let i = 0; i < children.length; i++) {
-            if (children[i].type === NodeType.TASK_LIST_ITEM && children[i].taskListItemNode?.complete) {
-              // Remove completed taskList item and next line breaks
-              children.splice(i, 1);
-              if (children[i]?.type === NodeType.LINE_BREAK) {
-                children.splice(i, 1);
-              }
-              i--;
-            }
-          }
-        }
-      }
-      const { markdown } = await markdownServiceClient.restoreMarkdownNodes({ nodes: newNodes });
-      await memoStore.updateMemo(
-        {
-          name: memo.name,
-          content: markdown,
-        },
-        ["content"],
-      );
-      toast.success(t("message.remove-completed-task-list-items-successfully"));
-      memoUpdatedCallback();
+  const handleDeleteMemoClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteMemo = async () => {
+    await memoStore.deleteMemo(memo.name);
+    toast.success(t("message.deleted-successfully"));
+    if (isInMemoDetailPage) {
+      navigateTo("/");
     }
+    memoUpdatedCallback();
+  };
+
+  const handleRemoveCompletedTaskListItemsClick = () => {
+    setRemoveTasksDialogOpen(true);
+  };
+
+  const confirmRemoveCompletedTaskListItems = async () => {
+    const newContent = removeCompletedTasks(memo.content);
+    await memoStore.updateMemo(
+      {
+        name: memo.name,
+        content: newContent,
+      },
+      ["content"],
+    );
+    toast.success(t("message.remove-completed-task-list-items-successfully"));
+    memoUpdatedCallback();
   };
 
   return (
@@ -198,10 +193,22 @@ const MemoActionMenu = observer((props: Props) => {
             </>
           )}
           {!isArchived && (
-            <DropdownMenuItem onClick={handleCopyLink}>
-              <CopyIcon className="w-4 h-auto" />
-              {t("memo.copy-link")}
-            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <CopyIcon className="w-4 h-auto" />
+                {t("common.copy")}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={handleCopyLink}>
+                  <LinkIcon className="w-4 h-auto" />
+                  {t("memo.copy-link")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCopyContent}>
+                  <FileTextIcon className="w-4 h-auto" />
+                  {t("memo.copy-content")}
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
           )}
           {!readonly && (
             <>
@@ -224,6 +231,27 @@ const MemoActionMenu = observer((props: Props) => {
             </>
           )}
         </DropdownMenuContent>
+        {/* Delete confirmation dialog */}
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title={t("memo.delete-confirm")}
+          confirmLabel={t("common.delete")}
+          description={t("memo.delete-confirm-description")}
+          cancelLabel={t("common.cancel")}
+          onConfirm={confirmDeleteMemo}
+          confirmVariant="destructive"
+        />
+        {/* Remove completed tasks confirmation */}
+        <ConfirmDialog
+          open={removeTasksDialogOpen}
+          onOpenChange={setRemoveTasksDialogOpen}
+          title={t("memo.remove-completed-task-list-items-confirm")}
+          confirmLabel={t("common.confirm")}
+          cancelLabel={t("common.cancel")}
+          onConfirm={confirmRemoveCompletedTaskListItems}
+          confirmVariant="destructive"
+        />
       </DropdownMenu>
 
       <ShareMemoDialog open={shareDialog.isOpen} onOpenChange={shareDialog.setOpen} memoId={memo.name} />

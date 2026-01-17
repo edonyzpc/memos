@@ -224,10 +224,12 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
                   </span>
                   <div className="w-full px-6 text-base pb-4 space-y-2">
                     <MemoContent
+                      key={`${memo.name}-${memo.updateTime}`}
                       memoName={memo.name}
-                      nodes={memo.nodes}
+                      content={memo.content}
                       readonly={true}
                       className="text-gray-900 dark:text-gray-100"
+                      contentClassName="text-gray-900 dark:text-gray-100"
                       disableFilter
                     />
                     <div className="w-full">

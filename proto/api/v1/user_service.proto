@@ -20,7 +20,10 @@ service UserService {
     option (google.api.http) = {get: "/api/v1/users"};
   }
 
-  // GetUser gets a user by name.
+  // GetUser gets a user by ID or username.
+  // Supports both numeric IDs and username strings:
+  //   - users/{id}       (e.g., users/101)
+  //   - users/{username} (e.g., users/steven)
   rpc GetUser(GetUserRequest) returns (User) {
     option (google.api.http) = {get: "/api/v1/{name=users/*}"};
     option (google.api.method_signature) = "name";
@@ -150,6 +153,27 @@ service UserService {
     option (google.api.http) = {delete: "/api/v1/{name=users/*/webhooks/*}"};
     option (google.api.method_signature) = "name";
   }
+
+  // ListUserNotifications lists notifications for a user.
+  rpc ListUserNotifications(ListUserNotificationsRequest) returns (ListUserNotificationsResponse) {
+    option (google.api.http) = {get: "/api/v1/{parent=users/*}/notifications"};
+    option (google.api.method_signature) = "parent";
+  }
+
+  // UpdateUserNotification updates a notification.
+  rpc UpdateUserNotification(UpdateUserNotificationRequest) returns (UserNotification) {
+    option (google.api.http) = {
+      patch: "/api/v1/{notification.name=users/*/notifications/*}"
+      body: "notification"
+    };
+    option (google.api.method_signature) = "notification,update_mask";
+  }
+
+  // DeleteUserNotification deletes a notification.
+  rpc DeleteUserNotification(DeleteUserNotificationRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/api/v1/{name=users/*/notifications/*}"};
+    option (google.api.method_signature) = "name";
+  }
 }
 
 message User {
@@ -220,9 +244,9 @@ message ListUsersRequest {
   string page_token = 2 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Filter to apply to the list results.
-  // Example: "state=ACTIVE" or "role=USER" or "email:@example.com"
-  // Supported operators: =, !=, <, <=, >, >=, :
-  // Supported fields: username, email, role, state, create_time, update_time
+  // Example: "username == 'steven'"
+  // Supported operators: ==
+  // Supported fields: username
   string filter = 3 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. If true, show deleted users in the response.
@@ -243,7 +267,10 @@ message ListUsersResponse {
 
 message GetUserRequest {
   // Required. The resource name of the user.
-  // Format: users/{user}
+  // Supports both numeric IDs and username strings:
+  //   - users/{id}       (e.g., users/101)
+  //   - users/{username} (e.g., users/steven)
+  // Format: users/{id_or_username}
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "memos.api.v1/User"}
@@ -665,4 +692,82 @@ message DeleteUserWebhookRequest {
   // The name of the webhook to delete.
   // Format: users/{user}/webhooks/{webhook}
   string name = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message UserNotification {
+  option (google.api.resource) = {
+    type: "memos.api.v1/UserNotification"
+    pattern: "users/{user}/notifications/{notification}"
+    name_field: "name"
+    singular: "notification"
+    plural: "notifications"
+  };
+
+  // The resource name of the notification.
+  // Format: users/{user}/notifications/{notification}
+  string name = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+
+  // The sender of the notification.
+  // Format: users/{user}
+  string sender = 2 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.resource_reference) = {type: "memos.api.v1/User"}
+  ];
+
+  // The status of the notification.
+  Status status = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // The creation timestamp.
+  google.protobuf.Timestamp create_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // The type of the notification.
+  Type type = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // The activity ID associated with this notification.
+  optional int32 activity_id = 6 [(google.api.field_behavior) = OPTIONAL];
+
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    UNREAD = 1;
+    ARCHIVED = 2;
+  }
+
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    MEMO_COMMENT = 1;
+  }
+}
+
+message ListUserNotificationsRequest {
+  // The parent user resource.
+  // Format: users/{user}
+  string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "memos.api.v1/User"}
+  ];
+
+  int32 page_size = 2 [(google.api.field_behavior) = OPTIONAL];
+  string page_token = 3 [(google.api.field_behavior) = OPTIONAL];
+  string filter = 4 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message ListUserNotificationsResponse {
+  repeated UserNotification notifications = 1;
+  string next_page_token = 2;
+}
+
+message UpdateUserNotificationRequest {
+  UserNotification notification = 1 [(google.api.field_behavior) = REQUIRED];
+  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message DeleteUserNotificationRequest {
+  // Format: users/{user}/notifications/{notification}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "memos.api.v1/UserNotification"}
+  ];
 }

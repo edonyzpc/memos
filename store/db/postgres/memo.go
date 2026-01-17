@@ -41,31 +41,34 @@ func (d *DB) CreateMemo(ctx context.Context, create *store.Memo) (*store.Memo, e
 func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo, error) {
 	where, args := []string{"1 = 1"}, []any{}
 
-	for _, filterStr := range find.Filters {
-		// Parse filter string and return the parsed expression.
-		// The filter string should be a CEL expression.
-		parsedExpr, err := filter.Parse(filterStr, filter.MemoFilterCELAttributes...)
-		if err != nil {
-			return nil, err
-		}
-		convertCtx := filter.NewConvertContext()
-		convertCtx.ArgsOffset = len(args)
-		// ConvertExprToSQL converts the parsed expression to a SQL condition string.
-		converter := filter.NewCommonSQLConverterWithOffset(&filter.PostgreSQLDialect{}, convertCtx.ArgsOffset+len(convertCtx.Args))
-		if err := converter.ConvertExprToSQL(convertCtx, parsedExpr.GetExpr()); err != nil {
-			return nil, err
-		}
-		condition := convertCtx.Buffer.String()
-		if condition != "" {
-			where = append(where, fmt.Sprintf("(%s)", condition))
-			args = append(args, convertCtx.Args...)
-		}
+	engine, err := filter.DefaultEngine()
+	if err != nil {
+		return nil, err
+	}
+	if err := filter.AppendConditions(ctx, engine, find.Filters, filter.DialectPostgres, &where, &args); err != nil {
+		return nil, err
 	}
 	if v := find.ID; v != nil {
 		where, args = append(where, "memo.id = "+placeholder(len(args)+1)), append(args, *v)
 	}
+	if len(find.IDList) > 0 {
+		holders := make([]string, 0, len(find.IDList))
+		for _, id := range find.IDList {
+			holders = append(holders, placeholder(len(args)+1))
+			args = append(args, id)
+		}
+		where = append(where, "memo.id IN ("+strings.Join(holders, ", ")+")")
+	}
 	if v := find.UID; v != nil {
 		where, args = append(where, "memo.uid = "+placeholder(len(args)+1)), append(args, *v)
+	}
+	if len(find.UIDList) > 0 {
+		holders := make([]string, 0, len(find.UIDList))
+		for _, uid := range find.UIDList {
+			holders = append(holders, placeholder(len(args)+1))
+			args = append(args, uid)
+		}
+		where = append(where, "memo.uid IN ("+strings.Join(holders, ", ")+")")
 	}
 	if v := find.CreatorID; v != nil {
 		where, args = append(where, "memo.creator_id = "+placeholder(len(args)+1)), append(args, *v)
@@ -90,11 +93,16 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		order = "ASC"
 	}
 	orderBy := []string{}
+	if find.OrderByPinned {
+		orderBy = append(orderBy, "pinned DESC")
+	}
 	if find.OrderByUpdatedTs {
 		orderBy = append(orderBy, "updated_ts "+order)
 	} else {
 		orderBy = append(orderBy, "created_ts "+order)
 	}
+	// Add id as final tie-breaker
+	orderBy = append(orderBy, "id DESC")
 	fields := []string{
 		`memo.id AS id`,
 		`memo.uid AS uid`,

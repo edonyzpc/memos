@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -17,13 +18,13 @@ func TestConvertExprToSQL(t *testing.T) {
 	}{
 		{
 			filter: `tag in ["tag1", "tag2"]`,
-			want:   "(memo.payload->'tags' @> jsonb_build_array($1::json) OR memo.payload->'tags' @> jsonb_build_array($2::json))",
-			args:   []any{`"tag1"`, `"tag2"`},
+			want:   "((memo.payload->'tags' @> jsonb_build_array($1::json) OR memo.payload->'tags'::text LIKE $2) OR (memo.payload->'tags' @> jsonb_build_array($3::json) OR memo.payload->'tags'::text LIKE $4))",
+			args:   []any{`"tag1"`, `%"tag1/%`, `"tag2"`, `%"tag2/%`},
 		},
 		{
 			filter: `!(tag in ["tag1", "tag2"])`,
-			want:   "NOT ((memo.payload->'tags' @> jsonb_build_array($1::json) OR memo.payload->'tags' @> jsonb_build_array($2::json)))",
-			args:   []any{`"tag1"`, `"tag2"`},
+			want:   "NOT (((memo.payload->'tags' @> jsonb_build_array($1::json) OR memo.payload->'tags'::text LIKE $2) OR (memo.payload->'tags' @> jsonb_build_array($3::json) OR memo.payload->'tags'::text LIKE $4)))",
+			args:   []any{`"tag1"`, `%"tag1/%`, `"tag2"`, `%"tag2/%`},
 		},
 		{
 			filter: `content.contains("memos")`,
@@ -42,8 +43,8 @@ func TestConvertExprToSQL(t *testing.T) {
 		},
 		{
 			filter: `tag in ['tag1'] || content.contains('hello')`,
-			want:   "(memo.payload->'tags' @> jsonb_build_array($1::json) OR memo.content ILIKE $2)",
-			args:   []any{`"tag1"`, "%hello%"},
+			want:   "((memo.payload->'tags' @> jsonb_build_array($1::json) OR memo.payload->'tags'::text LIKE $2) OR memo.content ILIKE $3)",
+			args:   []any{`"tag1"`, `%"tag1/%`, "%hello%"},
 		},
 		{
 			filter: `1`,
@@ -108,7 +109,7 @@ func TestConvertExprToSQL(t *testing.T) {
 		{
 			filter: `"work" in tags`,
 			want:   "memo.payload->'tags' @> jsonb_build_array($1::json)",
-			args:   []any{"work"},
+			args:   []any{`"work"`},
 		},
 		{
 			filter: `size(tags) == 2`,
@@ -147,14 +148,13 @@ func TestConvertExprToSQL(t *testing.T) {
 		},
 	}
 
+	engine, err := filter.DefaultEngine()
+	require.NoError(t, err)
+
 	for _, tt := range tests {
-		parsedExpr, err := filter.Parse(tt.filter, filter.MemoFilterCELAttributes...)
+		stmt, err := engine.CompileToStatement(context.Background(), tt.filter, filter.RenderOptions{Dialect: filter.DialectPostgres})
 		require.NoError(t, err)
-		convertCtx := filter.NewConvertContext()
-		converter := filter.NewCommonSQLConverterWithOffset(&filter.PostgreSQLDialect{}, convertCtx.ArgsOffset+len(convertCtx.Args))
-		err = converter.ConvertExprToSQL(convertCtx, parsedExpr.GetExpr())
-		require.NoError(t, err)
-		require.Equal(t, tt.want, convertCtx.Buffer.String())
-		require.Equal(t, tt.args, convertCtx.Args)
+		require.Equal(t, tt.want, stmt.SQL)
+		require.Equal(t, tt.args, stmt.Args)
 	}
 }

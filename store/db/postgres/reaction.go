@@ -2,10 +2,8 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
-	"github.com/usememos/memos/plugin/filter"
 	"github.com/usememos/memos/store"
 )
 
@@ -25,27 +23,7 @@ func (d *DB) UpsertReaction(ctx context.Context, upsert *store.Reaction) (*store
 }
 
 func (d *DB) ListReactions(ctx context.Context, find *store.FindReaction) ([]*store.Reaction, error) {
-	where, args := []string{"1 = 1"}, []interface{}{}
-
-	for _, filterStr := range find.Filters {
-		// Parse filter string and return the parsed expression.
-		// The filter string should be a CEL expression.
-		parsedExpr, err := filter.Parse(filterStr, filter.ReactionFilterCELAttributes...)
-		if err != nil {
-			return nil, err
-		}
-		convertCtx := filter.NewConvertContext()
-		// ConvertExprToSQL converts the parsed expression to a SQL condition string.
-		converter := filter.NewCommonSQLConverter(&filter.PostgreSQLDialect{})
-		if err := converter.ConvertExprToSQL(convertCtx, parsedExpr.GetExpr()); err != nil {
-			return nil, err
-		}
-		condition := convertCtx.Buffer.String()
-		if condition != "" {
-			where = append(where, fmt.Sprintf("(%s)", condition))
-			args = append(args, convertCtx.Args...)
-		}
-	}
+	where, args := []string{"1 = 1"}, []any{}
 
 	if find.ID != nil {
 		where, args = append(where, "id = "+placeholder(len(args)+1)), append(args, *find.ID)
@@ -55,6 +33,14 @@ func (d *DB) ListReactions(ctx context.Context, find *store.FindReaction) ([]*st
 	}
 	if find.ContentID != nil {
 		where, args = append(where, "content_id = "+placeholder(len(args)+1)), append(args, *find.ContentID)
+	}
+	if len(find.ContentIDList) > 0 {
+		holders := make([]string, 0, len(find.ContentIDList))
+		for _, id := range find.ContentIDList {
+			holders = append(holders, placeholder(len(args)+1))
+			args = append(args, id)
+		}
+		where = append(where, "content_id IN ("+strings.Join(holders, ", ")+")")
 	}
 
 	rows, err := d.db.QueryContext(ctx, `
@@ -94,6 +80,19 @@ func (d *DB) ListReactions(ctx context.Context, find *store.FindReaction) ([]*st
 	}
 
 	return list, nil
+}
+
+func (d *DB) GetReaction(ctx context.Context, find *store.FindReaction) (*store.Reaction, error) {
+	list, err := d.ListReactions(ctx, find)
+	if err != nil {
+		return nil, err
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+
+	reaction := list[0]
+	return reaction, nil
 }
 
 func (d *DB) DeleteReaction(ctx context.Context, delete *store.DeleteReaction) error {

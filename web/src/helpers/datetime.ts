@@ -46,7 +46,7 @@ export function getDateTimeString(t?: Date | number | string | any, locale = i18
       minute: "numeric",
       second: "numeric",
     });
-  } catch (error) {
+  } catch (_error) {
     return tsFromDate.toLocaleString();
   }
 }

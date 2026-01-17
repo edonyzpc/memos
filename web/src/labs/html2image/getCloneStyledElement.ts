@@ -11,7 +11,7 @@ const applyStyles = async (sourceElement: HTMLElement, clonedElement: HTMLElemen
     let covertFailed = false;
     try {
       (clonedElement as HTMLImageElement).src = await convertResourceToDataURL(url);
-    } catch (error) {
+    } catch (_error) {
       covertFailed = true;
     }
     if (covertFailed) {

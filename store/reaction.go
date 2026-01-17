@@ -14,10 +14,10 @@ type Reaction struct {
 }
 
 type FindReaction struct {
-	ID        *int32
-	CreatorID *int32
-	ContentID *string
-	Filters   []string
+	ID            *int32
+	CreatorID     *int32
+	ContentID     *string
+	ContentIDList []string
 }
 
 type DeleteReaction struct {
@@ -30,6 +30,10 @@ func (s *Store) UpsertReaction(ctx context.Context, upsert *Reaction) (*Reaction
 
 func (s *Store) ListReactions(ctx context.Context, find *FindReaction) ([]*Reaction, error) {
 	return s.driver.ListReactions(ctx, find)
+}
+
+func (s *Store) GetReaction(ctx context.Context, find *FindReaction) (*Reaction, error) {
+	return s.driver.GetReaction(ctx, find)
 }
 
 func (s *Store) DeleteReaction(ctx context.Context, delete *DeleteReaction) error {

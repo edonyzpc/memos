@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -17,13 +18,13 @@ func TestConvertExprToSQL(t *testing.T) {
 	}{
 		{
 			filter: `tag in ["tag1", "tag2"]`,
-			want:   "(JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ? OR JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ?)",
-			args:   []any{`%"tag1"%`, `%"tag2"%`},
+			want:   "((JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ? OR JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ?) OR (JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ? OR JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ?))",
+			args:   []any{`%"tag1"%`, `%"tag1/%`, `%"tag2"%`, `%"tag2/%`},
 		},
 		{
 			filter: `!(tag in ["tag1", "tag2"])`,
-			want:   "NOT ((JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ? OR JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ?))",
-			args:   []any{`%"tag1"%`, `%"tag2"%`},
+			want:   "NOT (((JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ? OR JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ?) OR (JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ? OR JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ?)))",
+			args:   []any{`%"tag1"%`, `%"tag1/%`, `%"tag2"%`, `%"tag2/%`},
 		},
 		{
 			filter: `content.contains("memos")`,
@@ -42,8 +43,8 @@ func TestConvertExprToSQL(t *testing.T) {
 		},
 		{
 			filter: `tag in ['tag1'] || content.contains('hello')`,
-			want:   "(JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ? OR `memo`.`content` LIKE ?)",
-			args:   []any{`%"tag1"%`, "%hello%"},
+			want:   "((JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ? OR JSON_EXTRACT(`memo`.`payload`, '$.tags') LIKE ?) OR `memo`.`content` LIKE ?)",
+			args:   []any{`%"tag1"%`, `%"tag1/%`, "%hello%"},
 		},
 		{
 			filter: `1`,
@@ -152,14 +153,13 @@ func TestConvertExprToSQL(t *testing.T) {
 		},
 	}
 
+	engine, err := filter.DefaultEngine()
+	require.NoError(t, err)
+
 	for _, tt := range tests {
-		parsedExpr, err := filter.Parse(tt.filter, filter.MemoFilterCELAttributes...)
+		stmt, err := engine.CompileToStatement(context.Background(), tt.filter, filter.RenderOptions{Dialect: filter.DialectSQLite})
 		require.NoError(t, err)
-		convertCtx := filter.NewConvertContext()
-		converter := filter.NewCommonSQLConverter(&filter.SQLiteDialect{})
-		err = converter.ConvertExprToSQL(convertCtx, parsedExpr.GetExpr())
-		require.NoError(t, err)
-		require.Equal(t, tt.want, convertCtx.Buffer.String())
-		require.Equal(t, tt.args, convertCtx.Args)
+		require.Equal(t, tt.want, stmt.SQL)
+		require.Equal(t, tt.args, stmt.Args)
 	}
 }
