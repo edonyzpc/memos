@@ -1,13 +1,13 @@
 import { observer } from "mobx-react-lite";
+import HitokotoBar from "@/components/HitokotoBar";
 import SearchBar from "@/components/SearchBar";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
 import type { StatisticsData } from "@/types/statistics";
+import ClustrBar from "../ClustrBar";
 import StatisticsView from "../StatisticsView";
 import ShortcutsSection from "./ShortcutsSection";
 import TagsSection from "./TagsSection";
-import ClustrBar from "../ClustrBar";
-import HitokotoBar from "@/components/HitokotoBar";
 
 export type MemoExplorerContext = "home" | "explore" | "archived" | "profile";
 
