@@ -1,6 +1,17 @@
 const cachedResourceMap = new Map<string, string>();
 
 const convertResourceToDataURL = async (url: string, useCache = true): Promise<string> => {
+  if (!url) {
+    return "";
+  }
+
+  if (url.startsWith("data:")) {
+    if (useCache) {
+      cachedResourceMap.set(url, url);
+    }
+    return url;
+  }
+
   if (useCache && cachedResourceMap.has(url)) {
     return Promise.resolve(cachedResourceMap.get(url) as string);
   }

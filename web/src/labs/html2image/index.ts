@@ -68,6 +68,14 @@ export const toCanvas = async (element: HTMLElement, options?: Options): Promise
   const ratio = options?.pixelRatio || 1;
   const { width, height } = getElementSize(element);
 
+  if (document.fonts && "ready" in document.fonts) {
+    try {
+      await document.fonts.ready;
+    } catch {
+      // ignore font readiness errors
+    }
+  }
+
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
 
