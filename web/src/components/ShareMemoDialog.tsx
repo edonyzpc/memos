@@ -73,6 +73,7 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
     downloadingImageState.setLoading();
     toImage(memoContainerRef.current, {
       pixelRatio: window.devicePixelRatio * 2,
+      targetAspectRatio: 4 / 3,
     })
       .then((url) => {
         downloadFileFromUrl(url, `memos-${getDateTimeString(Date.now(), "pt-BR")}.png`);

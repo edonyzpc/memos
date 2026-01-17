@@ -11,6 +11,7 @@ import waitImageLoaded from "./waitImageLoaded";
 type Options = Partial<{
   backgroundColor: string;
   pixelRatio: number;
+  targetAspectRatio: number;
 }>;
 
 const getElementSize = (element: HTMLElement) => {
@@ -26,6 +27,73 @@ const convertSVGToDataURL = (svg: SVGElement): string => {
   const xml = new XMLSerializer().serializeToString(svg);
   const url = encodeURIComponent(xml);
   return `data:image/svg+xml;charset=utf-8,${url}`;
+};
+
+const isTransparentColor = (value: string) => {
+  if (!value) {
+    return true;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  return normalized === "transparent" || normalized === "rgba(0, 0, 0, 0)";
+};
+
+const getPaddingColor = (element: HTMLElement, options?: Options) => {
+  if (options?.backgroundColor) {
+    return options.backgroundColor;
+  }
+
+  const computedBackground = window.getComputedStyle(element).backgroundColor;
+  if (!isTransparentColor(computedBackground)) {
+    return computedBackground;
+  }
+
+  return undefined;
+};
+
+const padCanvasToAspectRatio = (canvas: HTMLCanvasElement, targetRatio: number, paddingColor?: string) => {
+  if (!targetRatio || targetRatio <= 0) {
+    return canvas;
+  }
+
+  const { width, height } = canvas;
+  if (width === 0 || height === 0) {
+    return canvas;
+  }
+
+  const currentRatio = width / height;
+  if (Math.abs(currentRatio - targetRatio) < 0.001) {
+    return canvas;
+  }
+
+  let paddedWidth = width;
+  let paddedHeight = height;
+
+  if (currentRatio > targetRatio) {
+    paddedHeight = Math.ceil(width / targetRatio);
+  } else {
+    paddedWidth = Math.ceil(height * targetRatio);
+  }
+
+  const paddedCanvas = document.createElement("canvas");
+  const paddedContext = paddedCanvas.getContext("2d");
+  if (!paddedContext) {
+    return canvas;
+  }
+
+  paddedCanvas.width = paddedWidth;
+  paddedCanvas.height = paddedHeight;
+
+  if (paddingColor) {
+    paddedContext.fillStyle = paddingColor;
+    paddedContext.fillRect(0, 0, paddedWidth, paddedHeight);
+  }
+
+  const offsetX = Math.floor((paddedWidth - width) / 2);
+  const offsetY = Math.floor((paddedHeight - height) / 2);
+  paddedContext.drawImage(canvas, offsetX, offsetY);
+
+  return paddedCanvas;
 };
 
 const generateSVGElement = (width: number, height: number, element: HTMLElement): SVGSVGElement => {
@@ -103,6 +171,11 @@ export const toCanvas = async (element: HTMLElement, options?: Options): Promise
   await waitImageLoaded(imageEl, url);
   context.drawImage(imageEl, 0, 0, canvas.width, canvas.height);
   imageEl.remove();
+
+  if (options?.targetAspectRatio) {
+    return padCanvasToAspectRatio(canvas, options.targetAspectRatio, getPaddingColor(element, options));
+  }
+
   return canvas;
 };
 
