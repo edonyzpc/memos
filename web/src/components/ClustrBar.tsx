@@ -8,7 +8,7 @@ const ClustrBar = () => {
   }, []);
 
   return (
-    <div className="flex flex-col w-full border items-center mt-2 py-2 px-3 rounded-md space-y-0.5 text-gray-500">
+    <div className="flex flex-col w-full border items-center mt-2 rounded-md text-gray-500 overflow-hidden">
       {/*
       <script
         type="text/javascript"
@@ -21,13 +21,9 @@ const ClustrBar = () => {
         src="//clustrmaps.com/globe.js?d=qnA6xx_qxjmxISWbS7_0rFrALJmXLF7zntGqtN3QCEs"
       ></script>
     */}
-      <a
-        href="https://clustrmaps.com/site/1bzf3"
-        title="Visit tracker"
-        className="left-1/2 content-center items-center flex flex-wrap-reverse"
-      >
+      <a href="https://clustrmaps.com/site/1bzf3" title="Visit tracker" className="block w-full">
         <img
-          className="content-center items-center flex flex-wrap-reverse"
+          className="block w-full h-auto"
           src="//www.clustrmaps.com/map_v2.png?d=qnA6xx_qxjmxISWbS7_0rFrALJmXLF7zntGqtN3QCEs&cl=ffffff"
         />
       </a>
