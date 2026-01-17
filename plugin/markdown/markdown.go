@@ -390,18 +390,30 @@ func uniqueLowercase(strs []string) []string {
 
 // truncateAtWord truncates a string at the last word boundary before maxLength.
 func truncateAtWord(s string, maxLength int) string {
-	if len(s) <= maxLength {
+	if maxLength <= 0 {
+		return ""
+	}
+
+	runes := []rune(s)
+	if len(runes) <= maxLength {
 		return s
 	}
 
-	// Truncate to max length
-	truncated := s[:maxLength]
+	// Truncate to max length (runes) to avoid splitting UTF-8 sequences.
+	truncatedRunes := runes[:maxLength]
 
-	// Find last space
-	lastSpace := strings.LastIndexAny(truncated, " \t\n\r")
+	// Find last space within the truncated runes.
+	lastSpace := -1
+	for i, r := range truncatedRunes {
+		switch r {
+		case ' ', '\t', '\n', '\r':
+			lastSpace = i
+		}
+	}
 	if lastSpace > 0 {
-		truncated = truncated[:lastSpace]
+		truncatedRunes = truncatedRunes[:lastSpace]
 	}
 
+	truncated := strings.TrimRight(string(truncatedRunes), " \t\n\r")
 	return truncated + " ..."
 }

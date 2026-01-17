@@ -94,6 +94,12 @@ func TestGenerateSnippet(t *testing.T) {
 			maxLength: 100,
 			expected:  "Item 1 Item 2 Item 3",
 		},
+		{
+			name:      "truncate multibyte text safely",
+			content:   "你好世界这是一个很长的中文句子用于测试截断功能",
+			maxLength: 10,
+			expected:  "你好世界这是一个很长 ...",
+		},
 	}
 
 	for _, tt := range tests {
