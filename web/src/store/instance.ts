@@ -53,6 +53,11 @@ class InstanceState extends StandardState {
   profile: InstanceProfile = InstanceProfile.fromPartial({});
 
   /**
+   * Whether instance profile has been loaded from server
+   */
+  profileLoaded = false;
+
+  /**
    * Array of instance settings
    */
   settings: InstanceSetting[] = [];
@@ -216,7 +221,7 @@ const instanceStore = (() => {
       requestKey,
       async () => {
         const profile = await instanceServiceClient.getInstanceProfile({});
-        state.setPartial({ profile });
+        state.setPartial({ profile, profileLoaded: true });
         return profile;
       },
       "FETCH_INSTANCE_PROFILE_FAILED",

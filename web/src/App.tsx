@@ -12,6 +12,7 @@ const App = observer(() => {
   const { i18n } = useTranslation();
   const navigateTo = useNavigateTo();
   const instanceProfile = instanceStore.state.profile;
+  const instanceProfileLoaded = instanceStore.state.profileLoaded;
   const userGeneralSetting = userStore.state.userGeneralSetting;
   const instanceGeneralSetting = instanceStore.state.generalSetting;
 
@@ -46,10 +47,13 @@ const App = observer(() => {
 
   // Redirect to sign up page if no instance owner.
   useEffect(() => {
+    if (!instanceProfileLoaded) {
+      return;
+    }
     if (!instanceProfile.owner) {
       navigateTo("/auth/signup");
     }
-  }, [instanceProfile.owner]);
+  }, [instanceProfileLoaded, instanceProfile.owner]);
 
   useEffect(() => {
     if (instanceGeneralSetting.additionalStyle) {
