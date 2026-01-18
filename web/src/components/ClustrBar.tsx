@@ -1,12 +1,4 @@
-import React, { useEffect } from "react";
-import useCurrentUser from "@/hooks/useCurrentUser";
-
 const ClustrBar = () => {
-  const name = useCurrentUser();
-  useEffect(() => {
-    console.log(name);
-  }, []);
-
   return (
     <div className="flex flex-col w-full border items-center mt-2 rounded-md text-gray-500 overflow-hidden">
       {/*
@@ -25,6 +17,9 @@ const ClustrBar = () => {
         <img
           className="block w-full h-auto"
           src="//www.clustrmaps.com/map_v2.png?d=qnA6xx_qxjmxISWbS7_0rFrALJmXLF7zntGqtN3QCEs&cl=ffffff"
+          alt="Visitor map"
+          loading="lazy"
+          decoding="async"
         />
       </a>
     </div>

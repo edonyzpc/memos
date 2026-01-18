@@ -102,6 +102,7 @@ const Navigation = observer((props: Props) => {
             to={navLink.path}
             id={navLink.id}
             viewTransition
+            aria-label={navLink.title}
           >
             {props.collapsed ? (
               <TooltipProvider>

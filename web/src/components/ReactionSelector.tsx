@@ -64,14 +64,16 @@ const ReactionSelector = observer((props: Props) => {
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <span
+        <button
+          type="button"
           className={cn(
             "h-7 w-7 flex justify-center items-center rounded-full border cursor-pointer transition-all hover:opacity-80",
             className,
           )}
+          aria-label="Add reaction"
         >
           <SmilePlusIcon className="w-4 h-4 mx-auto text-muted-foreground" />
-        </span>
+        </button>
       </PopoverTrigger>
       <PopoverContent align="center" className="max-w-[90vw] sm:max-w-md">
         <div ref={containerRef}>
