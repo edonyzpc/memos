@@ -408,6 +408,8 @@ func truncateAtWord(s string, maxLength int) string {
 		switch r {
 		case ' ', '\t', '\n', '\r':
 			lastSpace = i
+		default:
+			// No-op: only track whitespace runes.
 		}
 	}
 	if lastSpace > 0 {
