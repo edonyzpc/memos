@@ -1,9 +1,9 @@
-import { LatLng } from "leaflet";
+import type { LatLngLiteral } from "@/types/geo";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 
 export interface LocationState {
   placeholder: string;
-  position?: LatLng;
+  position?: LatLngLiteral;
   latInput: string;
   lngInput: string;
 }

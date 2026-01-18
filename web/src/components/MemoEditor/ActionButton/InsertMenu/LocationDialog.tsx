@@ -1,11 +1,11 @@
-import { LatLng } from "leaflet";
-import LeafletMap from "@/components/LeafletMap";
+import LazyLeafletMap from "@/components/LazyLeafletMap";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
+import type { LatLngLiteral } from "@/types/geo";
 import { useTranslate } from "@/utils/i18n";
 import { LocationState } from "./types";
 
@@ -14,7 +14,7 @@ interface LocationDialogProps {
   onOpenChange: (open: boolean) => void;
   state: LocationState;
   locationInitialized: boolean;
-  onPositionChange: (position: LatLng) => void;
+  onPositionChange: (position: LatLngLiteral) => void;
   onLatChange: (value: string) => void;
   onLngChange: (value: string) => void;
   onPlaceholderChange: (value: string) => void;
@@ -51,7 +51,7 @@ export const LocationDialog = ({
         </VisuallyHidden>
         <div className="flex flex-col">
           <div className="w-full h-64 overflow-hidden rounded-t-md bg-muted/30">
-            <LeafletMap latlng={position} onChange={onPositionChange} />
+            <LazyLeafletMap latlng={position} onChange={onPositionChange} />
           </div>
           <div className="w-full flex flex-col p-3 gap-3">
             <div className="grid grid-cols-2 gap-3">

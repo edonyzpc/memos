@@ -11,7 +11,6 @@ import "./store/config";
 import { initialInstanceStore } from "./store/instance";
 import { initialUserStore } from "./store/user";
 import { applyThemeEarly } from "./utils/theme";
-import "leaflet/dist/leaflet.css";
 
 // Apply theme early to prevent flash of wrong theme
 applyThemeEarly();

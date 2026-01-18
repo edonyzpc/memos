@@ -1,8 +1,10 @@
-import { DivIcon, LatLng } from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { DivIcon } from "leaflet";
 import { MapPinIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ReactDOMServer from "react-dom/server";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import type { LatLngLiteral } from "@/types/geo";
 
 const markerIcon = new DivIcon({
   className: "relative border-none",
@@ -10,8 +12,8 @@ const markerIcon = new DivIcon({
 });
 
 interface MarkerProps {
-  position: LatLng | undefined;
-  onChange: (position: LatLng) => void;
+  position: LatLngLiteral | undefined;
+  onChange: (position: LatLngLiteral) => void;
   readonly?: boolean;
 }
 
@@ -25,10 +27,11 @@ const LocationMarker = (props: MarkerProps) => {
         return;
       }
 
-      setPosition(e.latlng);
+      const nextPosition = { lat: e.latlng.lat, lng: e.latlng.lng };
+      setPosition(nextPosition);
       map.locate();
       // Call the parent onChange function.
-      props.onChange(e.latlng);
+      props.onChange(nextPosition);
     },
     locationfound() {},
   });
@@ -45,13 +48,13 @@ const LocationMarker = (props: MarkerProps) => {
   useEffect(() => {
     if (props.position) {
       setPosition(props.position);
-      map.setView(props.position);
+      map.setView([props.position.lat, props.position.lng]);
     } else {
       setPosition(undefined);
     }
   }, [props.position, map]);
 
-  return position === undefined ? null : <Marker position={position} icon={markerIcon}></Marker>;
+  return position === undefined ? null : <Marker position={[position.lat, position.lng]} icon={markerIcon}></Marker>;
 };
 
 const MapCleanup = () => {
@@ -77,16 +80,16 @@ const MapCleanup = () => {
 
 interface MapProps {
   readonly?: boolean;
-  latlng?: LatLng;
-  onChange?: (position: LatLng) => void;
+  latlng?: LatLngLiteral;
+  onChange?: (position: LatLngLiteral) => void;
 }
 
-const DEFAULT_CENTER_LAT_LNG = new LatLng(48.8584, 2.2945);
+const DEFAULT_CENTER_LAT_LNG: LatLngLiteral = { lat: 48.8584, lng: 2.2945 };
 
 const LeafletMap = (props: MapProps) => {
   const position = props.latlng || DEFAULT_CENTER_LAT_LNG;
   return (
-    <MapContainer className="w-full h-72" center={position} zoom={13} scrollWheelZoom={false}>
+    <MapContainer className="w-full h-72" center={[position.lat, position.lng]} zoom={13} scrollWheelZoom={false}>
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <LocationMarker position={position} readonly={props.readonly} onChange={props.onChange ? props.onChange : () => {}} />
       <MapCleanup />

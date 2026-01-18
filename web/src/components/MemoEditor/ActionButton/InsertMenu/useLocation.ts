@@ -1,5 +1,5 @@
-import { LatLng } from "leaflet";
 import { useState } from "react";
+import type { LatLngLiteral } from "@/types/geo";
 import { Location } from "@/types/proto/api/v1/memo_service";
 import { LocationState } from "./types";
 
@@ -7,12 +7,12 @@ export const useLocation = (initialLocation?: Location) => {
   const [locationInitialized, setLocationInitialized] = useState(false);
   const [state, setState] = useState<LocationState>({
     placeholder: initialLocation?.placeholder || "",
-    position: initialLocation ? new LatLng(initialLocation.latitude, initialLocation.longitude) : undefined,
+    position: initialLocation ? { lat: initialLocation.latitude, lng: initialLocation.longitude } : undefined,
     latInput: initialLocation ? String(initialLocation.latitude) : "",
     lngInput: initialLocation ? String(initialLocation.longitude) : "",
   });
 
-  const updatePosition = (position?: LatLng) => {
+  const updatePosition = (position?: LatLngLiteral) => {
     setState((prev) => ({
       ...prev,
       position,
@@ -21,7 +21,7 @@ export const useLocation = (initialLocation?: Location) => {
     }));
   };
 
-  const handlePositionChange = (position: LatLng) => {
+  const handlePositionChange = (position: LatLngLiteral) => {
     if (!locationInitialized) {
       setLocationInitialized(true);
     }
@@ -32,7 +32,7 @@ export const useLocation = (initialLocation?: Location) => {
     setState((prev) => ({ ...prev, latInput: value }));
     const lat = parseFloat(value);
     if (!isNaN(lat) && lat >= -90 && lat <= 90 && state.position) {
-      updatePosition(new LatLng(lat, state.position.lng));
+      updatePosition({ lat, lng: state.position.lng });
     }
   };
 
@@ -40,7 +40,7 @@ export const useLocation = (initialLocation?: Location) => {
     setState((prev) => ({ ...prev, lngInput: value }));
     const lng = parseFloat(value);
     if (!isNaN(lng) && lng >= -180 && lng <= 180 && state.position) {
-      updatePosition(new LatLng(state.position.lat, lng));
+      updatePosition({ lat: state.position.lat, lng });
     }
   };
 

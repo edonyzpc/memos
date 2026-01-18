@@ -1,4 +1,3 @@
-import { LatLng } from "leaflet";
 import { uniqBy } from "lodash-es";
 import { FileIcon, LinkIcon, LoaderIcon, MapPinIcon, Maximize2Icon, MoreHorizontalIcon, PlusIcon } from "lucide-react";
 import { observer } from "mobx-react-lite";
@@ -14,6 +13,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { LatLngLiteral } from "@/types/geo";
 import type { Location, MemoRelation } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
 import { GEOCODING } from "../constants";
@@ -68,7 +68,7 @@ const InsertMenu = observer((props: Props) => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            location.handlePositionChange(new LatLng(position.coords.latitude, position.coords.longitude));
+            location.handlePositionChange({ lat: position.coords.latitude, lng: position.coords.longitude });
           },
           (error) => {
             console.error("Geolocation error:", error);
@@ -96,7 +96,7 @@ const InsertMenu = observer((props: Props) => {
    * Fetches human-readable address from coordinates using reverse geocoding
    * Falls back to coordinate string if geocoding fails
    */
-  const fetchReverseGeocode = async (position: LatLng, signal: AbortSignal): Promise<string> => {
+  const fetchReverseGeocode = async (position: LatLngLiteral, signal: AbortSignal): Promise<string> => {
     const coordString = `${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`;
     try {
       const url = `${GEOCODING.endpoint}?lat=${position.lat}&lon=${position.lng}&format=${GEOCODING.format}`;
@@ -124,7 +124,7 @@ const InsertMenu = observer((props: Props) => {
     }
   };
 
-  const handlePositionChange = (position: LatLng) => {
+  const handlePositionChange = (position: LatLngLiteral) => {
     location.handlePositionChange(position);
 
     // Abort previous and create new signal for this request
