@@ -17,6 +17,13 @@ const LocationDisplay = ({ location, mode, onRemove, className }: LocationDispla
   const [popoverOpen, setPopoverOpen] = useState<boolean>(false);
   const [showMap, setShowMap] = useState<boolean>(false);
   const t = useTranslate();
+  const activateMap = () => setShowMap(true);
+
+  useEffect(() => {
+    if (!popoverOpen) {
+      setShowMap(false);
+    }
+  }, [popoverOpen]);
 
   if (!location) {
     return null;
@@ -24,12 +31,6 @@ const LocationDisplay = ({ location, mode, onRemove, className }: LocationDispla
 
   const displayText = location.placeholder || `Position: [${location.latitude}, ${location.longitude}]`;
   const position: LatLngLiteral = { lat: location.latitude, lng: location.longitude };
-
-  useEffect(() => {
-    if (!popoverOpen) {
-      setShowMap(false);
-    }
-  }, [popoverOpen]);
 
   if (mode === "edit") {
     return (
@@ -95,9 +96,12 @@ const LocationDisplay = ({ location, mode, onRemove, className }: LocationDispla
             <button
               type="button"
               className="w-full h-72 rounded-md border border-border bg-muted/30 flex items-center justify-center text-sm text-muted-foreground hover:bg-muted/40 transition-colors"
-              onClick={() => setShowMap(true)}
+              onClick={activateMap}
+              onPointerEnter={activateMap}
+              onFocus={activateMap}
+              aria-label={t("common.preview")}
             >
-              {t("common.preview")}
+              <MapPinIcon className="w-6 h-6" />
             </button>
           )}
         </div>
