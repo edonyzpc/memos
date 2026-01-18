@@ -1,4 +1,5 @@
 import { memo, useState } from "react";
+import LazyVideo from "@/components/LazyVideo";
 import { cn } from "@/lib/utils";
 import { Attachment } from "@/types/proto/api/v1/attachment_service";
 import { getAttachmentType, getAttachmentUrl } from "@/utils/attachment";
@@ -59,12 +60,9 @@ const MemoAttachmentListView = ({ attachments = [] }: { attachments: Attachment[
     } else if (type === "video/*") {
       return (
         <div className={cn("h-64 flex items-center", className)}>
-          <video
-            className="cursor-pointer max-h-full w-auto rounded-lg border border-border/60 object-contain bg-popover transition-colors"
-            preload="metadata"
-            crossOrigin="anonymous"
+          <LazyVideo
             src={attachmentUrl}
-            controls
+            className="cursor-pointer max-h-full w-auto rounded-lg border border-border/60 object-contain bg-popover transition-colors"
           />
         </div>
       );

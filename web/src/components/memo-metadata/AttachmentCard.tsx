@@ -1,4 +1,5 @@
 import { FileIcon, XIcon } from "lucide-react";
+import LazyVideo from "@/components/LazyVideo";
 import { cn } from "@/lib/utils";
 import type { AttachmentItem, DisplayMode } from "./types";
 
@@ -81,15 +82,12 @@ const AttachmentCard = ({ item, mode, onRemove, onClick, className, showThumbnai
       );
     } else if (category === "video") {
       return (
-        <video
+        <LazyVideo
+          src={sourceUrl}
           className={cn(
             "cursor-pointer h-full w-auto rounded-lg border border-border/60 object-contain bg-muted transition-colors",
             className,
           )}
-          preload="metadata"
-          crossOrigin="anonymous"
-          src={sourceUrl}
-          controls
         />
       );
     }
