@@ -1,5 +1,5 @@
 import { CheckIcon, CopyIcon } from "lucide-react";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const LazyMermaidBlock = lazy(() => import("./MermaidBlock").then((mod) => ({ default: mod.MermaidBlock })));
@@ -11,6 +11,8 @@ interface PreProps {
 
 export const CodeBlock = ({ children, className, ...props }: PreProps) => {
   const [copied, setCopied] = useState(false);
+  const [shouldRenderMermaid, setShouldRenderMermaid] = useState(false);
+  const mermaidPlaceholderRef = useRef<HTMLPreElement>(null);
 
   // Extract the code element and its props
   const codeElement = children as React.ReactElement;
@@ -21,8 +23,40 @@ export const CodeBlock = ({ children, className, ...props }: PreProps) => {
   const match = /language-(\w+)/.exec(codeClassName);
   const language = match ? match[1] : "";
 
+  useEffect(() => {
+    if (language !== "mermaid" || shouldRenderMermaid) {
+      return;
+    }
+
+    const target = mermaidPlaceholderRef.current;
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldRenderMermaid(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [language, shouldRenderMermaid]);
+
   // If it's a mermaid block, render with MermaidBlock component
   if (language === "mermaid") {
+    if (!shouldRenderMermaid) {
+      return (
+        <pre ref={mermaidPlaceholderRef} className={className}>
+          <code className="language-mermaid">{codeContent}</code>
+        </pre>
+      );
+    }
+
     return (
       <Suspense
         fallback={

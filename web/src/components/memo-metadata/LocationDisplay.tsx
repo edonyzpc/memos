@@ -1,9 +1,10 @@
 import { MapPinIcon, XIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LazyLeafletMap from "@/components/LazyLeafletMap";
 import { cn } from "@/lib/utils";
 import type { LatLngLiteral } from "@/types/geo";
 import { Location } from "@/types/proto/api/v1/memo_service";
+import { useTranslate } from "@/utils/i18n";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { BaseMetadataProps } from "./types";
 
@@ -14,6 +15,8 @@ interface LocationDisplayProps extends BaseMetadataProps {
 
 const LocationDisplay = ({ location, mode, onRemove, className }: LocationDisplayProps) => {
   const [popoverOpen, setPopoverOpen] = useState<boolean>(false);
+  const [showMap, setShowMap] = useState<boolean>(false);
+  const t = useTranslate();
 
   if (!location) {
     return null;
@@ -21,6 +24,12 @@ const LocationDisplay = ({ location, mode, onRemove, className }: LocationDispla
 
   const displayText = location.placeholder || `Position: [${location.latitude}, ${location.longitude}]`;
   const position: LatLngLiteral = { lat: location.latitude, lng: location.longitude };
+
+  useEffect(() => {
+    if (!popoverOpen) {
+      setShowMap(false);
+    }
+  }, [popoverOpen]);
 
   if (mode === "edit") {
     return (
@@ -80,7 +89,17 @@ const LocationDisplay = ({ location, mode, onRemove, className }: LocationDispla
       </PopoverTrigger>
       <PopoverContent align="start">
         <div className="min-w-80 sm:w-lg flex flex-col justify-start items-start">
-          <LazyLeafletMap latlng={position} readonly={true} />
+          {showMap ? (
+            <LazyLeafletMap latlng={position} readonly={true} />
+          ) : (
+            <button
+              type="button"
+              className="w-full h-72 rounded-md border border-border bg-muted/30 flex items-center justify-center text-sm text-muted-foreground hover:bg-muted/40 transition-colors"
+              onClick={() => setShowMap(true)}
+            >
+              {t("common.preview")}
+            </button>
+          )}
         </div>
       </PopoverContent>
     </Popover>
