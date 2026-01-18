@@ -5,6 +5,7 @@ import (
 	"embed"
 	"io/fs"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -35,16 +36,19 @@ func (*FrontendService) Serve(_ context.Context, e *echo.Echo) {
 		if util.HasPrefixes(c.Path(), "/api", "/memos.api.v1") {
 			return true
 		}
-		// Skip setting cache headers for index.html
-		if c.Path() == "/" || c.Path() == "/index.html" {
+		// Serve HTML with revalidation to keep metadata fresh for crawlers.
+		if c.Path() == "/" || c.Path() == "/index.html" || strings.HasSuffix(c.Path(), ".html") || !strings.Contains(c.Path(), ".") {
+			c.Response().Header().Set(echo.HeaderCacheControl, "no-cache")
 			return false
 		}
 		// Set Cache-Control header for static assets.
-		// Since Vite generates content-hashed filenames (e.g., index-BtVjejZf.js),
-		// we can cache aggressively but use immutable to prevent revalidation checks.
-		// For frequently redeployed instances, use shorter max-age (1 hour) to avoid
-		// serving stale assets after redeployment.
-		c.Response().Header().Set(echo.HeaderCacheControl, "public, max-age=3600, immutable") // 1 hour
+		// Vite generates content-hashed filenames under /assets (e.g., index-BtVjejZf.js),
+		// so we can cache those aggressively.
+		cacheControl := "public, max-age=604800" // 7 days for non-hashed static files
+		if strings.HasPrefix(c.Path(), "/assets/") {
+			cacheControl = "public, max-age=31536000, immutable" // 1 year for hashed assets
+		}
+		c.Response().Header().Set(echo.HeaderCacheControl, cacheControl)
 		return false
 	}
 

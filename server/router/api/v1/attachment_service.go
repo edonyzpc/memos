@@ -234,6 +234,8 @@ func (s *APIV1Service) GetAttachmentBinary(ctx context.Context, request *v1pb.Ge
 		}
 	}
 
+	cacheControl := "public, max-age=604800, stale-while-revalidate=86400"
+
 	if request.Thumbnail && util.HasPrefixes(attachment.Type, SupportedThumbnailMimeTypes...) {
 		// Skip server-side thumbnail generation for S3 storage to reduce memory usage.
 		// S3 images use external links (presigned URLs) directly, which avoids:
@@ -252,6 +254,11 @@ func (s *APIV1Service) GetAttachmentBinary(ctx context.Context, request *v1pb.Ge
 				// a attachment image can be used in its place.
 				slog.Warn("failed to get attachment thumbnail image", slog.Any("error", err))
 			} else {
+				if err := setResponseHeaders(ctx, map[string]string{
+					"cache-control": cacheControl,
+				}); err != nil {
+					slog.Warn("failed to set attachment cache headers", slog.Any("error", err))
+				}
 				return &httpbody.HttpBody{
 					ContentType: attachment.Type,
 					Data:        thumbnailBlob,
@@ -308,10 +315,16 @@ func (s *APIV1Service) GetAttachmentBinary(ctx context.Context, request *v1pb.Ge
 		if err := setResponseHeaders(ctx, map[string]string{
 			"accept-ranges":  "bytes",
 			"content-length": fmt.Sprintf("%d", len(blob)),
-			"cache-control":  "public, max-age=3600", // 1 hour cache
+			"cache-control":  cacheControl,
 		}); err != nil {
 			slog.Warn("failed to set streaming headers", slog.Any("error", err))
 		}
+	}
+
+	if err := setResponseHeaders(ctx, map[string]string{
+		"cache-control": cacheControl,
+	}); err != nil {
+		slog.Warn("failed to set attachment cache headers", slog.Any("error", err))
 	}
 
 	return &httpbody.HttpBody{
@@ -729,7 +742,7 @@ func (*APIV1Service) handleRangeRequest(ctx context.Context, data []byte, rangeH
 		"accept-ranges":  "bytes",
 		"content-range":  fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize),
 		"content-length": fmt.Sprintf("%d", end-start+1),
-		"cache-control":  "public, max-age=3600",
+		"cache-control":  "public, max-age=604800, stale-while-revalidate=86400",
 	}); err != nil {
 		slog.Warn("failed to set partial content headers", slog.Any("error", err))
 	}

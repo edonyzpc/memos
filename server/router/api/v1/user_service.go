@@ -20,7 +20,9 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/genproto/googleapis/api/httpbody"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -136,6 +138,10 @@ func (s *APIV1Service) GetUserAvatar(ctx context.Context, request *v1pb.GetUserA
 		ContentType: imageType,
 		Data:        imageData,
 	}
+	_ = grpc.SetHeader(ctx, metadata.Pairs(
+		"cache-control",
+		"public, max-age=86400, stale-while-revalidate=604800",
+	))
 	return httpBody, nil
 }
 
