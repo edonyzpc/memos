@@ -32,7 +32,15 @@ const Explore = observer(() => {
   return (
     <PagedMemoList
       renderer={(memo: Memo, context?: MemoRenderContext) => (
-        <MemoView key={`${memo.name}-${memo.updateTime}`} memo={memo} showCreator showVisibility compact={context?.compact} />
+        <MemoView
+          key={`${memo.name}-${memo.updateTime}`}
+          memo={memo}
+          showCreator
+          showVisibility
+          compact={context?.compact}
+          memoIndex={context?.memoIndex}
+          columns={context?.columns}
+        />
       )}
       listSort={listSort}
       orderBy={orderBy}

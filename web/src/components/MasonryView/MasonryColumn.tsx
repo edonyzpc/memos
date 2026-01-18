@@ -28,12 +28,13 @@ export function MasonryColumn({
       {/* Render all memos assigned to this column */}
       {memoIndices?.map((memoIndex) => {
         const memo = memoList[memoIndex];
+        const memoContext = { ...renderContext, memoIndex };
         return memo ? (
           <MasonryItem
             key={`${memo.name}-${memo.displayTime}`}
             memo={memo}
             renderer={renderer}
-            renderContext={renderContext}
+            renderContext={memoContext}
             onHeightChange={onHeightChange}
           />
         ) : null;

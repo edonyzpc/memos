@@ -93,7 +93,15 @@ const UserProfile = observer(() => {
             {/* Memo list - full width for proper masonry layout */}
             <PagedMemoList
               renderer={(memo: Memo, context?: MemoRenderContext) => (
-                <MemoView key={`${memo.name}-${memo.displayTime}`} memo={memo} showVisibility showPinned compact={context?.compact} />
+                <MemoView
+                  key={`${memo.name}-${memo.displayTime}`}
+                  memo={memo}
+                  showVisibility
+                  showPinned
+                  compact={context?.compact}
+                  memoIndex={context?.memoIndex}
+                  columns={context?.columns}
+                />
               )}
               listSort={listSort}
               orderBy={orderBy}

@@ -100,6 +100,12 @@
     margin-bottom: 0.5rem;
   }
 
+  .markdown-content img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
   /* ========================================
    * Headings
    * Compact spacing for visual separation

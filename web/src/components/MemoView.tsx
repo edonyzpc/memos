@@ -35,6 +35,8 @@ interface Props {
   showNsfwContent?: boolean;
   className?: string;
   parentPage?: string;
+  memoIndex?: number;
+  columns?: number;
 }
 
 const MemoView: React.FC<Props> = observer((props: Props) => {
@@ -65,6 +67,11 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
   const readonly = memo.creator !== user?.name && !isSuperUser(user);
   const isInMemoDetailPage = location.pathname.startsWith(`/${memo.name}`);
   const parentPage = props.parentPage || location.pathname;
+  const isAboveFoldCandidate =
+    props.memoIndex !== undefined
+      ? props.memoIndex < Math.max(1, props.columns ?? 1)
+      : !props.compact;
+  const isLcpCandidate = props.memoIndex === 0 && (parentPage === "/" || parentPage.startsWith("/explore"));
   const nsfw =
     instanceMemoRelatedSetting.enableBlurNsfwContent &&
     memo.tags?.some((tag) => instanceMemoRelatedSetting.nsfwTags.some((nsfwTag) => tag === nsfwTag || tag.startsWith(`${nsfwTag}/`)));
@@ -347,6 +354,8 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
           onDoubleClick={handleMemoContentDoubleClick}
           compact={memo.pinned ? false : props.compact} // Always show full content when pinned.
           parentPage={parentPage}
+          lcpCandidate={isLcpCandidate}
+          aboveFoldCandidate={isAboveFoldCandidate}
         />
         {memo.location && <LocationDisplay mode="view" location={memo.location} />}
         <AttachmentList mode="view" attachments={memo.attachments} />

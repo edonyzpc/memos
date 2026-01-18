@@ -27,7 +27,15 @@ const Home = observer(() => {
     <div className="w-full min-h-full bg-background text-foreground">
       <PagedMemoList
         renderer={(memo: Memo, context?: MemoRenderContext) => (
-          <MemoView key={`${memo.name}-${memo.displayTime}`} memo={memo} showVisibility showPinned compact={context?.compact} />
+          <MemoView
+            key={`${memo.name}-${memo.displayTime}`}
+            memo={memo}
+            showVisibility
+            showPinned
+            compact={context?.compact}
+            memoIndex={context?.memoIndex}
+            columns={context?.columns}
+          />
         )}
         listSort={listSort}
         orderBy={orderBy}

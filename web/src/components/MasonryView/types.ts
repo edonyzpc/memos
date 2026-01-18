@@ -8,6 +8,8 @@ export interface MemoRenderContext {
   compact: boolean;
   /** Current number of columns in the layout */
   columns: number;
+  /** Index of the memo in the current list (0-based) */
+  memoIndex?: number;
 }
 
 /**
