@@ -7,26 +7,31 @@ interface Props {
   src: string;
   className?: string;
   poster?: string;
+  previewClassName?: string;
 }
 
-const LazyVideo = ({ src, className, poster }: Props) => {
+const LazyVideo = ({ src, className, poster, previewClassName }: Props) => {
   const t = useTranslate();
   const [active, setActive] = useState(false);
 
   if (!active) {
+    const activate = () => setActive(true);
+
     return (
       <button
         type="button"
-        onClick={() => setActive(true)}
+        onClick={activate}
+        onPointerEnter={activate}
+        onFocus={activate}
         className={cn(
-          "w-full h-full min-h-24 rounded-lg border border-border/60 bg-muted/40 text-muted-foreground",
-          "flex items-center justify-center gap-2 text-sm hover:opacity-90 transition-colors",
-          className,
+          "inline-flex items-center justify-center cursor-pointer",
+          "w-16 h-16 shrink-0 aspect-square rounded-xl border border-border/60 bg-muted/40 text-muted-foreground",
+          "hover:opacity-90 transition-colors",
+          previewClassName,
         )}
         aria-label={t("common.preview")}
       >
-        <PlayIcon className="w-4 h-4" />
-        <span>{t("common.preview")}</span>
+        <PlayIcon className="w-6 h-6" />
       </button>
     );
   }
