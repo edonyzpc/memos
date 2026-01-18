@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router-dom";
 import useNavigateTo from "./hooks/useNavigateTo";
 import { instanceStore, userStore } from "./store";
+import { loadGtag } from "./utils/analytics";
 import { cleanupExpiredOAuthState } from "./utils/oauth";
 import { loadTheme, setupSystemThemeListener } from "./utils/theme";
 
@@ -17,6 +18,30 @@ const App = observer(() => {
   // Clean up expired OAuth states on app initialization
   useEffect(() => {
     cleanupExpiredOAuthState();
+  }, []);
+
+  // Defer analytics until idle to avoid blocking initial render
+  useEffect(() => {
+    if (!import.meta.env.PROD) {
+      return;
+    }
+
+    const scheduleLoad = () => {
+      loadGtag().catch(() => {});
+    };
+
+    const win = window as typeof window & {
+      requestIdleCallback?: (cb: () => void) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+
+    if (win.requestIdleCallback) {
+      const id = win.requestIdleCallback(scheduleLoad);
+      return () => win.cancelIdleCallback?.(id);
+    }
+
+    const timeout = window.setTimeout(scheduleLoad, 1500);
+    return () => window.clearTimeout(timeout);
   }, []);
 
   // Redirect to sign up page if no instance owner.
