@@ -67,10 +67,7 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
   const readonly = memo.creator !== user?.name && !isSuperUser(user);
   const isInMemoDetailPage = location.pathname.startsWith(`/${memo.name}`);
   const parentPage = props.parentPage || location.pathname;
-  const isAboveFoldCandidate =
-    props.memoIndex !== undefined
-      ? props.memoIndex < Math.max(1, props.columns ?? 1)
-      : !props.compact;
+  const isAboveFoldCandidate = props.memoIndex !== undefined ? props.memoIndex < Math.max(1, props.columns ?? 1) : !props.compact;
   const isLcpCandidate = props.memoIndex === 0 && (parentPage === "/" || parentPage.startsWith("/explore"));
   const nsfw =
     instanceMemoRelatedSetting.enableBlurNsfwContent &&

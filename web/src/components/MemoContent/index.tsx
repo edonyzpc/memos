@@ -20,7 +20,7 @@ import { TaskListItem } from "./TaskListItem";
 const MAX_DISPLAY_HEIGHT = 256;
 
 const findFirstImageCandidate = (content: string) => {
-  const markdownMatch = /!\[[^\]]*]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)/.exec(content);
+  const markdownMatch = /!\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)/.exec(content);
   const htmlTagMatch = /<img\b[^>]*>/i.exec(content);
 
   const markdownIndex = markdownMatch?.index ?? Number.POSITIVE_INFINITY;
@@ -32,13 +32,11 @@ const findFirstImageCandidate = (content: string) => {
 
   if (htmlTagMatch) {
     const tag = htmlTagMatch[0];
-    const srcMatch = /src\s*=\s*(?:\"([^\"]+)\"|'([^']+)'|([^\s>]+))/i.exec(tag);
+    const srcMatch = /src\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/i.exec(tag);
     if (srcMatch) {
       const src = srcMatch[1] || srcMatch[2] || srcMatch[3];
-      const crossOriginMatch = /crossorigin\s*=\s*(?:\"([^\"]+)\"|'([^']+)'|([^\s>]+))/i.exec(tag);
-      const crossOrigin = crossOriginMatch
-        ? crossOriginMatch[1] || crossOriginMatch[2] || crossOriginMatch[3]
-        : undefined;
+      const crossOriginMatch = /crossorigin\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/i.exec(tag);
+      const crossOrigin = crossOriginMatch ? crossOriginMatch[1] || crossOriginMatch[2] || crossOriginMatch[3] : undefined;
       return { src, crossOrigin };
     }
   }
