@@ -22,11 +22,11 @@ const Main = observer(() => (
   </>
 ));
 
+const container = document.getElementById("root");
+const root = createRoot(container as HTMLElement);
+root.render(<Main />);
+
 (async () => {
   await initialInstanceStore();
   await initialUserStore();
-
-  const container = document.getElementById("root");
-  const root = createRoot(container as HTMLElement);
-  root.render(<Main />);
 })();
