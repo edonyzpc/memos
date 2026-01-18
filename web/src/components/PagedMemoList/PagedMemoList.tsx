@@ -1,6 +1,6 @@
 import { ArrowUpIcon, LoaderIcon } from "lucide-react";
 import { observer } from "mobx-react-lite";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { matchPath } from "react-router-dom";
 import PullToRefresh from "react-simple-pull-to-refresh";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,10 @@ import { useTranslate } from "@/utils/i18n";
 import Empty from "../Empty";
 import type { MemoRenderContext } from "../MasonryView";
 import MasonryView from "../MasonryView";
-import MemoEditor from "../MemoEditor";
 import MemoFilters from "../MemoFilters";
 import MemoSkeleton from "../MemoSkeleton";
+
+const LazyMemoEditor = lazy(() => import("../MemoEditor"));
 
 interface Props {
   renderer: (memo: Memo, context?: MemoRenderContext) => JSX.Element;
@@ -179,7 +180,11 @@ const PagedMemoList = observer((props: Props) => {
             renderer={props.renderer}
             prefixElement={
               <>
-                {showMemoEditor ? <MemoEditor className="mb-2" cacheKey="home-memo-editor" /> : undefined}
+                {showMemoEditor ? (
+                  <Suspense fallback={<div className="mb-2 h-24 rounded-md bg-muted/30 animate-pulse" aria-busy="true" />}>
+                    <LazyMemoEditor className="mb-2" cacheKey="home-memo-editor" />
+                  </Suspense>
+                ) : undefined}
                 <MemoFilters />
               </>
             }

@@ -1,7 +1,8 @@
 import { CheckIcon, CopyIcon } from "lucide-react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { cn } from "@/lib/utils";
-import { MermaidBlock } from "./MermaidBlock";
+
+const LazyMermaidBlock = lazy(() => import("./MermaidBlock").then((mod) => ({ default: mod.MermaidBlock })));
 
 interface PreProps {
   children?: React.ReactNode;
@@ -23,9 +24,17 @@ export const CodeBlock = ({ children, className, ...props }: PreProps) => {
   // If it's a mermaid block, render with MermaidBlock component
   if (language === "mermaid") {
     return (
-      <MermaidBlock className={className} {...props}>
-        {children}
-      </MermaidBlock>
+      <Suspense
+        fallback={
+          <pre className={className}>
+            <code className="language-mermaid">{codeContent}</code>
+          </pre>
+        }
+      >
+        <LazyMermaidBlock className={className} {...props}>
+          {children}
+        </LazyMermaidBlock>
+      </Suspense>
     );
   }
 

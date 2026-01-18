@@ -1,6 +1,6 @@
 import { BookmarkIcon, EyeOffIcon, MessageCircleMoreIcon } from "lucide-react";
 import { observer } from "mobx-react-lite";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, memo, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,13 +17,14 @@ import { convertVisibilityToString } from "@/utils/memo";
 import { isSuperUser } from "@/utils/user";
 import MemoActionMenu from "./MemoActionMenu";
 import MemoContent from "./MemoContent";
-import MemoEditor from "./MemoEditor";
 import MemoReactionistView from "./MemoReactionListView";
 import { AttachmentList, LocationDisplay, RelationList } from "./memo-metadata";
 import PreviewImageDialog from "./PreviewImageDialog";
 import ReactionSelector from "./ReactionSelector";
 import UserAvatar from "./UserAvatar";
 import VisibilityIcon from "./VisibilityIcon";
+
+const LazyMemoEditor = lazy(() => import("./MemoEditor"));
 
 interface Props {
   memo: Memo;
@@ -218,14 +219,16 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
   );
 
   return showEditor ? (
-    <MemoEditor
-      autoFocus
-      className="mb-2"
-      cacheKey={`inline-memo-editor-${memo.name}`}
-      memoName={memo.name}
-      onConfirm={onEditorConfirm}
-      onCancel={() => setShowEditor(false)}
-    />
+    <Suspense fallback={<div className="mb-2 h-24 rounded-md bg-muted/30 animate-pulse" aria-busy="true" />}>
+      <LazyMemoEditor
+        autoFocus
+        className="mb-2"
+        cacheKey={`inline-memo-editor-${memo.name}`}
+        memoName={memo.name}
+        onConfirm={onEditorConfirm}
+        onCancel={() => setShowEditor(false)}
+      />
+    </Suspense>
   ) : (
     <div
       className={cn(
