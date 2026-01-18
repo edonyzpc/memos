@@ -1,14 +1,11 @@
-import React, { useEffect, useState } from "react";
-import useCurrentUser from "@/hooks/useCurrentUser";
+import { useEffect, useState } from "react";
 
 const HitokotoBar = () => {
-  const name = useCurrentUser();
   const [uuid, setUuid] = useState("");
   const [hitokoto, setHitokoto] = useState("");
   const [from_who, setFrom_who] = useState("");
   const [created_at, setCreated_at] = useState("");
   useEffect(() => {
-    console.log(name);
     /*
       {
       "id": 8881,
@@ -60,7 +57,7 @@ const HitokotoBar = () => {
       ></script>
     */}
       <div>
-        <span className="font-link text-[16.5px]">{hitokoto}</span>
+        <span className="text-[16.5px]">{hitokoto}</span>
       </div>
       <div className="text-right text-sm">{from_who}</div>
       <hr className="border-gray-700"></hr>
