@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
+	storepb "github.com/usememos/memos/proto/gen/store"
 	"github.com/usememos/memos/store"
 )
 
@@ -60,8 +61,25 @@ func (s *APIV1Service) GetShareMemo(ctx context.Context, request *v1pb.GetShareM
 		return nil, status.Errorf(codes.Internal, "failed to convert memo")
 	}
 
+	attachmentTypes := map[string]storepb.AttachmentStorageType{}
+	for _, attachment := range attachments {
+		if attachment == nil {
+			continue
+		}
+		attachmentTypes[attachment.UID] = attachment.StorageType
+	}
+
 	expiresAt := time.Now().Add(ShareTokenTTL)
 	for _, attachment := range memoMessage.Attachments {
+		if attachment == nil {
+			continue
+		}
+		attachmentUID, err := ExtractAttachmentUIDFromName(attachment.Name)
+		if err == nil {
+			if storageType, ok := attachmentTypes[attachmentUID]; ok && storageType == storepb.AttachmentStorageType_EXTERNAL {
+				continue
+			}
+		}
 		attachment.ExternalLink = buildSignedAttachmentURL(attachment.Name, attachment.Filename, expiresAt, false, s.Secret)
 	}
 
