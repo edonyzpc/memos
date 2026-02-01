@@ -4,9 +4,11 @@ package memos.api.v1;
 
 import "api/v1/attachment_service.proto";
 import "api/v1/common.proto";
+import "api/v1/user_service.proto";
 import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
+import "google/api/httpbody.proto";
 import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
@@ -33,6 +35,11 @@ service MemoService {
     option (google.api.http) = {get: "/api/v1/{name=memos/*}"};
     option (google.api.method_signature) = "name";
   }
+  // GetShareMemo gets memo data for share rendering.
+  rpc GetShareMemo(GetShareMemoRequest) returns (GetShareMemoResponse) {
+    option (google.api.http) = {get: "/api/v1/share/memos/{id}"};
+    option (google.api.method_signature) = "id";
+  }
   // UpdateMemo updates a memo.
   rpc UpdateMemo(UpdateMemoRequest) returns (Memo) {
     option (google.api.http) = {
@@ -44,6 +51,14 @@ service MemoService {
   // DeleteMemo deletes a memo.
   rpc DeleteMemo(DeleteMemoRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {delete: "/api/v1/{name=memos/*}"};
+    option (google.api.method_signature) = "name";
+  }
+  // CreateMemoShareImage renders a share image for a memo.
+  rpc CreateMemoShareImage(CreateMemoShareImageRequest) returns (google.api.HttpBody) {
+    option (google.api.http) = {
+      post: "/api/v1/{name=memos/*}/share-image"
+      body: "*"
+    };
     option (google.api.method_signature) = "name";
   }
   // SetMemoAttachments sets attachments for a memo.
@@ -226,6 +241,46 @@ message Memo {
     bool has_code = 3;
     bool has_incomplete_tasks = 4;
   }
+}
+
+message GetShareMemoRequest {
+  // Required. Memo UID.
+  string id = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // Required. Share JWT token.
+  string token = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message GetShareMemoResponse {
+  Memo memo = 1;
+  User creator = 2;
+}
+
+message CreateMemoShareImageRequest {
+  // Required. The memo name.
+  // Format: memos/{memo}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "memos.api.v1/Memo"}
+  ];
+
+  // Optional. Theme for rendering ("light" or "dark").
+  string theme = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Locale for rendering.
+  string locale = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Target width (px).
+  int32 width = 4 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Target height (px).
+  int32 height = 5 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Render mode ("auto" or "fixed").
+  string mode = 6 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Device scale factor for rendering.
+  float device_scale_factor = 7 [(google.api.field_behavior) = OPTIONAL];
 }
 
 message Location {

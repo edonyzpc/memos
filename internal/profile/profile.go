@@ -32,6 +32,8 @@ type Profile struct {
 	Version string
 	// InstanceURL is the url of your memos instance.
 	InstanceURL string
+	// RenderServiceURL is the internal URL of the share image render service.
+	RenderServiceURL string
 }
 
 func (p *Profile) IsDev() bool {

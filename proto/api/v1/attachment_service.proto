@@ -151,6 +151,12 @@ message GetAttachmentBinaryRequest {
 
   // Optional. A flag indicating if the thumbnail version of the attachment should be returned.
   bool thumbnail = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Signed URL expiration timestamp (unix seconds).
+  int64 exp = 4 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Signed URL signature (hex HMAC).
+  string sig = 5 [(google.api.field_behavior) = OPTIONAL];
 }
 
 message UpdateAttachmentRequest {
