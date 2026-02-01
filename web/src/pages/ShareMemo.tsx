@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import ShareMemoCard from "@/components/ShareMemoCard";
+import i18n from "@/i18n";
 import Loading from "@/pages/Loading";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { User } from "@/types/proto/api/v1/user_service";
+import { findNearestMatchedLanguage, isValidateLocale } from "@/utils/i18n";
 
 declare global {
   interface Window {
@@ -27,6 +29,7 @@ const ShareMemo = () => {
   const height = Number(searchParams.get("height") || DEFAULT_HEIGHT);
   const mode = searchParams.get("mode") || DEFAULT_MODE;
   const theme = searchParams.get("theme") || "light";
+  const locale = searchParams.get("locale") || "";
 
   const [memo, setMemo] = useState<Memo | null>(null);
   const [creator, setCreator] = useState<User | null>(null);
@@ -86,6 +89,19 @@ const ShareMemo = () => {
       root.classList.remove("dark");
     };
   }, [theme]);
+
+  useEffect(() => {
+    if (!locale) {
+      return;
+    }
+    const resolvedLocale = isValidateLocale(locale) ? locale : findNearestMatchedLanguage(locale);
+    if (resolvedLocale && i18n.language !== resolvedLocale) {
+      void i18n.changeLanguage(resolvedLocale);
+    }
+    if (resolvedLocale) {
+      document.documentElement.lang = resolvedLocale;
+    }
+  }, [locale]);
 
   useEffect(() => {
     window.__MEMO_SHARE_READY__ = false;
