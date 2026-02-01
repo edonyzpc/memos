@@ -25,15 +25,16 @@ var (
 		Short: `An open source, lightweight note-taking service. Easily capture and share your great thoughts.`,
 		Run: func(_ *cobra.Command, _ []string) {
 			instanceProfile := &profile.Profile{
-				Mode:        viper.GetString("mode"),
-				Addr:        viper.GetString("addr"),
-				Port:        viper.GetInt("port"),
-				UNIXSock:    viper.GetString("unix-sock"),
-				Data:        viper.GetString("data"),
-				Driver:      viper.GetString("driver"),
-				DSN:         viper.GetString("dsn"),
-				InstanceURL: viper.GetString("instance-url"),
-				Version:     version.GetCurrentVersion(viper.GetString("mode")),
+				Mode:             viper.GetString("mode"),
+				Addr:             viper.GetString("addr"),
+				Port:             viper.GetInt("port"),
+				UNIXSock:         viper.GetString("unix-sock"),
+				Data:             viper.GetString("data"),
+				Driver:           viper.GetString("driver"),
+				DSN:              viper.GetString("dsn"),
+				InstanceURL:      viper.GetString("instance-url"),
+				RenderServiceURL: viper.GetString("render-service-url"),
+				Version:          version.GetCurrentVersion(viper.GetString("mode")),
 			}
 			if err := instanceProfile.Validate(); err != nil {
 				panic(err)
@@ -101,6 +102,7 @@ func init() {
 	rootCmd.PersistentFlags().String("driver", "sqlite", "database driver")
 	rootCmd.PersistentFlags().String("dsn", "", "database source name(aka. DSN)")
 	rootCmd.PersistentFlags().String("instance-url", "", "the url of your memos instance")
+	rootCmd.PersistentFlags().String("render-service-url", "", "internal render service URL for share images")
 
 	if err := viper.BindPFlag("mode", rootCmd.PersistentFlags().Lookup("mode")); err != nil {
 		panic(err)
@@ -126,10 +128,16 @@ func init() {
 	if err := viper.BindPFlag("instance-url", rootCmd.PersistentFlags().Lookup("instance-url")); err != nil {
 		panic(err)
 	}
+	if err := viper.BindPFlag("render-service-url", rootCmd.PersistentFlags().Lookup("render-service-url")); err != nil {
+		panic(err)
+	}
 
 	viper.SetEnvPrefix("memos")
 	viper.AutomaticEnv()
 	if err := viper.BindEnv("instance-url", "MEMOS_INSTANCE_URL"); err != nil {
+		panic(err)
+	}
+	if err := viper.BindEnv("render-service-url", "MEMOS_RENDER_SERVICE_URL"); err != nil {
 		panic(err)
 	}
 }

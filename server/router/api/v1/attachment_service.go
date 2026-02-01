@@ -226,9 +226,10 @@ func (s *APIV1Service) GetAttachmentBinary(ctx context.Context, request *v1pb.Ge
 				return nil, status.Errorf(codes.Internal, "failed to get current user: %v", err)
 			}
 			if user == nil {
-				return nil, status.Errorf(codes.Unauthenticated, "unauthorized access")
-			}
-			if memo.Visibility == store.Private && user.ID != attachment.CreatorID {
+				if !validateSignedAttachmentURL(request.Name, request.Filename, request.Exp, request.Sig, request.Thumbnail, s.Secret) {
+					return nil, status.Errorf(codes.Unauthenticated, "unauthorized access")
+				}
+			} else if memo.Visibility == store.Private && user.ID != attachment.CreatorID {
 				return nil, status.Errorf(codes.Unauthenticated, "unauthorized access")
 			}
 		}
