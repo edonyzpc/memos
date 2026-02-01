@@ -14,6 +14,8 @@ const Inboxes = lazy(() => import("@/pages/Inboxes"));
 const MemoDetail = lazy(() => import("@/pages/MemoDetail"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PermissionDenied = lazy(() => import("@/pages/PermissionDenied"));
+const ShareMemoSandbox = lazy(() => import("@/pages/ShareMemoSandbox"));
+const ShareMemo = lazy(() => import("@/pages/ShareMemo"));
 const Attachments = lazy(() => import("@/pages/Attachments"));
 const Setting = lazy(() => import("@/pages/Setting"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
@@ -36,6 +38,26 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
+      {
+        path: "/share/memo/:id",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ShareMemo />
+          </Suspense>
+        ),
+      },
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: "/share/sandbox/:id",
+              element: (
+                <Suspense fallback={<Loading />}>
+                  <ShareMemoSandbox />
+                </Suspense>
+              ),
+            },
+          ]
+        : []),
       {
         path: Routes.AUTH,
         children: [

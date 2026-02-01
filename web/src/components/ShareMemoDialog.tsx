@@ -1,6 +1,6 @@
 import copy from "copy-to-clipboard";
 import * as Icon from "lucide-react";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,13 +9,11 @@ import { downloadFileFromUrl } from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useLoading from "@/hooks/useLoading";
 import toImage from "@/labs/html2image";
-import { memoStore, userStore } from "@/store";
+import { instanceStore, memoStore, userStore } from "@/store";
 import { Visibility } from "@/types/proto/api/v1/memo_service";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityToString } from "@/utils/memo";
-import MemoResourceListView from "./MemoAttachmentListView";
-import MemoContent from "./MemoContent";
-import UserAvatar from "./UserAvatar";
+import ShareMemoCard from "./ShareMemoCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 
 interface Props {
@@ -31,49 +29,122 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
   const downloadingImageState = useLoading(false);
   const loadingState = useLoading();
   const memoContainerRef = useRef<HTMLDivElement>(null);
+  const downloadUrlRef = useRef<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
   const memo = memoStore.getMemoByName(memoId);
   const user = memo ? userStore.getUserByName(memo.creator) : null;
   const readonly = memo?.creator !== currentUser?.name;
+  const shareImageState = useLoading(true);
+  const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
+  const shareImageWidth = 2400;
+  const shareImageHeight = 1350;
+  const shareImageDpr = 5;
 
   useEffect(() => {
-    if (memo) {
-      (async () => {
-        await userStore.getOrFetchUserByName(memo.creator);
-        loadingState.setFinish();
-
-        // Safari-specific fix: Force reflow to ensure proper rendering
-        if (memoContainerRef.current) {
-          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-          if (isSafari) {
-            // Force a reflow to ensure Safari renders the content properly
-            void memoContainerRef.current.offsetHeight;
-            // Small delay to ensure all content is rendered
-            setTimeout(() => {
-              if (memoContainerRef.current) {
-                memoContainerRef.current.style.transform = "translateZ(0)";
-              }
-            }, 100);
-          }
-        }
-      })();
-    } else {
+    if (!memo) {
       loadingState.setFinish();
+      return;
     }
+
+    let cancelled = false;
+
+    const fetchPreview = async () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+        downloadUrlRef.current = null;
+        setShareImageUrl(null);
+      }
+      await userStore.getOrFetchUserByName(memo.creator);
+      loadingState.setFinish();
+
+      try {
+        shareImageState.setLoading();
+        const theme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+        const locale = instanceStore.state.locale || "en";
+        const response = await fetch(`/api/v1/${memo.name}/share-image`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            mode: "auto",
+            width: shareImageWidth,
+            height: shareImageHeight,
+            deviceScaleFactor: shareImageDpr,
+            theme,
+            locale,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error(`share image failed (${response.status})`);
+        }
+        const blob = await response.blob();
+        if (cancelled) {
+          return;
+        }
+        if (previewUrlRef.current) {
+          URL.revokeObjectURL(previewUrlRef.current);
+        }
+        const url = URL.createObjectURL(blob);
+        previewUrlRef.current = url;
+        downloadUrlRef.current = url;
+        setShareImageUrl(url);
+      } catch (error) {
+        console.error(error);
+        setShareImageUrl(null);
+      } finally {
+        shareImageState.setFinish();
+      }
+
+      // Safari-specific fix: Force reflow to ensure proper rendering for fallback
+      if (memoContainerRef.current) {
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        if (isSafari) {
+          void memoContainerRef.current.offsetHeight;
+          setTimeout(() => {
+            if (memoContainerRef.current) {
+              memoContainerRef.current.style.transform = "translateZ(0)";
+            }
+          }, 100);
+        }
+      }
+    };
+
+    void fetchPreview();
+
+    return () => {
+      cancelled = true;
+    };
   }, [memo]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
 
   const handleCloseBtnClick = () => {
     onOpenChange(false);
   };
 
   const handleDownloadImageBtnClick = () => {
-    if (!memoContainerRef.current) {
+    downloadingImageState.setLoading();
+    if (downloadUrlRef.current) {
+      downloadFileFromUrl(downloadUrlRef.current, `memos-${getDateTimeString(Date.now(), "pt-BR")}.png`);
+      downloadingImageState.setFinish();
       return;
     }
-
-    downloadingImageState.setLoading();
+    if (!memoContainerRef.current) {
+      downloadingImageState.setFinish();
+      return;
+    }
     toImage(memoContainerRef.current, {
       pixelRatio: window.devicePixelRatio * 2,
-      targetAspectRatio: 4 / 3,
+      targetAspectRatio: 16 / 9,
     })
       .then((url) => {
         downloadFileFromUrl(url, `memos-${getDateTimeString(Date.now(), "pt-BR")}.png`);
@@ -82,6 +153,7 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
       })
       .catch((err) => {
         console.error(err);
+        downloadingImageState.setFinish();
       });
   };
 
@@ -211,6 +283,17 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
                 )}
               </div>
               <div className="w-full border-t dark:border-zinc-700 overflow-clip">
+                {shareImageState.isLoading && (
+                  <div className="flex items-center justify-center p-8">
+                    <Icon.Loader className="w-6 h-6 animate-spin" />
+                    <span className="ml-2">Rendering...</span>
+                  </div>
+                )}
+                {shareImageUrl && (
+                  <div className="w-full bg-white dark:bg-zinc-900 flex items-center justify-center p-4">
+                    <img className="max-w-full h-auto rounded-xl shadow-sm" src={shareImageUrl} alt="share memo preview" />
+                  </div>
+                )}
                 <div
                   className="share-memo-canvas w-full h-auto select-none relative flex flex-col justify-start items-start"
                   ref={memoContainerRef}
@@ -218,42 +301,10 @@ const ShareMemoDialog: React.FC<Props> = (props: Props) => {
                     WebkitFontSmoothing: "antialiased",
                     MozOsxFontSmoothing: "grayscale",
                     textRendering: "optimizeLegibility",
+                    display: shareImageUrl ? "none" : "flex",
                   }}
                 >
-                  <div className="share-memo-card w-full h-auto relative flex flex-col justify-start items-start bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden">
-                    <span className="w-full px-6 pt-5 pb-2 text-sm text-gray-500 dark:text-gray-400">
-                      {getDateTimeString(memo.displayTime)}
-                    </span>
-                    <div className="w-full px-6 text-base pb-4 space-y-2">
-                      <MemoContent
-                        key={`${memo.name}-${memo.updateTime}`}
-                        memoName={memo.name}
-                        content={memo.content}
-                        readonly={true}
-                        className="text-gray-900 dark:text-gray-100"
-                        contentClassName="share-memo-markdown text-gray-900 dark:text-gray-100"
-                        disableFilter
-                      />
-                      <div className="w-full">
-                        <MemoResourceListView attachments={memo.attachments} />
-                      </div>
-                    </div>
-                    <div className="flex flex-row justify-between items-center w-full bg-gray-100 dark:bg-zinc-900 py-4 px-6">
-                      <div className="flex flex-row justify-start items-center">
-                        <UserAvatar className="mr-2" avatarUrl={user?.avatarUrl} />
-                        <div className="w-auto grow truncate flex mr-2 flex-col justify-center items-start">
-                          <span className="w-full text truncate font-medium text-gray-600 dark:text-gray-300">
-                            {user?.displayName || user?.username || "Unknown User"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex flex-row justify-end items-center">
-                        <span className="text-gray-500 dark:text-gray-400 mr-2 font-thin italic">via</span>
-                        <img className="w-8 h-8" src="/logo.svg" alt="shadow walker logo" />
-                        <span className="text-gray-500 dark:text-gray-400 ml-1 font-mono font-medium">松烟阁</span>
-                      </div>
-                    </div>
-                  </div>
+                  <ShareMemoCard memo={memo} creator={user} />
                 </div>
               </div>
             </>
