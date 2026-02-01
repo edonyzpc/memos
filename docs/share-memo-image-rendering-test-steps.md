@@ -7,7 +7,7 @@ touching production web.
 
 ## Prerequisites
 - Local dev web: `make web` (http://localhost:3001)
-- Render repo: `/Users/edonyzpc/code/memos-images-rendering`
+- Render repo: `https://github.com/edonyzpc/memos-images-rendering`
 - ECS host: `root@cn-ubuntu-ecs`
 - Render container uses host network and calls local dev web via reverse SSH
   tunnel on `127.0.0.1:13001`.
