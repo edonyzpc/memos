@@ -363,6 +363,12 @@
       radial-gradient(120% 90% at 88% 8%, rgba(200, 244, 245, 0.8) 0%, rgba(200, 244, 245, 0) 58%),
       radial-gradient(120% 90% at 24% 96%, rgba(220, 223, 255, 0.7) 0%, rgba(220, 223, 255, 0) 60%),
       linear-gradient(155deg, #f1f5fb 0%, #edf3f9 55%, #e8f1f6 100%);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Noto Sans CJK SC", "Noto Sans", "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
   }
 
   @media (min-width: 640px) {
