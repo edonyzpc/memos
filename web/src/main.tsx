@@ -26,7 +26,11 @@ const container = document.getElementById("root");
 const root = createRoot(container as HTMLElement);
 root.render(<Main />);
 
+const isSharePage = window.location.pathname.startsWith("/share/");
+
 (async () => {
   await initialInstanceStore();
-  await initialUserStore();
+  if (!isSharePage) {
+    await initialUserStore();
+  }
 })();
