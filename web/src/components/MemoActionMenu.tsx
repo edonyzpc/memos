@@ -254,9 +254,7 @@ const MemoActionMenu = observer((props: Props) => {
         />
       </DropdownMenu>
 
-      {shareDialog.isOpen && (
-        <ShareMemoDialog open={shareDialog.isOpen} onOpenChange={shareDialog.setOpen} memoId={memo.name} />
-      )}
+      {shareDialog.isOpen && <ShareMemoDialog open={shareDialog.isOpen} onOpenChange={shareDialog.setOpen} memoId={memo.name} />}
     </>
   );
 });
